@@ -1,0 +1,16 @@
+
+> anumitra@1.0.0 test:browser
+> playwright test
+
+
+Running 2 tests using 1 worker
+
+  ok 1 tests\browser\ui.spec.ts:18:1 › welcome and authenticated workspaces use real API and retain responsive design (15.9s)
+  ok 2 tests\browser\ui.spec.ts:130:1 › institution can save and submit a draft through browser forms (4.6s)
+
+  2 passed (22.4s)
+
+To open last HTML report run:
+[36m[39m
+[36m  npx playwright show-report[39m
+[36m[39m

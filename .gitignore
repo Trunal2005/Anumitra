@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.env
+.local/
+storage/
+test-results/
+playwright-report/
+*.log
+apps/web/public/pdf-assets/

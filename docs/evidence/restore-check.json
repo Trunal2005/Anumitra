@@ -1,0 +1,11 @@
+{
+  "database": "anumitra_restore_033b4ce7c2",
+  "backup": "2026-10-22T14-42-30.358Z",
+  "verifiedDocumentFiles": 324,
+  "counts": {
+    "applications": "332",
+    "audits": "1275"
+  },
+  "executedAt": "2026-10-22T14:42:32.839Z",
+  "retained": true
+}

@@ -1,0 +1,10 @@
+{
+  "workerStoppedAt": "2026-10-22T14:33:09.097Z",
+  "queuedWhileStopped": true,
+  "transportEnqueuedBeforeOutboxAcknowledgement": true,
+  "smtpState": "SMTP_ACCEPTED",
+  "recoveryMilliseconds": 1034,
+  "ambiguousState": "AMBIGUOUS",
+  "inboxCount": 1,
+  "acceptanceAttempts": 1
+}

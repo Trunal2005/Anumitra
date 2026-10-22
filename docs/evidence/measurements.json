@@ -1,0 +1,34 @@
+{
+  "executedAt": "2026-10-22T14:42:27.192Z",
+  "hardware": {
+    "cpu": "12th Gen Intel(R) Core(TM) i7-12650H",
+    "logicalCpus": 16,
+    "memoryGiB": 15.7,
+    "platform": "win32",
+    "release": "10.0.26300",
+    "node": "v20.19.4"
+  },
+  "method": "One loopback client; 3 warm-ups then 20 sequential reads per endpoint; includes HTTP and JSON parse; other local test records remain; no national-scale or user-effort extrapolation.",
+  "workload": {
+    "authorizedApplications": 30,
+    "scope": "North supervisor",
+    "clock": "2026-10-22T09:00:00.000Z"
+  },
+  "results": [
+    {
+      "endpoint": "/dashboard",
+      "samples": 20,
+      "p50Milliseconds": 26.02,
+      "p95Milliseconds": 32.58,
+      "maxMilliseconds": 34.27
+    },
+    {
+      "endpoint": "/applications?limit=15",
+      "samples": 20,
+      "p50Milliseconds": 17.06,
+      "p95Milliseconds": 24.56,
+      "maxMilliseconds": 26.79
+    }
+  ],
+  "openapiPaths": 43
+}

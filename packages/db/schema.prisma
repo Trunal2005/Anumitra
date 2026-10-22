@@ -1,0 +1,327 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+}
+model Region {
+  id String @id
+  name String
+  institutions Institution[]
+}
+model Institution {
+  id String @id
+  name String
+  regionId String
+  region Region @relation(fields:[regionId], references:[id])
+  applications Application[]
+  grants Grant[]
+}
+model User {
+  id String @id @default(uuid())
+  email String @unique
+  name String
+  passwordHash String
+  securityVersion Int @default(1)
+  grants Grant[]
+  notifications Notification[]
+  recovery Recovery[]
+}
+model Grant {
+  id String @id @default(uuid())
+  userId String
+  user User @relation(fields:[userId],references:[id])
+  role String
+  institutionId String?
+  institution Institution? @relation(fields:[institutionId],references:[id])
+  regionId String?
+  bureau String?
+  committee String?
+  @@index([userId])
+}
+model Workflow {
+  id String @id @default(uuid())
+  name String
+  version Int
+  state String @default("DRAFT")
+  config Json
+  source String @default("DEMO: unverified policy configuration")
+  createdAt DateTime @default(now())
+  applications Application[]
+  @@unique([name,version])
+}
+model Application {
+  id String @id @default(uuid())
+  reference String @unique
+  institutionId String
+  institution Institution @relation(fields:[institutionId],references:[id])
+  workflowId String
+  workflow Workflow @relation(fields:[workflowId],references:[id])
+  runId String
+  category String
+  cycle String @default("2026-27")
+  bureau String @default("APPROVAL")
+  data Json @default("{}")
+  state String @default("DRAFT")
+  stageIndex Int @default(0)
+  version Int @default(1)
+  ownerId String?
+  dueAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  snapshots Snapshot[]
+  attempts StageAttempt[]
+  deficiencies Deficiency[]
+  documents Document[]
+  visits Visit[]
+  decisions Decision[]
+  recommendations Recommendation[]
+  obligations Obligation[]
+  audits Audit[]
+  outbox Outbox[]
+  @@index([runId,state,institutionId])
+  @@index([dueAt])
+}
+model Snapshot {
+  id String @id @default(uuid())
+  applicationId String
+  application Application @relation(fields:[applicationId],references:[id])
+  revision Int
+  kind String
+  content Json
+  createdAt DateTime @default(now())
+  @@unique([applicationId,revision,kind])
+}
+model StageAttempt {
+  id String @id @default(uuid())
+  applicationId String
+  application Application @relation(fields:[applicationId],references:[id])
+  stage String
+  stageIndex Int
+  state String @default("OPEN")
+  ownerId String?
+  startedAt DateTime @default(now())
+  endedAt DateTime?
+}
+model Deficiency {
+  id String @id @default(uuid())
+  applicationId String
+  application Application @relation(fields:[applicationId],references:[id])
+  round Int
+  item String
+  reason String
+  state String @default("OPEN")
+  responses Response[]
+  createdAt DateTime @default(now())
+}
+model Response {
+  id String @id @default(uuid())
+  deficiencyId String
+  deficiency Deficiency @relation(fields:[deficiencyId],references:[id])
+  text String
+  documentVersionId String
+  documentVersion DocumentVersion @relation(fields:[documentVersionId],references:[id])
+  createdAt DateTime @default(now())
+}
+model Recommendation {
+  id String @id @default(uuid())
+  applicationId String
+  application Application @relation(fields:[applicationId],references:[id])
+  actorId String
+  stage String
+  outcome String
+  reason String
+  createdAt DateTime @default(now())
+}
+model Decision {
+  id String @id @default(uuid())
+  applicationId String @unique
+  application Application @relation(fields:[applicationId],references:[id])
+  actorId String
+  outcome String
+  reason String
+  snapshot Json
+  createdAt DateTime @default(now())
+  obligations Obligation[]
+}
+model Obligation {
+  id String @id @default(uuid())
+  applicationId String
+  application Application @relation(fields:[applicationId],references:[id])
+  decisionId String
+  decision Decision @relation(fields:[decisionId],references:[id])
+  condition String
+  source String
+  ownerId String
+  reviewerId String?
+  requiredEvidence String
+  state String @default("OPEN")
+  originalDueAt DateTime
+  dueAt DateTime
+  revision Int @default(1)
+  revisions Json @default("[]")
+  evidence Json @default("[]")
+}
+model Document {
+  id String @id @default(uuid())
+  applicationId String
+  application Application @relation(fields:[applicationId],references:[id])
+  kind String
+  title String
+  versions DocumentVersion[]
+}
+model DocumentVersion {
+  id String @id @default(uuid())
+  documentId String
+  document Document @relation(fields:[documentId],references:[id])
+  number Int
+  storageKey String @unique
+  mime String
+  size Int
+  hash String
+  issuer String?
+  issueDate DateTime?
+  validUntil DateTime?
+  reviewState String @default("PENDING")
+  scanState String @default("NOT_SCANNED")
+  createdAt DateTime @default(now())
+  reviews DocumentReview[]
+  responses Response[]
+  @@unique([documentId,number])
+}
+model DocumentReview {
+  id String @id @default(uuid())
+  versionId String
+  version DocumentVersion @relation(fields:[versionId],references:[id])
+  actorId String
+  outcome String
+  reason String
+  createdAt DateTime @default(now())
+}
+model Visit {
+  id String @id @default(uuid())
+  applicationId String
+  application Application @relation(fields:[applicationId],references:[id])
+  state String @default("PROPOSED")
+  mode String
+  startAt DateTime
+  endAt DateTime
+  metadata String
+  reason String
+  report String?
+  history Json @default("[]")
+  reservations Reservation[]
+}
+model Reservation {
+  id String @id @default(uuid())
+  visitId String
+  visit Visit @relation(fields:[visitId],references:[id])
+  userId String
+  startAt DateTime
+  endAt DateTime
+  active Boolean @default(true)
+  @@index([userId,startAt,endAt])
+}
+model Availability {
+  id String @id @default(uuid())
+  userId String
+  startAt DateTime
+  endAt DateTime
+}
+model Audit {
+  id String @id @default(uuid())
+  applicationId String?
+  application Application? @relation(fields:[applicationId],references:[id])
+  actorId String
+  scope Json
+  action String
+  fromState String?
+  toState String?
+  reason String
+  evidence Json @default("[]")
+  policyId String?
+  visibility String @default("INTERNAL")
+  correlationId String
+  createdAt DateTime @default(now())
+  @@index([applicationId,createdAt])
+}
+model Idempotency {
+  id String @id
+  payloadHash String
+  result Json
+  createdAt DateTime @default(now())
+}
+model Outbox {
+  id String @id @default(uuid())
+  applicationId String
+  application Application @relation(fields:[applicationId],references:[id])
+  recipientId String
+  logicalKey String @unique
+  revision Int
+  subjectType String @default("APPLICATION")
+  subjectId String
+  runId String
+  title String
+  state String @default("QUEUED")
+  jobId String?
+  attempts Int @default(0)
+  nextAt DateTime @default(now())
+  createdAt DateTime @default(now())
+  deliveries DeliveryAttempt[]
+  @@index([state,nextAt])
+}
+model DeliveryAttempt {
+  id String @id @default(uuid())
+  outboxId String
+  outbox Outbox @relation(fields:[outboxId],references:[id])
+  state String
+  detail String
+  createdAt DateTime @default(now())
+}
+model Notification {
+  id String @id @default(uuid())
+  userId String
+  user User @relation(fields:[userId],references:[id])
+  applicationId String
+  logicalKey String @unique
+  title String
+  read Boolean @default(false)
+  createdAt DateTime @default(now())
+}
+model DemoClock {
+  id String @id @default("current")
+  runId String
+  now DateTime
+}
+model Recovery {
+  id String @id
+  userId String
+  user User @relation(fields:[userId],references:[id])
+  expiresAt DateTime
+  used Boolean @default(false)
+}
+model ExternalMapping {
+  id String @id @default(uuid())
+  source String
+  externalId String
+  applicationId String
+  payloadHash String
+  @@unique([source,externalId])
+}
+model SyncRun {
+  id String @id @default(uuid())
+  actorId String
+  mode String @default("LOCAL_ADAPTER")
+  preview Boolean
+  result Json
+  createdAt DateTime @default(now())
+}
+model PolicySource {
+  id String @id
+  title String
+  url String
+  retrievedAt DateTime
+  status String
+  applicability String
+}
