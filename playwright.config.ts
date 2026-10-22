@@ -4,7 +4,7 @@ export default defineConfig({
   timeout: 45000,
   workers: 1,
   use: {
-    baseURL: "http://127.0.0.1:3000",
+    baseURL: process.env.TEST_API_ORIGIN ?? "http://127.0.0.1:3100",
     headless: true,
     trace: "retain-on-failure",
   },

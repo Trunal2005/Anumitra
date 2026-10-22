@@ -17,10 +17,23 @@ services:
     environment:
       MP_DATABASE: /data/mailpit.db
     volumes: ["maildata:/data"]
+  bootstrap:
+    build: .
+    environment:
+      MIGRATION_DATABASE_URL: postgresql://anumitra:${POSTGRES_PASSWORD}@postgres:5432/anumitra
+      RUNTIME_DATABASE_URL: postgresql://anumitra_app:${APP_DB_PASSWORD:?Set a distinct hex runtime password}@postgres:5432/anumitra
+      WORKER_DATABASE_URL: postgresql://anumitra_worker:${WORKER_DB_PASSWORD:?Set a distinct hex worker password}@postgres:5432/anumitra
+      DEMO_MODE: "true"
+      STORAGE_PATH: /app/storage/private
+    command: node scripts/container-bootstrap.mjs
+    volumes: ["documents:/app/storage", "localconfig:/app/.local"]
+    depends_on:
+      postgres:
+        condition: service_healthy
   app:
     build: .
     environment: &appenv
-      DATABASE_URL: postgresql://anumitra:${POSTGRES_PASSWORD}@postgres:5432/anumitra
+      DATABASE_URL: postgresql://anumitra_app:${APP_DB_PASSWORD}@postgres:5432/anumitra
       SESSION_SECRET: ${SESSION_SECRET:?Set a random local session secret}
       DEMO_MODE: "true"
       NODE_ENV: development
@@ -29,12 +42,14 @@ services:
       SMTP_HOST: mailpit
       SMTP_PORT: "1025"
       STORAGE_PATH: /app/storage/private
-    command: sh -c "npm run db:migrate && npm run db:seed && npm start"
+    command: npm start
     ports: ["127.0.0.1:3000:3000"]
     volumes: ["documents:/app/storage", "localconfig:/app/.local"]
     depends_on:
       postgres:
         condition: service_healthy
+      bootstrap:
+        condition: service_completed_successfully
       mailpit:
         condition: service_started
     healthcheck:
@@ -49,7 +64,9 @@ services:
       retries: 10
   worker:
     build: .
-    environment: *appenv
+    environment:
+      <<: *appenv
+      DATABASE_URL: postgresql://anumitra_worker:${WORKER_DB_PASSWORD}@postgres:5432/anumitra
     command: npm run worker
     volumes: ["documents:/app/storage"]
     depends_on:

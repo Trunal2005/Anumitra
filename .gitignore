@@ -19,3 +19,8 @@ backups/
 *.sqlite3
 *.db
 *.dump
+*.env
+*.sql.gz
+*.backup
+.pgpass
+!.env.example

@@ -3,11 +3,8 @@ import { mkdirSync, existsSync, writeFileSync, readFileSync } from "node:fs";
 import { randomBytes } from "node:crypto";
 import path from "node:path";
 mkdirSync(".local", { recursive: true });
-const pg =
-  process.env.PG_BIN ??
-  (process.platform === "win32"
-    ? "C:/Program Files/PostgreSQL/18/bin"
-    : "/usr/lib/postgresql/18/bin");
+const { postgresBin } = await import("./platform.mjs");
+const pg = postgresBin();
 const bin = (n) =>
   path.join(pg, n + (process.platform === "win32" ? ".exe" : ""));
 function run(cmd, args, env = process.env) {
@@ -28,6 +25,10 @@ if (!existsSync(".env")) {
 }
 const { config } = await import("dotenv");
 config();
+if (!existsSync(".local/db/PG_VERSION") && !existsSync(".local/pg-password"))
+  throw new Error(
+    "Existing .env but no initialized private cluster/password file. Refusing to overwrite credentials. Configure an existing PostgreSQL database and use db:migrate, or explicitly prepare a fresh local setup.",
+  );
 if (!existsSync(".local/db/PG_VERSION"))
   run(bin("initdb"), [
     "-D",
@@ -71,7 +72,7 @@ const npm = process.platform === "win32" ? "npm.cmd" : "npm";
 run(npm, ["run", "db:generate"]);
 run(npm, ["run", "db:migrate"]);
 run(npm, ["run", "db:seed"]);
-if (!existsSync(".local/migration.env")) run(npm, ["run", "db:harden"]);
+run(npm, ["run", "db:harden"]);
 run(npm, ["run", "build"]);
 if (existsSync(".local/mailpit.exe")) {
   const log = await import("node:fs");
@@ -91,5 +92,5 @@ if (existsSync(".local/mailpit.exe")) {
   child.unref();
 }
 console.log(
-  "Ready. npm start + npm run worker; http://127.0.0.1:3000; Mailpit http://127.0.0.1:8025; credentials: .local/demo-credentials.json",
+  "Database/build prepared. Start npm start and npm run worker. Run npm run doctor to check API/database/storage/worker/SMTP; preparation alone does not imply delivery readiness.",
 );

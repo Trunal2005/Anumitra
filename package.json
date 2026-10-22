@@ -19,10 +19,14 @@
     "db:seed": "tsx packages/db/seed.ts",
     "demo:reset": "tsx scripts/new-demo-run.ts --new-run",
     "bootstrap": "node scripts/bootstrap.mjs",
-    "test": "tsx --test --test-concurrency=1 tests/integration.test.ts tests/operations.test.ts",
+    "test": "node scripts/verify.mjs --backend",
     "format:check": "prettier --check apps packages tests scripts vite.config.ts playwright.config.ts",
-    "test:browser": "playwright test",
-    "typecheck": "tsc --noEmit"
+    "test:browser": "node scripts/verify.mjs --browser-only",
+    "typecheck": "tsc --noEmit",
+    "verify:isolated": "node scripts/verify.mjs",
+    "verify:repair": "node scripts/verify.mjs --backend --repair-only",
+    "doctor": "tsx scripts/doctor.ts",
+    "storage:reconcile": "tsx scripts/reconcile-storage.ts"
   },
   "dependencies": {
     "@fontsource/inter": "5.2.8",
