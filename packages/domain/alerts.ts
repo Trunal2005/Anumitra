@@ -34,7 +34,7 @@ export async function scan() {
         await notify(
           tx,
           app,
-          `${app.reference}: UPCOMING � ${subject.label}`,
+          `${app.reference}: UPCOMING · ${subject.label}`,
           `${identity}:UPCOMING`,
           subject.type,
           subject.id,
@@ -46,7 +46,7 @@ export async function scan() {
         await notify(
           tx,
           app,
-          `${app.reference}: OVERDUE � ${subject.label}`,
+          `${app.reference}: OVERDUE · ${subject.label}`,
           `${identity}:OVERDUE`,
           subject.type,
           subject.id,
@@ -126,7 +126,7 @@ export async function scan() {
           await notify(
             tx,
             app,
-            `${app.reference}: ESCALATION L${i + 1} � ${subject.label}`,
+            `${app.reference}: ESCALATION L${i + 1} · ${subject.label}`,
             `${identity}:L${i + 1}`,
             subject.type,
             subject.id,

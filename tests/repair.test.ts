@@ -253,39 +253,42 @@ test("two rejected responses create disjoint waiting/review intervals, immutable
       outcome: "ACCEPTED",
     },
     key = randomUUID();
-  const first = await reviewer.ok(
-    `/applications/${app.id}/commands`,
-    "POST",
-    body,
-    key,
+  const requests = ["ACCEPTED", "REJECTED"].map((outcome) => ({
+    body: { ...body, outcome },
+    key: randomUUID(),
+  }));
+  const results = await Promise.all(
+    requests.map((r) =>
+      reviewer.request(
+        `/applications/${app.id}/commands`,
+        "POST",
+        r.body,
+        r.key,
+      ),
+    ),
   );
+  assert.deepEqual(results.map((r) => r.status).sort(), [200, 409]);
+  const winner = results.findIndex((r) => r.status === 200);
   assert.deepEqual(
-    await reviewer.ok(`/applications/${app.id}/commands`, "POST", body, key),
-    first,
+    await reviewer.ok(
+      `/applications/${app.id}/commands`,
+      "POST",
+      requests[winner].body,
+      requests[winner].key,
+    ),
+    results[winner].data,
   );
   assert.equal(
     (
       await reviewer.request(
         `/applications/${app.id}/commands`,
         "POST",
-        body,
+        requests[winner].body,
         randomUUID(),
       )
     ).status,
     409,
   );
-  const current = await supervisor.ok("/applications/" + app.id);
-  const results = await Promise.all(
-    ["ACCEPTED", "REJECTED"].map((outcome) =>
-      reviewer.request(
-        `/applications/${app.id}/commands`,
-        "POST",
-        { ...body, outcome, expectedVersion: current.version },
-        randomUUID(),
-      ),
-    ),
-  );
-  assert.deepEqual(results.map((r) => r.status).sort(), [200, 409]);
   await time(original);
 });
 
@@ -323,11 +326,27 @@ test("pending and rejected renewals preserve effective expiry; acceptance switch
   assert.ok(JSON.stringify(report).includes("EXPIRED"));
   const overdue = await supervisor.ok("/reports/overdue");
   assert.ok(JSON.stringify(overdue).includes(version.id));
+  const oldIntents = await db.outbox.findMany({
+    where: { subjectType: "DOCUMENT", subjectId: version.id, state: "QUEUED" },
+    select: { id: true },
+  });
+  assert.ok(oldIntents.length > 0);
   await supervisor.ok(`/documents/${pending.id}/review`, "POST", {
     documentVersionId: pending.id,
     outcome: "REJECTED",
     reason: "Rejected renewal retains expired effective lease",
   });
+  assert.equal(
+    await db.outbox.count({
+      where: { id: { in: oldIntents.map((o) => o.id) }, state: "QUEUED" },
+    }),
+    oldIntents.length,
+  );
+  assert.ok(
+    await db.escalation.count({
+      where: { subjectId: version.id, state: "OPEN" },
+    }),
+  );
   subjects = await deadlineSubjects({ id: app.id }, await clock());
   assert.ok(subjects.some((s) => s.id === version.id));
   const next = await institution.upload(app.id, doc.documentId);
@@ -1127,4 +1146,161 @@ test("authenticated mixed grants preserve per-case internal visibility and scope
     await reader.cancel();
     controller.abort();
   }
+});
+
+test("acceptance atomically resolves missing-acceptance alerts and a reviewed version cannot be rewritten", async () => {
+  await time(original);
+  const { app, version } = await prepared();
+  const doc = await db.documentVersion.findUniqueOrThrow({
+    where: { id: version.id },
+  });
+  await time(new Date(+original + 8 * 86400000));
+  await scan();
+  assert.ok(
+    await db.outbox.count({
+      where: {
+        subjectType: "DOCUMENT_REVIEW",
+        subjectId: doc.documentId,
+        state: "QUEUED",
+      },
+    }),
+  );
+  await reviewer.command(app.id, "review-document", {
+    documentVersionId: version.id,
+    outcome: "ACCEPTED",
+  });
+  assert.equal(
+    await db.outbox.count({
+      where: {
+        subjectType: "DOCUMENT_REVIEW",
+        subjectId: doc.documentId,
+        state: "QUEUED",
+      },
+    }),
+    0,
+  );
+  assert.equal(
+    await db.escalation.count({
+      where: {
+        subjectType: "DOCUMENT_REVIEW",
+        subjectId: doc.documentId,
+        state: { in: ["OPEN", "UNASSIGNED"] },
+      },
+    }),
+    0,
+  );
+  assert.equal(
+    (
+      await supervisor.request(`/documents/${version.id}/review`, "POST", {
+        outcome: "REJECTED",
+        reason: "Cannot replace an immutable prior verification",
+      })
+    ).status,
+    409,
+  );
+  const review = await db.documentReview.findFirstOrThrow({
+    where: { versionId: version.id },
+  });
+  await assert.rejects(
+    db.documentReview.update({
+      where: { id: review.id },
+      data: { outcome: "REJECTED" },
+    }),
+  );
+  assert.equal(
+    (await db.documentVersion.findUniqueOrThrow({ where: { id: version.id } }))
+      .reviewState,
+    "ACCEPTED",
+  );
+  await time(original);
+});
+
+test("reasoned visit cancellation atomically closes reminders, releases reservations and restores scheduling monitoring", async () => {
+  await time(original);
+  const app = await institution.create("Only EVC");
+  await institution.upload(app.id);
+  await institution.command(app.id, "submit");
+  const before = await db.application.findUniqueOrThrow({
+    where: { id: app.id },
+  });
+  const latest = await db.reservation.findFirst({
+    where: { active: true },
+    orderBy: { endAt: "desc" },
+  });
+  const start = new Date(
+      Math.max(
+        +original + 3 * 86400000,
+        +(latest?.endAt ?? original) + 86400000,
+      ),
+    ),
+    end = new Date(+start + 3600000);
+  const visit = await supervisor.ok(`/applications/${app.id}/visits`, "POST", {
+    mode: "ONLINE",
+    startAt: start.toISOString(),
+    endAt: end.toISOString(),
+    participants: [actor("committee.evc").id],
+    metadata: "Fictional cancellation fixture",
+    reason: "Coordinated appointment for cancellation regression",
+  });
+  await time(new Date(+start + 1000));
+  await scan();
+  assert.ok(
+    await db.outbox.count({
+      where: { subjectType: "VISIT", subjectId: visit.id, state: "QUEUED" },
+    }),
+  );
+  assert.equal(
+    (
+      await authority.request(`/visits/${visit.id}/cancel`, "POST", {
+        reason: "Authority role alone cannot schedule/cancel visits",
+      })
+    ).status,
+    403,
+  );
+  await supervisor.ok(`/visits/${visit.id}/cancel`, "POST", {
+    reason: "Committee availability changed; retain appointment history",
+  });
+  assert.equal(
+    (await db.visit.findUniqueOrThrow({ where: { id: visit.id } })).state,
+    "CANCELLED",
+  );
+  assert.equal(
+    await db.reservation.count({ where: { visitId: visit.id, active: true } }),
+    0,
+  );
+  assert.equal(
+    await db.outbox.count({
+      where: { subjectType: "VISIT", subjectId: visit.id, state: "QUEUED" },
+    }),
+    0,
+  );
+  assert.equal(
+    await db.escalation.count({
+      where: {
+        subjectType: "VISIT",
+        subjectId: visit.id,
+        state: { in: ["OPEN", "UNASSIGNED"] },
+      },
+    }),
+    0,
+  );
+  const after = await db.application.findUniqueOrThrow({
+    where: { id: app.id },
+  });
+  assert.equal(after.deadlineRevision, before.deadlineRevision + 1);
+  assert.equal(+after.dueAt!, +before.dueAt!);
+  assert.ok(
+    (await deadlineSubjects({ id: app.id }, await clock())).some(
+      (s) => s.type === "APPLICATION",
+    ),
+  );
+  assert.equal(
+    (
+      await supervisor.request(`/visits/${visit.id}/cancel`, "POST", {
+        reason: "Duplicate cancellation cannot change deadline again",
+      })
+    ).status,
+    409,
+  );
+  await time(original);
 });

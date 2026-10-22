@@ -831,8 +831,16 @@ app.post(
             hash: createHash("sha256").update(bytes).digest("hex"),
             issuer: metadata.issuer,
             validUntil,
+            createdAt: await clock(tx),
           },
         });
+        await invalidateDeadline(
+          tx,
+          id,
+          "DOCUMENT_REVIEW",
+          doc.id,
+          "New submission revises its missing-acceptance review deadline; existing effective expiry remains monitored",
+        );
         const updated = await tx.application.update({
           where: { id },
           data: { version: { increment: 1 } },
@@ -968,6 +976,10 @@ app.post("/api/documents/:id/review", async (req, res) => {
         v.id,
       "Superseded version cannot become current",
     );
+    ensure(
+      v.reviewState === "PENDING",
+      "This immutable version already has a review decision; upload a new version for another verification",
+    );
     await tx.documentReview.create({
       data: { versionId: v.id, actorId: a.id, ...c },
     });
@@ -975,15 +987,25 @@ app.post("/api/documents/:id/review", async (req, res) => {
       where: { id: v.id },
       data: { reviewState: c.outcome },
     });
-    for (const version of record.documents.find((d) => d.id === v.documentId)!
-      .versions)
+    if (c.outcome === "ACCEPTED") {
+      const previous = record.documents.find((d) => d.id === v.documentId)!
+        .compliance.effective;
+      if (previous)
+        await invalidateDeadline(
+          tx,
+          record.id,
+          "DOCUMENT",
+          previous.id,
+          "Authorized accepted renewal replaced the previous effective version",
+        );
       await invalidateDeadline(
         tx,
         record.id,
-        "DOCUMENT",
-        version.id,
-        "Authorized renewal review changed effective compliance",
+        "DOCUMENT_REVIEW",
+        v.documentId,
+        "Accepted renewal resolves the missing-acceptance review deadline",
       );
+    }
     const updated = await tx.application.update({
       where: { id: record.id },
       data: { version: { increment: 1 } },
@@ -1198,6 +1220,39 @@ app.post("/api/applications/:id/migrate-policy", async (req, res) => {
       record.id,
       "Authorized policy migration; due time preserved, policy/deadline revision changed",
     );
+    for (const document of record.documents) {
+      await invalidateDeadline(
+        tx,
+        record.id,
+        "DOCUMENT_REVIEW",
+        document.id,
+        "Authorized policy migration superseded prior-policy reminder work",
+      );
+      for (const version of document.versions)
+        await invalidateDeadline(
+          tx,
+          record.id,
+          "DOCUMENT",
+          version.id,
+          "Authorized policy migration superseded prior-policy reminder work",
+        );
+    }
+    for (const obligation of record.obligations)
+      await invalidateDeadline(
+        tx,
+        record.id,
+        "OBLIGATION",
+        obligation.id,
+        "Authorized policy migration superseded prior-policy reminder work",
+      );
+    for (const visit of record.visits)
+      await invalidateDeadline(
+        tx,
+        record.id,
+        "VISIT",
+        visit.id,
+        "Authorized policy migration superseded prior-policy reminder work",
+      );
     await audit(
       tx,
       a,

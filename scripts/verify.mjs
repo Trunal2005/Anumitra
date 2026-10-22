@@ -92,6 +92,7 @@ async function ready(url) {
   throw new Error("Service did not become ready: " + url);
 }
 const report = {
+  arguments: process.argv.slice(2),
   source: sourceState(),
   status: "RUNNING",
   startedAt: new Date(),
@@ -128,12 +129,21 @@ try {
         "tsx",
         "--test",
         "--test-concurrency=1",
+        ...process.argv.filter((argument) =>
+          argument.startsWith("--test-name-pattern="),
+        ),
         "tests/repair.test.ts",
       ],
       runtime,
       "docs/evidence/repair/regressions.tap",
     );
-    report.checks.push("repair regressions passed");
+    report.checks.push(
+      process.argv.some((argument) =>
+        argument.startsWith("--test-name-pattern="),
+      )
+        ? "selected repair regression passed (see raw TAP for skipped tests)"
+        : "repair regressions passed",
+    );
   } else {
     if (!process.argv.includes("--browser-only")) {
       run(

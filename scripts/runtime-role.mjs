@@ -43,7 +43,7 @@ export async function provisionRuntime(ownerUrl, runtimeUrl) {
   );
   await c.query(`GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA pgboss TO ${role}`);
   await c.query(
-    `REVOKE UPDATE,DELETE ON "Audit","Snapshot","Decision","DocumentVersion","DeliveryAttempt" FROM ${role}`,
+    `REVOKE UPDATE,DELETE ON "Audit","Snapshot","Decision","DocumentVersion","DocumentReview","DeliveryAttempt" FROM ${role}`,
   );
   await c.query(
     `GRANT UPDATE("reviewState","scanState") ON "DocumentVersion" TO ${role}`,

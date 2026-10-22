@@ -197,6 +197,7 @@ export async function visitCommand(
     await tx.$queryRaw`SELECT id FROM "Application" WHERE id=${v.applicationId} FOR UPDATE`;
     v = await tx.visit.findUniqueOrThrow({ where: { id } });
     const app = await getApp(a, v.applicationId, tx);
+    ensure(app.state === "EVC", "Visit actions require the current EVC stage");
     const participant = await tx.reservation.count({
       where: { visitId: id, userId: a.id, active: true },
     });
@@ -249,10 +250,44 @@ export async function visitCommand(
         "Visit report reviewed and completed",
       );
       await tx.visit.update({ where: { id }, data: { state: "COMPLETED" } });
+    } else if (operation === "cancel") {
+      ensure(
+        can(a, app, ["SUPERVISOR", "BUREAU"]),
+        "Scoped coordinator required to cancel an appointment",
+        403,
+      );
+      ensure(
+        !["COMPLETED", "CANCELLED"].includes(v.state),
+        "Completed or cancelled visits cannot be cancelled",
+      );
+      await invalidateDeadline(
+        tx,
+        app.id,
+        "VISIT",
+        id,
+        "Coordinator cancelled the appointment with a recorded reason",
+      );
+      await tx.visit.update({
+        where: { id },
+        data: {
+          state: "CANCELLED",
+          reason,
+          deadlineRevision: { increment: 1 },
+        },
+      });
+      await tx.reservation.updateMany({
+        where: { visitId: id },
+        data: { active: false },
+      });
     } else ensure(false, "Unknown visit command", 400);
     const updated = await tx.application.update({
       where: { id: app.id },
-      data: { version: { increment: 1 } },
+      data: {
+        version: { increment: 1 },
+        ...(operation === "cancel"
+          ? { deadlineRevision: { increment: 1 } }
+          : {}),
+      },
     });
     await audit(
       tx,

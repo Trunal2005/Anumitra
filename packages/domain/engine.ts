@@ -62,7 +62,7 @@ export async function getApp(a: Actor, id: string, tx: Tx = db) {
       },
       attempts: { orderBy: { startedAt: "asc" } },
       snapshots: true,
-      recommendations: true,
+      recommendations: { orderBy: [{ createdAt: "desc" }, { id: "desc" }] },
       decisions: true,
       obligations: true,
       visits: { include: { reservations: true } },
@@ -420,6 +420,13 @@ export async function command(
           "Choose review outcome",
           400,
         );
+        const doc = app.documents.find(
+          (d) => d.versions[0]?.id === c.documentVersionId,
+        )!;
+        ensure(
+          doc.versions[0].reviewState === "PENDING",
+          "This immutable version already has a review decision; submit a new version for another verification",
+        );
         await tx.documentReview.create({
           data: {
             versionId: c.documentVersionId!,
@@ -432,17 +439,24 @@ export async function command(
           where: { id: c.documentVersionId },
           data: { reviewState: c.outcome },
         });
-        const doc = app.documents.find((d) =>
-          d.versions.some((v) => v.id === c.documentVersionId),
-        )!;
-        for (const v of doc.versions)
+        if (c.outcome === "ACCEPTED") {
+          const previous = doc.compliance.effective;
+          if (previous)
+            await invalidateDeadline(
+              tx,
+              id,
+              "DOCUMENT",
+              previous.id,
+              "Authorized accepted evidence replaced the prior effective version",
+            );
           await invalidateDeadline(
             tx,
             id,
-            "DOCUMENT",
-            v.id,
-            "Authorized evidence review changed effective compliance",
+            "DOCUMENT_REVIEW",
+            doc.id,
+            "Accepted evidence resolves the missing-acceptance review deadline",
           );
+        }
       }
       if (c.command === "record-recommendation") {
         ensure(

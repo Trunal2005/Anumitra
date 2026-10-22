@@ -2569,6 +2569,15 @@ function Evc({ user }: { user: any }) {
                           Reschedule
                         </button>
                       )}
+                      {coordinator && (
+                        <button
+                          className="ghost"
+                          disabled={busy}
+                          onClick={() => act(v.id, "cancel")}
+                        >
+                          Cancel appointment
+                        </button>
+                      )}
                     </div>
                   </>
                 )}
