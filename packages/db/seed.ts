@@ -18,8 +18,9 @@ export async function seedRun() {
     throw new Error("Demo seeding disabled outside demo mode");
   const runId = randomUUID();
   const now = new Date("2026-10-22T09:00:00Z");
-  const passwordPath = path.resolve(".local/demo-credentials.json");
-  await mkdir(".local", { recursive: true });
+  const localState = process.env.LOCAL_STATE_PATH ?? ".local";
+  const passwordPath = path.resolve(localState, "demo-credentials.json");
+  await mkdir(localState, { recursive: true });
   let password: string;
   try {
     password = JSON.parse(await readFile(passwordPath, "utf8")).password;
@@ -95,7 +96,14 @@ export async function seedRun() {
           name: name!,
           passwordHash,
           grants: {
-            create: { role: role!, institutionId, regionId, committee },
+            create: {
+              role: role!,
+              institutionId,
+              regionId,
+              committee,
+              global: !institutionId && !regionId,
+              canDelegateGlobal: prefix === "bureau",
+            },
           },
         },
       });
@@ -129,6 +137,23 @@ export async function seedRun() {
           stages: routes[i],
           deadlineDays: 14,
           reminderDays: 3,
+          adverseReferral: "AUTHORITY_REVIEW",
+          windows: {
+            SCRUTINY: 14,
+            RESCRUTINY: 7,
+            RESPONSE: 10,
+            EVC_SCHEDULING: 14,
+            EVC_REPORT: 7,
+            SAC: 7,
+            SHC: 7,
+            AUTHORITY: 7,
+            DOCUMENT_REVIEW: 7,
+          },
+          escalationLevels: [
+            { afterDays: 0, role: "SUPERVISOR" },
+            { afterDays: 7, role: "BUREAU" },
+            { afterDays: 14, role: "AUTHORITY" },
+          ],
           label: "DEMO policy; calendar days in Asia/Kolkata",
         },
       },
@@ -269,15 +294,16 @@ export async function seedRun() {
           content: { data: app.data, evidence: [v.id], workflowId: wf.id },
         },
       });
-      await db.stageAttempt.create({
-        data: {
-          applicationId: app.id,
-          stage: state,
-          stageIndex,
-          ownerId: owner,
-          startedAt: app.createdAt,
-        },
-      });
+      if (!["APPROVED", "CONDITIONAL", "REJECTED"].includes(state))
+        await db.stageAttempt.create({
+          data: {
+            applicationId: app.id,
+            stage: state,
+            stageIndex,
+            ownerId: owner,
+            startedAt: app.createdAt,
+          },
+        });
     }
     if (i === 5 || i === 6) {
       const d = await db.deficiency.create({

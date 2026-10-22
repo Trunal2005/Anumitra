@@ -1,3 +1,4 @@
+import "./safety.ts";
 // Run explicitly with: npx tsx --test tests/operations.test.ts
 import "dotenv/config";
 import { test, after } from "node:test";
@@ -194,7 +195,13 @@ test("SMTP failures have bounded attempts and stale obligation revisions are sup
         title: "SMTP failure injection",
       },
     });
-    for (let i = 0; i < 4; i++) await deliver(o.id);
+    for (let i = 0; i < 4; i++) {
+      await db.outbox.update({
+        where: { id: o.id },
+        data: { nextAt: new Date(0) },
+      });
+      await deliver(o.id);
+    }
     const result = await db.outbox.findUniqueOrThrow({
       where: { id: o.id },
       include: { deliveries: true },

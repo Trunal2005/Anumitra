@@ -24,6 +24,7 @@ model User {
   name String
   passwordHash String
   securityVersion Int @default(1)
+  active Boolean @default(true)
   grants Grant[]
   notifications Notification[]
   recovery Recovery[]
@@ -38,12 +39,16 @@ model Grant {
   regionId String?
   bureau String?
   committee String?
+  global Boolean @default(false)
+  canDelegateGlobal Boolean @default(false)
   @@index([userId])
 }
 model Workflow {
   id String @id @default(uuid())
   name String
   version Int
+  revision Int @default(1)
+  publishedHash String?
   state String @default("DRAFT")
   config Json
   source String @default("DEMO: unverified policy configuration")
@@ -68,6 +73,7 @@ model Application {
   version Int @default(1)
   ownerId String?
   dueAt DateTime?
+  deadlineRevision Int @default(1)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   snapshots Snapshot[]
@@ -120,6 +126,9 @@ model Response {
   deficiencyId String
   deficiency Deficiency @relation(fields:[deficiencyId],references:[id])
   text String
+  reviewOutcome String?
+  reviewerId String?
+  reviewedAt DateTime?
   documentVersionId String
   documentVersion DocumentVersion @relation(fields:[documentVersionId],references:[id])
   createdAt DateTime @default(now())
@@ -130,6 +139,7 @@ model Recommendation {
   application Application @relation(fields:[applicationId],references:[id])
   actorId String
   stage String
+  attemptId String?
   outcome String
   reason String
   createdAt DateTime @default(now())
@@ -210,6 +220,8 @@ model Visit {
   metadata String
   reason String
   report String?
+  deadlineRevision Int @default(1)
+  reportDueAt DateTime?
   history Json @default("[]")
   reservations Reservation[]
 }
@@ -266,6 +278,10 @@ model Outbox {
   state String @default("QUEUED")
   jobId String?
   attempts Int @default(0)
+  generation Int @default(1)
+  generationAttempts Int @default(0)
+  recipientRole String?
+  eventKind String @default("EVENT")
   nextAt DateTime @default(now())
   createdAt DateTime @default(now())
   deliveries DeliveryAttempt[]
@@ -277,6 +293,7 @@ model DeliveryAttempt {
   outbox Outbox @relation(fields:[outboxId],references:[id])
   state String
   detail String
+  generation Int @default(1)
   createdAt DateTime @default(now())
 }
 model Notification {
@@ -324,4 +341,27 @@ model PolicySource {
   retrievedAt DateTime
   status String
   applicability String
+}
+model Escalation {
+  id String @id @default(uuid())
+  applicationId String
+  subjectType String
+  subjectId String
+  deadlineRevision String
+  policyId String
+  level Int
+  dueAt DateTime
+  recipientIds Json
+  recipientRole String
+  state String @default("OPEN")
+  logicalKey String @unique
+  reason String
+  createdAt DateTime @default(now())
+  resolvedAt DateTime?
+  @@index([applicationId,state])
+}
+model WorkerHeartbeat {
+  id String @id
+  updatedAt DateTime @updatedAt
+  status String
 }

@@ -1,3 +1,4 @@
+import "./safety.ts";
 import "dotenv/config";
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
@@ -7,9 +8,12 @@ import { db } from "../packages/db/index.ts";
 import { commandSchema, workflowSchema } from "../packages/contracts/index.ts";
 import { csvCell, dateOnlyEnd, hash } from "../packages/domain/engine.ts";
 import { scan, deliver } from "../packages/domain/alerts.ts";
-const base = "http://127.0.0.1:3000/api";
+const base = (process.env.TEST_API_ORIGIN ?? "http://127.0.0.1:3100") + "/api";
 const credentials = JSON.parse(
-  await readFile(".local/demo-credentials.json", "utf8"),
+  await readFile(
+    (process.env.LOCAL_STATE_PATH ?? ".local") + "/demo-credentials.json",
+    "utf8",
+  ),
 );
 class Client {
   cookie = "";
@@ -138,7 +142,10 @@ test("technical user creation, Mailpit recovery, one-time tokens and SSE session
   assert.match(new TextDecoder().decode(first.value), /event: ready/);
   await admin.ok("/recovery", "POST", { email });
   const messages = await (
-    await fetch("http://127.0.0.1:8025/api/v1/messages")
+    await fetch(
+      (process.env.TEST_MAILPIT_ORIGIN ?? "http://127.0.0.1:8125") +
+        "/api/v1/messages",
+    )
   ).json();
   const found = messages.messages.find(
     (m: any) =>
@@ -147,7 +154,11 @@ test("technical user creation, Mailpit recovery, one-time tokens and SSE session
   );
   assert.ok(found, "Recovery captured in Mailpit");
   const message = await (
-    await fetch("http://127.0.0.1:8025/api/v1/message/" + found.ID)
+    await fetch(
+      (process.env.TEST_MAILPIT_ORIGIN ?? "http://127.0.0.1:8125") +
+        "/api/v1/message/" +
+        found.ID,
+    )
   ).json();
   const token = message.Text.match(/recovery=([a-f0-9]{64})/)?.[1];
   assert.ok(token);
@@ -533,7 +544,11 @@ test("published versions are immutable; technical admin cannot publish or decide
     (await admin.request(`/rules/${draft.id}/publish`, "POST", {})).status,
     403,
   );
-  await bureau.ok(`/rules/${draft.id}/publish`, "POST", {});
+  const simulated = await bureau.ok(`/rules/${draft.id}/simulate`, "POST", {});
+  await bureau.ok(`/rules/${draft.id}/publish`, "POST", {
+    expectedRevision: draft.revision,
+    expectedHash: simulated.savedHash,
+  });
   assert.equal(
     (
       await admin.request(`/rules/${draft.id}/save`, "POST", {

@@ -1,101 +1,189 @@
 import { db } from "../db/index.ts";
 import { audit, clock, getApp, notify, runId } from "./engine.ts";
 import { transport } from "./mail.ts";
+import { deadlineSubjects } from "./deadlines.ts";
+import { resolveRecipients } from "./recipients.ts";
 import { workflowSchema } from "../contracts/index.ts";
 export async function scan() {
   const now = await clock();
-  const apps = await db.application.findMany({
-    where: { runId: await runId() },
-    include: {
-      workflow: true,
-      obligations: true,
-      documents: {
-        include: { versions: { orderBy: { number: "desc" }, take: 1 } },
-      },
-      visits: true,
-    },
-  });
-  for (const app of apps) {
-    const config = workflowSchema.parse(app.workflow.config);
-    const horizon = +now + config.reminderDays * 86400000;
-    const subjects = [
-      ...(!["DRAFT", "APPROVED", "REJECTED", "CONDITIONAL"].includes(
-        app.state,
-      ) && app.dueAt
-        ? [
-            {
-              type: "APPLICATION",
-              id: app.id,
-              revision: app.version,
-              due: app.dueAt,
-              label:
-                app.state === "EVC"
-                  ? "EVC scheduling/report"
-                  : "Application task",
-            },
-          ]
-        : []),
-      ...app.obligations
-        .filter((o) => !["ACCEPTED", "WAIVED"].includes(o.state))
-        .map((o) => ({
-          type: "OBLIGATION",
-          id: o.id,
-          revision: o.revision,
-          due: o.dueAt,
-          label: "Undertaking compliance",
-        })),
-      ...app.documents.flatMap((d) =>
-        d.versions[0]?.validUntil
-          ? [
-              {
-                type: "DOCUMENT",
-                id: d.versions[0].id,
-                revision: d.versions[0].number,
-                due: d.versions[0].validUntil!,
-                label: "Document renewal",
-              },
-            ]
-          : [],
-      ),
-      ...app.visits
-        .filter((v) => !["COMPLETED", "CANCELLED"].includes(v.state))
-        .map((v) => ({
-          type: "VISIT",
-          id: v.id,
-          revision: +v.startAt,
-          due: v.state === "REPORT_PENDING" ? v.endAt : v.startAt,
-          label: "EVC appointment",
-        })),
-    ];
-    for (const s of subjects) {
-      if (+s.due > horizon) continue;
-      if (
-        +s.due < +now &&
-        +now < +s.due + (config.escalationDays ?? 0) * 86400000
-      )
-        continue;
-      const level = +s.due < +now ? "OVERDUE_ESCALATION" : "UPCOMING";
-      await db.$transaction(async (tx) => {
-        const key = `${s.type}:${s.id}:${s.revision}:${level}`;
+  const currentRun = await runId();
+  const subjects = await deadlineSubjects({ runId: currentRun }, now);
+  const live = new Set(subjects.map((s) => `${s.type}:${s.id}:${s.revision}`));
+  for (const subject of subjects) {
+    const horizon = +now + subject.policy.reminderDays * 86400000;
+    if (+subject.due > horizon) continue;
+    await db.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM "Application" WHERE id=${subject.applicationId} FOR UPDATE`;
+      const current = (
+        await deadlineSubjects({ id: subject.applicationId }, now, tx)
+      ).find(
+        (s) =>
+          s.type === subject.type &&
+          s.id === subject.id &&
+          s.revision === subject.revision &&
+          s.policyId === subject.policyId &&
+          +s.due === +subject.due,
+      );
+      if (!current) return; // A scan snapshot must not recreate invalidated work after a concurrent lifecycle change.
+      const app = await tx.application.findUniqueOrThrow({
+        where: { id: subject.applicationId },
+        include: { institution: true },
+      });
+      const identity = `policy:${subject.policyId}:${subject.type}:${subject.id}:${subject.revision}`;
+      if (+now <= +subject.due)
         await notify(
           tx,
           app,
-          `${app.reference}: ${level} • ${s.label}`,
-          key,
-          s.type,
-          s.id,
-          s.type === "VISIT" ? 0 : s.revision,
+          `${app.reference}: UPCOMING � ${subject.label}`,
+          `${identity}:UPCOMING`,
+          subject.type,
+          subject.id,
+          subject.revision,
+          subject.policy.recipients ?? ["INSTITUTION", "ASSIGNEE"],
+          "DEADLINE",
         );
+      else {
+        await notify(
+          tx,
+          app,
+          `${app.reference}: OVERDUE � ${subject.label}`,
+          `${identity}:OVERDUE`,
+          subject.type,
+          subject.id,
+          subject.revision,
+          subject.policy.recipients ?? ["INSTITUTION", "ASSIGNEE"],
+          "DEADLINE",
+        );
+        const levels = subject.policy.escalationLevels ?? [
+          {
+            afterDays: subject.policy.escalationDays ?? 0,
+            role: "SUPERVISOR" as const,
+          },
+          {
+            afterDays: (subject.policy.escalationDays ?? 0) + 7,
+            role: "BUREAU" as const,
+          },
+        ];
+        for (let i = 0; i < levels.length; i++) {
+          const level = levels[i];
+          if (+now < +subject.due + level.afterDays * 86400000) continue;
+          const recipients = await resolveRecipients(tx, app, [level.role]);
+          const key = `${currentRun}:${identity}:L${i + 1}`;
+          const old = await tx.escalation.findUnique({
+            where: { logicalKey: key },
+          });
+          let event = old;
+          if (!old) {
+            event = await tx.escalation.create({
+              data: {
+                applicationId: app.id,
+                subjectType: subject.type,
+                subjectId: subject.id,
+                deadlineRevision: String(subject.revision),
+                policyId: subject.policyId,
+                level: i + 1,
+                dueAt: subject.due,
+                recipientIds: recipients.map((r) => r.id),
+                recipientRole: level.role,
+                state: recipients.length ? "OPEN" : "UNASSIGNED",
+                logicalKey: key,
+                reason: recipients.length
+                  ? "Configured designated recipients"
+                  : "No eligible designated official; coordinator action required",
+              },
+            });
+            await audit(
+              tx,
+              null,
+              app,
+              "escalation-created",
+              `Level ${i + 1} ${level.role}; subject ${identity}; recipients ${recipients.map((r) => r.id).join(",") || "UNASSIGNED"}`,
+              app.state,
+              "PUBLIC",
+            );
+          } else if (
+            JSON.stringify(old.recipientIds) !==
+            JSON.stringify(recipients.map((r) => r.id))
+          ) {
+            event = await tx.escalation.update({
+              where: { id: old.id },
+              data: {
+                recipientIds: recipients.map((r) => r.id),
+                state: recipients.length ? "OPEN" : "UNASSIGNED",
+                reason: "Recipient eligibility changed",
+              },
+            });
+            await audit(
+              tx,
+              null,
+              app,
+              "escalation-rerouted",
+              `Level ${i + 1}: recipient eligibility changed`,
+              app.state,
+              "PUBLIC",
+            );
+          }
+          await notify(
+            tx,
+            app,
+            `${app.reference}: ESCALATION L${i + 1} � ${subject.label}`,
+            `${identity}:L${i + 1}`,
+            subject.type,
+            subject.id,
+            subject.revision,
+            [level.role],
+            "DEADLINE",
+          );
+        }
+      }
+    });
+  }
+  const events = await db.escalation.findMany({
+    where: { state: { in: ["OPEN", "UNASSIGNED", "ACKNOWLEDGED"] } },
+  });
+  for (const event of events) {
+    const app = await db.application.findUnique({
+      where: { id: event.applicationId },
+    });
+    if (
+      app?.runId !== currentRun ||
+      app.workflowId !== event.policyId ||
+      !live.has(
+        `${event.subjectType}:${event.subjectId}:${event.deadlineRevision}`,
+      )
+    ) {
+      await db.$transaction(async (tx) => {
+        await tx.escalation.update({
+          where: { id: event.id },
+          data: {
+            state: "RESOLVED",
+            resolvedAt: now,
+            reason:
+              "Deadline subject resolved, revised, superseded or run replaced",
+          },
+        });
+        if (app)
+          await audit(
+            tx,
+            null,
+            app,
+            "escalation-resolved",
+            `Subject ${event.subjectType}:${event.subjectId} revision ${event.deadlineRevision}`,
+            app.state,
+            "PUBLIC",
+          );
       });
     }
   }
 }
-export async function deliver(id: string) {
+export async function deliver(id: string, generation = 1) {
   return db
     .$transaction(
       async (tx) => {
         await tx.$queryRaw`SELECT id FROM "Outbox" WHERE id=${id} FOR UPDATE`;
         const o = await tx.outbox.findUniqueOrThrow({ where: { id } });
+        if (o.state === "FAILED" && o.nextAt > new Date()) return;
+        if (o.generation !== generation) return;
         if (
           [
             "ATTEMPTED",
@@ -118,63 +206,77 @@ export async function deliver(id: string) {
         } catch {
           valid = false;
         }
-        if (o.subjectType === "APPLICATION")
+        if (o.eventKind === "DEADLINE" && app) {
+          const subjects = await deadlineSubjects(
+            { id: app.id },
+            await clock(tx),
+            tx,
+          );
+          const subject = subjects.find(
+            (s) =>
+              s.type === o.subjectType &&
+              s.id === o.subjectId &&
+              s.revision === o.revision,
+          );
+          valid = valid && !!subject;
+          if (subject)
+            valid =
+              valid && o.logicalKey.includes(`policy:${subject.policyId}:`);
+          if (subject) {
+            const now = await clock(tx);
+            const kind = o.logicalKey.includes(":UPCOMING:")
+              ? "UPCOMING"
+              : (o.logicalKey.match(/:L(\d+):/)?.[1] ?? "OVERDUE");
+            valid =
+              valid &&
+              +subject.due <= +now + subject.policy.reminderDays * 86400000;
+            if (kind === "UPCOMING") valid = valid && +now <= +subject.due;
+            else {
+              valid = valid && +now > +subject.due;
+              if (/^\d+$/.test(kind)) {
+                const levels = subject.policy.escalationLevels ?? [
+                  {
+                    afterDays: subject.policy.escalationDays ?? 0,
+                    role: "SUPERVISOR",
+                  },
+                  {
+                    afterDays: (subject.policy.escalationDays ?? 0) + 7,
+                    role: "BUREAU",
+                  },
+                ];
+                valid =
+                  valid &&
+                  !!levels[Number(kind) - 1] &&
+                  +now >=
+                    +subject.due +
+                      levels[Number(kind) - 1].afterDays * 86400000;
+              }
+            }
+            if (o.recipientRole)
+              valid =
+                valid &&
+                (await resolveRecipients(tx, app, [o.recipientRole])).some(
+                  (r) => r.id === user?.id,
+                );
+          }
+        } else if (o.subjectType === "APPLICATION")
           valid = valid && app?.version === o.revision;
-        if (o.subjectType === "APPLICATION") deadline = app?.dueAt ?? null;
-        if (o.subjectType === "OBLIGATION") {
-          const s = await tx.obligation.findUnique({
+        else if (o.subjectType === "OBLIGATION") {
+          const item = await tx.obligation.findUnique({
             where: { id: o.subjectId },
           });
           valid =
             valid &&
-            s?.revision === o.revision &&
-            !["ACCEPTED", "WAIVED"].includes(s?.state ?? "");
-          deadline = s?.dueAt ?? null;
-        }
-        if (o.subjectType === "DOCUMENT") {
-          const s = await tx.documentVersion.findUnique({
-            where: { id: o.subjectId },
-            include: {
-              document: {
-                include: { versions: { orderBy: { number: "desc" }, take: 1 } },
-              },
-            },
-          });
-          valid = valid && s?.document.versions[0]?.id === s?.id;
-          deadline = s?.validUntil ?? null;
-        }
-        if (o.subjectType === "VISIT") {
-          const v = await tx.visit.findUnique({ where: { id: o.subjectId } });
+            item?.revision === o.revision &&
+            !["ACCEPTED", "WAIVED"].includes(item?.state ?? "");
+        } else if (o.subjectType === "DOCUMENT") {
+          const item = app?.documents.find((d) =>
+            d.versions.some((v) => v.id === o.subjectId),
+          );
           valid =
             valid &&
-            !!v &&
-            !["CANCELLED", "COMPLETED"].includes(v.state) &&
-            o.logicalKey.includes(String(+v.startAt));
-          deadline = v
-            ? v.state === "REPORT_PENDING"
-              ? v.endAt
-              : v.startAt
-            : null;
-        }
-        if (app && /UPCOMING|OVERDUE_ESCALATION/.test(o.title)) {
-          const config = workflowSchema.parse(app.workflow.config);
-          const now = await clock(tx);
-          if (!deadline) valid = false;
-          else if (o.title.includes("OVERDUE_ESCALATION"))
-            valid =
-              valid &&
-              +now >= +deadline + (config.escalationDays ?? 0) * 86400000;
-          else
-            valid =
-              valid &&
-              +deadline >= +now &&
-              +deadline <= +now + config.reminderDays * 86400000;
-          if (o.subjectType === "APPLICATION")
-            valid =
-              valid &&
-              !["DRAFT", "APPROVED", "CONDITIONAL", "REJECTED"].includes(
-                app.state,
-              );
+            item?.versions.find((v) => v.reviewState === "ACCEPTED")?.id ===
+              o.subjectId;
         }
         if (!valid) {
           await tx.outbox.update({
@@ -196,17 +298,26 @@ export async function deliver(id: string) {
         // The attempted marker commits before SMTP in a separate transaction below.
         await tx.outbox.update({
           where: { id },
-          data: { state: "ATTEMPTED", attempts: { increment: 1 } },
+          data: {
+            state: "ATTEMPTED",
+            attempts: { increment: 1 },
+            generationAttempts: { increment: 1 },
+          },
         });
         await tx.deliveryAttempt.create({
           data: {
             outboxId: id,
+            generation,
             state: "ATTEMPTED",
             detail:
               "Local SMTP attempt started; acceptance after crash may be ambiguous",
           },
         });
-        return { to: user!.email, title: o.title, attempt: o.attempts + 1 };
+        return {
+          to: user!.email,
+          title: o.title,
+          attempt: o.generationAttempts + 1,
+        };
       },
       { timeout: 20000 },
     )
@@ -219,7 +330,7 @@ export async function deliver(id: string) {
           to: payload.to,
           subject: payload.title,
           text: `${payload.title}\nIndependent student prototype. Open the local Anumitra inbox for authorized details.`,
-          messageId: `<${id}@anumitra.test>`,
+          messageId: `<${id}.g${generation}@anumitra.test>`,
         });
         smtpAccepted = true;
         await db.$transaction(async (tx) => {
@@ -230,6 +341,7 @@ export async function deliver(id: string) {
           await tx.deliveryAttempt.create({
             data: {
               outboxId: id,
+              generation,
               state: "SMTP_ACCEPTED",
               detail: `Captured by local Mailpit: ${r.messageId}`,
             },
@@ -265,6 +377,7 @@ export async function deliver(id: string) {
           db.deliveryAttempt.create({
             data: {
               outboxId: id,
+              generation,
               state: smtpAccepted
                 ? "AMBIGUOUS"
                 : exhausted

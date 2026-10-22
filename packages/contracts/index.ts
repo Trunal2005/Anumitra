@@ -16,6 +16,37 @@ export const workflowSchema = z
     escalationDays: z.number().int().min(0).max(365).optional(),
     calendar: z.literal("CALENDAR_DAYS").optional(),
     timezone: z.literal("Asia/Kolkata").optional(),
+    windows: z
+      .object({
+        SCRUTINY: z.number().int().min(1).max(365).optional(),
+        RESCRUTINY: z.number().int().min(1).max(365).optional(),
+        RESPONSE: z.number().int().min(1).max(365).optional(),
+        EVC_SCHEDULING: z.number().int().min(1).max(365).optional(),
+        EVC_REPORT: z.number().int().min(1).max(365).optional(),
+        SAC: z.number().int().min(1).max(365).optional(),
+        SHC: z.number().int().min(1).max(365).optional(),
+        AUTHORITY: z.number().int().min(1).max(365).optional(),
+        DOCUMENT_REVIEW: z.number().int().min(1).max(365).optional(),
+      })
+      .strict()
+      .optional(),
+    recipients: z
+      .array(z.enum(["INSTITUTION", "ASSIGNEE"]))
+      .min(1)
+      .optional(),
+    escalationLevels: z
+      .array(
+        z
+          .object({
+            afterDays: z.number().int().min(0).max(365),
+            role: z.enum(["SUPERVISOR", "BUREAU", "AUTHORITY"]),
+          })
+          .strict(),
+      )
+      .min(1)
+      .max(5)
+      .optional(),
+    adverseReferral: z.literal("AUTHORITY_REVIEW").optional(),
   })
   .strict()
   .superRefine((c, ctx) => {
@@ -32,6 +63,16 @@ export const workflowSchema = z
         code: "custom",
         message: "Cycles and duplicate stages are not allowed",
       });
+    if (
+      c.escalationLevels?.some(
+        (level, i) =>
+          i > 0 && level.afterDays < c.escalationLevels![i - 1].afterDays,
+      )
+    )
+      ctx.addIssue({
+        code: "custom",
+        message: "Escalation levels must be ordered by delay",
+      });
   });
 export type WorkflowConfig = z.infer<typeof workflowSchema>;
 export const commandSchema = z
@@ -47,10 +88,12 @@ export const commandSchema = z
       "return-with-reason",
       "record-recommendation",
       "record-authorized-decision",
+      "refer-adverse",
     ]),
     expectedVersion: z.number().int().positive(),
     reason: z.string().max(4000).default(""),
     item: z.string().max(100).optional(),
+    items: z.array(z.string().min(1).max(100)).min(1).max(20).optional(),
     deficiencyId: z.string().optional(),
     documentVersionId: z.string().optional(),
     ownerId: z.string().optional(),

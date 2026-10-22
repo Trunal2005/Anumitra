@@ -9,6 +9,9 @@ import {
   getApp,
   notify,
 } from "./engine.ts";
+import { eligible } from "./permissions.ts";
+import { workflowSchema } from "../contracts/index.ts";
+import { invalidateDeadline } from "./invalidation.ts";
 const visitSchema = z.object({
   mode: z.enum(["PHYSICAL", "ONLINE", "HYBRID"]),
   startAt: z.iso.datetime(),
@@ -48,12 +51,7 @@ export async function schedule(a: Actor, id: string, input: unknown) {
           include: { grants: true },
         });
         ensure(
-          u?.grants.some(
-            (g) =>
-              g.role === "COMMITTEE" &&
-              g.committee === "EVC" &&
-              (!g.regionId || g.regionId === app.institution.regionId),
-          ),
+          u && eligible(u, app, "EVC"),
           "Participant lacks EVC grant",
           403,
         );
@@ -80,6 +78,13 @@ export async function schedule(a: Actor, id: string, input: unknown) {
       if (c.visitId) {
         const old = app.visits.find((v) => v.id === c.visitId);
         ensure(old && old.state !== "COMPLETED", "Visit cannot be rescheduled");
+        await invalidateDeadline(
+          tx,
+          id,
+          "VISIT",
+          old.id,
+          "Visit rescheduled with a new deadline revision",
+        );
         await tx.reservation.updateMany({
           where: { visitId: old.id },
           data: { active: false },
@@ -93,6 +98,14 @@ export async function schedule(a: Actor, id: string, input: unknown) {
             mode: c.mode,
             metadata: c.metadata,
             reason: c.reason,
+            deadlineRevision: { increment: 1 },
+            reportDueAt: new Date(
+              +endAt +
+                (workflowSchema.parse(app.workflow.config).windows
+                  ?.EVC_REPORT ??
+                  workflowSchema.parse(app.workflow.config).deadlineDays) *
+                  86400000,
+            ),
             history: [
               ...(old.history as any[]),
               {
@@ -118,8 +131,22 @@ export async function schedule(a: Actor, id: string, input: unknown) {
             endAt,
             metadata: c.metadata,
             reason: c.reason,
+            reportDueAt: new Date(
+              +endAt +
+                (workflowSchema.parse(app.workflow.config).windows
+                  ?.EVC_REPORT ??
+                  workflowSchema.parse(app.workflow.config).deadlineDays) *
+                  86400000,
+            ),
           },
         });
+        await invalidateDeadline(
+          tx,
+          id,
+          "APPLICATION",
+          id,
+          "EVC scheduling completed; monitoring now follows the visit deadline",
+        );
       }
       await tx.reservation.createMany({
         data: c.participants.map((userId) => ({
@@ -165,9 +192,10 @@ export async function visitCommand(
     400,
   );
   return db.$transaction(async (tx) => {
-    const v = await tx.visit.findUnique({ where: { id } });
+    let v = await tx.visit.findUnique({ where: { id } });
     ensure(v, "Visit unavailable", 404);
     await tx.$queryRaw`SELECT id FROM "Application" WHERE id=${v.applicationId} FOR UPDATE`;
+    v = await tx.visit.findUniqueOrThrow({ where: { id } });
     const app = await getApp(a, v.applicationId, tx);
     const participant = await tx.reservation.count({
       where: { visitId: id, userId: a.id, active: true },
@@ -182,7 +210,17 @@ export async function visitCommand(
         ["PROPOSED", "RESCHEDULED"].includes(v.state),
         "Visit must be proposed",
       );
-      await tx.visit.update({ where: { id }, data: { state: "CONFIRMED" } });
+      await invalidateDeadline(
+        tx,
+        app.id,
+        "VISIT",
+        id,
+        "Visit confirmed; report deadline replaces proposed attendance deadline",
+      );
+      await tx.visit.update({
+        where: { id },
+        data: { state: "CONFIRMED", deadlineRevision: { increment: 1 } },
+      });
     } else if (operation === "report") {
       ensure(
         participant &&
@@ -203,6 +241,13 @@ export async function visitCommand(
         403,
       );
       ensure(v.state === "REPORT_PENDING" && v.report, "Report required");
+      await invalidateDeadline(
+        tx,
+        app.id,
+        "VISIT",
+        id,
+        "Visit report reviewed and completed",
+      );
       await tx.visit.update({ where: { id }, data: { state: "COMPLETED" } });
     } else ensure(false, "Unknown visit command", 400);
     const updated = await tx.application.update({

@@ -7,7 +7,19 @@ import {
 } from "@prisma/client";
 import { db, type Tx } from "../db/index.ts";
 import { commandSchema, workflowSchema } from "../contracts/index.ts";
-export type Actor = User & { grants: Grant[] };
+export { type Actor, scope, can } from "./permissions.ts";
+import {
+  type Actor,
+  scope,
+  can,
+  eligible,
+  officialScope,
+} from "./permissions.ts";
+import { transitionAttempt } from "./attempts.ts";
+import { windowDays } from "./deadlines.ts";
+import { resolveRecipients } from "./recipients.ts";
+import { documentCompliance } from "./documents.ts";
+import { invalidateDeadline } from "./invalidation.ts";
 export class DomainError extends Error {
   constructor(
     public status: number,
@@ -33,46 +45,6 @@ export async function runId(tx: Tx = db) {
 export function hasRole(a: Actor, ...roles: string[]) {
   return a.grants.some((g) => roles.includes(g.role));
 }
-export function scope(a: Actor): Prisma.ApplicationWhereInput {
-  const OR: Prisma.ApplicationWhereInput[] = a.grants.map((g) => {
-    const regional = {
-      ...(g.regionId ? { institution: { regionId: g.regionId } } : {}),
-      ...(g.bureau ? { bureau: g.bureau } : {}),
-    };
-    if (g.role === "INSTITUTION")
-      return { institutionId: g.institutionId ?? "DENIED" };
-    if (g.role === "REVIEWER") return { ...regional, ownerId: a.id };
-    if (g.role === "COMMITTEE")
-      return {
-        ...regional,
-        OR: [
-          { visits: { some: { reservations: { some: { userId: a.id } } } } },
-          { ownerId: a.id, state: g.committee ?? "DENIED" },
-        ],
-      };
-    if (["SUPERVISOR", "BUREAU", "AUTHORITY", "AUDITOR"].includes(g.role))
-      return regional;
-    return { id: "DENIED" };
-  });
-  if (OR.some((x) => Object.keys(x).length === 0)) return {};
-  return { OR: OR.length ? OR : [{ id: "DENIED" }] };
-}
-export function can(
-  a: Actor,
-  app: Application & { institution?: { regionId: string } },
-  roles: string[],
-) {
-  return a.grants.some(
-    (g) =>
-      roles.includes(g.role) &&
-      (!g.institutionId || g.institutionId === app.institutionId) &&
-      (!g.regionId || g.regionId === app.institution?.regionId) &&
-      (!g.bureau || g.bureau === app.bureau) &&
-      (g.role !== "REVIEWER" || app.ownerId === a.id) &&
-      (g.role !== "COMMITTEE" ||
-        (g.committee === app.state && app.ownerId === a.id)),
-  );
-}
 export async function getApp(a: Actor, id: string, tx: Tx = db) {
   const app = await tx.application.findFirst({
     where: { id, ...scope(a), runId: await runId(tx) },
@@ -97,15 +69,28 @@ export async function getApp(a: Actor, id: string, tx: Tx = db) {
     },
   });
   ensure(app, "Application unavailable", 404);
-  return hasRole(a, "INSTITUTION")
-    ? {
-        ...app,
-        documents: app.documents.map((d) => ({
-          ...d,
-          versions: d.versions.slice(0, 1),
-        })),
-      }
-    : app;
+  const asOf = await clock(tx);
+  const institutionOnly = !(await tx.application.count({
+    where: { id, ...officialScope(a) },
+  }));
+  return {
+    ...app,
+    institutionView: institutionOnly,
+    documents: app.documents.map((d) => {
+      const compliance = documentCompliance(d.versions, asOf);
+      return {
+        ...d,
+        compliance,
+        versions: institutionOnly
+          ? d.versions.filter(
+              (v) =>
+                v.id === compliance.submitted?.id ||
+                v.id === compliance.effective?.id,
+            )
+          : d.versions,
+      };
+    }),
+  };
 }
 export async function audit(
   tx: Tx,
@@ -146,18 +131,21 @@ export async function notify(
   subjectType = "APPLICATION",
   subjectId = app.id,
   revision = app.version,
+  roles: string[] = ["INSTITUTION", "ASSIGNEE", "SUPERVISOR"],
+  eventKind = "EVENT",
 ) {
-  const actors = await tx.user.findMany({ include: { grants: true } });
-  for (const recipient of actors) {
-    const match = await tx.application.count({
-      where: { id: app.id, ...scope(recipient) },
-    });
-    if (!match) continue;
+  const caseRecord = await tx.application.findUniqueOrThrow({
+    where: { id: app.id },
+    include: { institution: true },
+  });
+  for (const recipient of await resolveRecipients(tx, caseRecord, roles)) {
     await tx.outbox.upsert({
       where: { logicalKey: `${app.runId}:${key}:${recipient.id}` },
       create: {
         applicationId: app.id,
         recipientId: recipient.id,
+        recipientRole: recipient.role,
+        eventKind,
         logicalKey: `${app.runId}:${key}:${recipient.id}`,
         revision,
         subjectType,
@@ -190,6 +178,11 @@ export function actions(a: Actor, app: Awaited<ReturnType<typeof getApp>>) {
     can(a, app, ["COMMITTEE", "SUPERVISOR", "BUREAU"])
   )
     allowed.push("record-recommendation", "complete-stage");
+  if (
+    ["SCRUTINY", "RESCRUTINY", "AWAITING_RESPONSE"].includes(app.state) &&
+    can(a, app, ["REVIEWER", "SUPERVISOR", "BUREAU"])
+  )
+    allowed.push("refer-adverse");
   if (app.state === "AUTHORITY" && can(a, app, ["AUTHORITY"]))
     allowed.push("record-authorized-decision");
   if (!app.documents.some((d) => d.versions.length))
@@ -202,7 +195,50 @@ export function actions(a: Actor, app: Awaited<ReturnType<typeof getApp>>) {
     blockers.push("Current evidence versions require official verification.");
   if (app.state === "EVC" && !app.visits.some((v) => v.state === "COMPLETED"))
     blockers.push("EVC requires a completed visit and reviewed report.");
-  return { allowedActions: allowed, blockingReasons: blockers };
+  const reviewed =
+    app.documents.length > 0 &&
+    app.documents.every((d) =>
+      ["ACCEPTED", "REJECTED"].includes(d.versions[0]?.reviewState),
+    );
+  const commandBlockingReasons: Record<string, Record<string, string[]>> = {
+    "record-authorized-decision": {
+      REJECTED: reviewed
+        ? []
+        : [
+            "A negative decision requires every current evidence version to have been reviewed.",
+          ],
+      APPROVED: blockers,
+      CONDITIONAL: [
+        ...blockers,
+        "Enter the decision condition and a future undertaking deadline.",
+      ],
+    },
+    "refer-adverse": {
+      ACCEPTED: reviewed
+        ? [
+            "Requires a recorded adverse document or response review and an enabled pinned referral policy.",
+          ]
+        : ["Review all current evidence before an adverse referral."],
+    },
+    "submit-response": {
+      ACCEPTED: [
+        "Choose an open deficiency and the current evidence supporting this response.",
+      ],
+    },
+    "verify-response": {
+      ACCEPTED: [
+        "Choose a responded deficiency; acceptance resolves this item.",
+      ],
+      REJECTED: [
+        "Choose a responded deficiency; rejection opens a new institutional waiting interval.",
+      ],
+    },
+  };
+  return {
+    allowedActions: allowed,
+    blockingReasons: blockers,
+    commandBlockingReasons,
+  };
 }
 export async function command(
   a: Actor,
@@ -288,44 +324,32 @@ export async function command(
         });
         ensure(assignee, "Assignee unavailable", 400);
         ensure(
-          assignee.grants.some(
-            (g) =>
-              (!g.regionId || g.regionId === app.institution.regionId) &&
-              (["REVIEWER", "SUPERVISOR", "AUTHORITY"].includes(g.role) ||
-                (g.role === "COMMITTEE" && g.committee === app.state)),
-          ),
-          "Assignee lacks applicable grant",
+          eligible(assignee, app),
+          "Assignee lacks the current stage and complete case scope",
           403,
         );
         ownerId = c.ownerId;
-        await tx.stageAttempt.updateMany({
-          where: { applicationId: id, state: "OPEN" },
-          data: { ownerId },
-        });
       }
       if (
         c.command === "raise-deficiency" ||
         c.command === "return-with-reason"
       ) {
-        ensure(c.item?.trim(), "Checklist item is required", 400);
+        const items = c.items ?? (c.item?.trim() ? [c.item] : []);
+        ensure(
+          items.length && new Set(items).size === items.length,
+          "Distinct checklist items are required",
+          400,
+        );
         const round = Math.max(0, ...app.deficiencies.map((d) => d.round)) + 1;
-        await tx.deficiency.create({
-          data: { applicationId: id, round, item: c.item!, reason: c.reason },
+        await tx.deficiency.createMany({
+          data: items.map((item) => ({
+            applicationId: id,
+            round,
+            item,
+            reason: c.reason,
+          })),
         });
         state = "AWAITING_RESPONSE";
-        await tx.stageAttempt.updateMany({
-          where: { applicationId: id, state: "OPEN" },
-          data: { state: "RETURNED", endedAt: now },
-        });
-        await tx.stageAttempt.create({
-          data: {
-            applicationId: id,
-            stage: "AWAITING_RESPONSE",
-            stageIndex,
-            state: "OPEN",
-            startedAt: now,
-          },
-        });
       }
       if (c.command === "submit-response") {
         const d = app.deficiencies.find(
@@ -376,6 +400,14 @@ export async function command(
           where: { id: d.id },
           data: { state: c.outcome === "ACCEPTED" ? "ACCEPTED" : "OPEN" },
         });
+        const response = [...d.responses].sort(
+          (a, b) => +b.createdAt - +a.createdAt,
+        )[0];
+        ensure(response, "Response evidence is missing");
+        await tx.response.update({
+          where: { id: response.id },
+          data: { reviewOutcome: c.outcome, reviewerId: a.id, reviewedAt: now },
+        });
         if (c.outcome === "REJECTED") state = "AWAITING_RESPONSE";
       }
       if (c.command === "review-document") {
@@ -400,9 +432,23 @@ export async function command(
           where: { id: c.documentVersionId },
           data: { reviewState: c.outcome },
         });
+        const doc = app.documents.find((d) =>
+          d.versions.some((v) => v.id === c.documentVersionId),
+        )!;
+        for (const v of doc.versions)
+          await invalidateDeadline(
+            tx,
+            id,
+            "DOCUMENT",
+            v.id,
+            "Authorized evidence review changed effective compliance",
+          );
       }
       if (c.command === "record-recommendation") {
-        ensure(c.outcome, "Outcome required");
+        ensure(
+          ["ACCEPTED", "REJECTED"].includes(c.outcome ?? ""),
+          "Recommendation must explicitly accept or reject",
+        );
         if (app.state === "EVC")
           ensure(
             app.visits.some((v) => v.state === "COMPLETED"),
@@ -413,26 +459,41 @@ export async function command(
             applicationId: id,
             actorId: a.id,
             stage: app.state,
+            attemptId: app.attempts.find((t) => t.state === "OPEN")?.id,
             outcome: c.outcome!,
             reason: c.reason,
           },
         });
       }
       if (c.command === "complete-stage") {
+        const currentRecommendation = app.recommendations.find(
+          (r) =>
+            r.attemptId === app.attempts.find((t) => t.state === "OPEN")?.id,
+        );
+        const negative =
+          ["EVC", "SAC", "SHC"].includes(app.state) &&
+          currentRecommendation?.outcome === "REJECTED";
         ensure(
-          !app.deficiencies.some((d) => d.state !== "ACCEPTED"),
-          "Resolve every open deficiency",
+          negative || !app.deficiencies.some((d) => d.state !== "ACCEPTED"),
+          "Resolve every open deficiency or use an explicit adverse referral",
         );
         ensure(
           app.documents.length &&
-            app.documents.every(
-              (d) => d.versions[0]?.reviewState === "ACCEPTED",
+            app.documents.every((d) =>
+              negative
+                ? ["ACCEPTED", "REJECTED"].includes(d.versions[0]?.reviewState)
+                : d.versions[0]?.reviewState === "ACCEPTED",
             ),
-          "Verify all current evidence before progressing",
+          "Review current evidence before progressing; positive paths require acceptance",
         );
         if (["EVC", "SAC", "SHC"].includes(app.state))
           ensure(
-            app.recommendations.some((r) => r.stage === app.state),
+            app.recommendations.some(
+              (r) =>
+                r.stage === app.state &&
+                r.attemptId ===
+                  app.attempts.find((t) => t.state === "OPEN")?.id,
+            ),
             "Record a separate recommendation first",
           );
         if (app.state === "EVC")
@@ -443,10 +504,6 @@ export async function command(
         stageIndex++;
         ensure(config.stages[stageIndex], "No next stage configured");
         state = config.stages[stageIndex];
-        await tx.stageAttempt.updateMany({
-          where: { applicationId: id, state: "OPEN" },
-          data: { state: "COMPLETED", endedAt: now },
-        });
       }
       if (c.command === "record-authorized-decision") {
         ensure(
@@ -454,13 +511,23 @@ export async function command(
           "Choose a decision outcome",
           400,
         );
-        ensure(
-          !app.deficiencies.some((d) => d.state !== "ACCEPTED") &&
-            app.documents.every(
-              (d) => d.versions[0]?.reviewState === "ACCEPTED",
-            ),
-          "Evidence verification incomplete",
-        );
+        if (c.outcome === "REJECTED")
+          ensure(
+            app.documents.length &&
+              app.documents.every((d) =>
+                ["ACCEPTED", "REJECTED"].includes(d.versions[0]?.reviewState),
+              ),
+            "A negative decision still requires reviewed evidence",
+          );
+        else
+          ensure(
+            !app.deficiencies.some((d) => d.state !== "ACCEPTED") &&
+              app.documents.length &&
+              app.documents.every(
+                (d) => d.versions[0]?.reviewState === "ACCEPTED",
+              ),
+            "Positive decisions require accepted evidence and resolved deficiencies",
+          );
         const decision = await tx.decision.create({
           data: {
             applicationId: id,
@@ -472,6 +539,15 @@ export async function command(
               evidence,
               workflowId: app.workflowId,
               recommendations: app.recommendations.map((r) => r.id),
+              reviewedEvidence: app.documents.map((d) => ({
+                versionId: d.versions[0]?.id,
+                outcome: d.versions[0]?.reviewState,
+              })),
+              recommendationOutcomes: app.recommendations.map((r) => ({
+                id: r.id,
+                attemptId: r.attemptId,
+                outcome: r.outcome,
+              })),
             },
           },
         });
@@ -503,62 +579,74 @@ export async function command(
           });
         }
         state = c.outcome!;
-        await tx.stageAttempt.updateMany({
-          where: { applicationId: id, state: "OPEN" },
-          data: { state: "COMPLETED", endedAt: now },
+      }
+      if (c.command === "refer-adverse") {
+        ensure(
+          config.adverseReferral === "AUTHORITY_REVIEW",
+          "The pinned DEMO policy does not permit an adverse referral",
+        );
+        ensure(
+          app.documents.length &&
+            app.documents.every((d) =>
+              ["ACCEPTED", "REJECTED"].includes(d.versions[0]?.reviewState),
+            ),
+          "An adverse referral requires current reviewed evidence",
+        );
+        ensure(
+          app.documents.some(
+            (d) => d.versions[0]?.reviewState === "REJECTED",
+          ) ||
+            app.deficiencies.some((d) =>
+              d.responses.some((r) => r.reviewOutcome === "REJECTED"),
+            ),
+          "Record a reasoned adverse verification before referring",
+        );
+        await tx.recommendation.create({
+          data: {
+            applicationId: id,
+            actorId: a.id,
+            stage: app.state,
+            attemptId: app.attempts.find((t) => t.state === "OPEN")?.id,
+            outcome: "REJECTED",
+            reason: c.reason,
+          },
         });
+        stageIndex = config.stages.indexOf("AUTHORITY");
+        state = "AUTHORITY";
       }
       if (state !== app.state && config.stages.includes(state as any)) {
-        const nextRole =
-          state === "AUTHORITY"
-            ? "AUTHORITY"
-            : ["EVC", "SAC", "SHC"].includes(state)
-              ? "COMMITTEE"
-              : "REVIEWER";
-        const next = await tx.user.findFirst({
-          where: {
-            grants: {
-              some: {
-                role: nextRole,
-                OR: [
-                  { regionId: app.institution.regionId },
-                  { regionId: null },
-                ],
-                ...(nextRole === "COMMITTEE" ? { committee: state } : {}),
-              },
-            },
-          },
+        const candidates = await tx.user.findMany({
+          where: { active: true },
+          include: { grants: true },
+          orderBy: { id: "asc" },
         });
-        ownerId = next?.id ?? null;
-        await tx.stageAttempt.create({
-          data: {
-            applicationId: id,
-            stage: state,
-            stageIndex,
-            ownerId,
-            startedAt: now,
-          },
-        });
+        ownerId =
+          candidates
+            .filter((u) => eligible(u, { ...app, state }, state))
+            .sort((a, b) => {
+              const score = (u: Actor) =>
+                Math.min(
+                  ...u.grants
+                    .filter((g) =>
+                      ["REVIEWER", "SUPERVISOR", "BUREAU"].includes(g.role),
+                    )
+                    .map((g) =>
+                      ["REVIEWER", "SUPERVISOR", "BUREAU"].indexOf(g.role),
+                    ),
+                  9,
+                );
+              return score(a) - score(b) || a.id.localeCompare(b.id);
+            })[0]?.id ?? null;
       }
-      if (state === "RESCRUTINY" && state !== app.state) {
-        await tx.stageAttempt.updateMany({
-          where: {
-            applicationId: id,
-            stage: "AWAITING_RESPONSE",
-            state: "OPEN",
-          },
-          data: { state: "COMPLETED", endedAt: now },
-        });
-        await tx.stageAttempt.create({
-          data: {
-            applicationId: id,
-            stage: state,
-            stageIndex,
-            ownerId,
-            startedAt: now,
-          },
-        });
-      }
+      await transitionAttempt(tx, app, { state, stageIndex, ownerId }, now);
+      if (state !== app.state)
+        await invalidateDeadline(
+          tx,
+          id,
+          "APPLICATION",
+          id,
+          `Stage changed ${app.state} to ${state}; previous deadline resolved`,
+        );
       const updated = await tx.application.update({
         where: { id },
         data: {
@@ -566,8 +654,11 @@ export async function command(
           stageIndex,
           ownerId,
           version: { increment: 1 },
-          ...(c.command === "submit" || c.command === "complete-stage"
-            ? { dueAt: new Date(+now + config.deadlineDays * 86400000) }
+          ...(state !== app.state
+            ? { deadlineRevision: { increment: 1 } }
+            : {}),
+          ...(state !== app.state
+            ? { dueAt: new Date(+now + windowDays(config, state) * 86400000) }
             : {}),
         },
       });
@@ -603,5 +694,15 @@ export const csvCell = (v: unknown) => {
 };
 export function dateOnlyEnd(s: string) {
   ensure(/^\d{4}-\d{2}-\d{2}$/.test(s), "Date must be YYYY-MM-DD", 400);
+  const [year, month, day] = s.split("-").map(Number);
+  const checked = new Date(Date.UTC(year, month - 1, day));
+  ensure(
+    year >= 1900 &&
+      checked.getUTCFullYear() === year &&
+      checked.getUTCMonth() === month - 1 &&
+      checked.getUTCDate() === day,
+    "Impossible calendar date",
+    400,
+  );
   return new Date(`${s}T23:59:59.999+05:30`);
 }

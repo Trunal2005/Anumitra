@@ -1928,9 +1928,15 @@ function ApplicationWorkspace({ user }: { user: any }) {
             </div>
             <div className="case-brief">
               <strong>Why blocked?</strong>
-              {r.blockingReasons.length ? (
+              {(
+                r.commandBlockingReasons?.[effectiveCmd]?.[outcome] ??
+                r.blockingReasons
+              ).length ? (
                 <ul>
-                  {r.blockingReasons.map((b: string) => (
+                  {(
+                    r.commandBlockingReasons?.[effectiveCmd]?.[outcome] ??
+                    r.blockingReasons
+                  ).map((b: string) => (
                     <li key={b}>{b}</li>
                   ))}
                 </ul>
@@ -1946,7 +1952,8 @@ function ApplicationWorkspace({ user }: { user: any }) {
                   ? "You are assigned."
                   : r.state === "AWAITING_RESPONSE"
                     ? "Institution representative"
-                    : label(r.state) + " assigned actor"}
+                    : (r.brief.ownerName ??
+                      "Unassigned — scoped coordinator must assign an eligible official")}
               </p>
               <strong>What is due?</strong>
               <p>{date(r.dueAt)} IST</p>
@@ -1991,7 +1998,7 @@ function ApplicationWorkspace({ user }: { user: any }) {
                       onChange={(e) => setOwnerId(e.target.value)}
                     >
                       <option value="">Select eligible user</option>
-                      {options.data?.users.map((u: any) => (
+                      {r.assignees?.map((u: any) => (
                         <option value={u.id} key={u.id}>
                           {u.name}
                         </option>
@@ -2855,9 +2862,7 @@ function Documents({ user }: { user: any }) {
                 (!params.get("review") ||
                   d.versions[0]?.reviewState === params.get("review")) &&
                 (!params.get("validity") ||
-                  (d.versions[0]?.validUntil &&
-                    +new Date(d.versions[0].validUntil) <
-                      +new Date(now) + 7 * 86400000)),
+                  ["EXPIRED", "EXPIRING"].includes(d.compliance?.status)),
             )
             .filter((d: any) =>
               (d.title + " " + d.application.reference)
@@ -2866,13 +2871,7 @@ function Documents({ user }: { user: any }) {
             )
             .map((d: any) => {
               const v = d.versions[0];
-              const validity = v?.validUntil
-                ? new Date(v.validUntil) < new Date(now)
-                  ? "EXPIRED"
-                  : +new Date(v.validUntil) < +new Date(now) + 7 * 86400000
-                    ? "EXPIRING"
-                    : "CURRENT"
-                : "NO EXPIRY RECORDED";
+              const validity = d.compliance?.status ?? "NO_ACCEPTED_VERSION";
               return (
                 <div className="document-card" key={d.id}>
                   <div className="section-heading">
@@ -2893,12 +2892,17 @@ function Documents({ user }: { user: any }) {
                     <Badge>{v?.reviewState ?? "No file"}</Badge>
                     <Badge>{v?.scanState}</Badge>
                     <span className="mono">
-                      Valid through {date(v?.validUntil)} IST
+                      Effective v{d.compliance?.effective?.number ?? "—"} ·
+                      valid through {date(d.compliance?.effective?.validUntil)}{" "}
+                      IST
                     </span>
                   </div>
                   <div className="lineage-row">
                     <span>
-                      Current v{v?.number} · {v?.mime}
+                      Newest submission v{v?.number} · {v?.mime}
+                      {d.compliance?.renewalPending
+                        ? " · Renewal pending verification"
+                        : ""}
                     </span>
                     <a
                       href={`/api/documents/${v?.id}/content`}
@@ -2918,8 +2922,13 @@ function Documents({ user }: { user: any }) {
                     {d.versions.map((x: any, i: number) => (
                       <div key={x.id} className="version-row">
                         <strong>
-                          v{x.number} · {i === 0 ? "Current" : "Superseded"} ·{" "}
-                          {x.reviewState}
+                          v{x.number} ·{" "}
+                          {x.id === d.compliance?.effective?.id
+                            ? "Effective"
+                            : i === 0
+                              ? "Newest submission"
+                              : "History"}{" "}
+                          · {x.reviewState}
                         </strong>
                         <code>{x.hash}</code>
                         <small>
@@ -3013,6 +3022,62 @@ function Alerts() {
           retry.
         </p>
         <ErrorBox error={error} />
+        {!!data.data?.escalations?.length && (
+          <details>
+            <summary>
+              Designated escalation events ({data.data.escalations.length})
+            </summary>
+            {data.data.escalations.map((event: any) => (
+              <div className="notification" key={event.id}>
+                <div>
+                  <Link to={"/applications/" + event.applicationId}>
+                    Level {event.level} · {event.recipientRole} · {event.state}
+                  </Link>
+                  <p>
+                    {event.subjectType} · due {date(event.dueAt)} IST ·{" "}
+                    {event.recipientIds.length
+                      ? (event.recipientNames?.join(", ") ??
+                        `${event.recipientIds.length} designated recipient(s)`)
+                      : "Unassigned: no eligible designated official"}
+                  </p>
+                  <small>{event.reason}</small>
+                  {["OPEN", "UNASSIGNED"].includes(event.state) && (
+                    <form
+                      onSubmit={async (e) => {
+                        e.preventDefault();
+                        try {
+                          await post(
+                            "/escalations/" + event.id + "/acknowledge",
+                            {
+                              reason: new FormData(e.currentTarget).get(
+                                "reason",
+                              ),
+                              expectedState: event.state,
+                            },
+                          );
+                          setError(null);
+                          q.invalidateQueries();
+                        } catch (error) {
+                          setError(error);
+                        }
+                      }}
+                    >
+                      <input
+                        name="reason"
+                        aria-label="Escalation acknowledgement reason"
+                        required
+                        minLength={5}
+                      />
+                      <button className="secondary">
+                        Acknowledge escalation
+                      </button>
+                    </form>
+                  )}
+                </div>
+              </div>
+            ))}
+          </details>
+        )}
         {data.isPending ? (
           <Loading />
         ) : data.error ? (
@@ -3072,6 +3137,11 @@ function Alerts() {
                     try {
                       await post("/deliveries/" + d.id + "/retry", {
                         reason: new FormData(e.currentTarget).get("reason"),
+                        expectedGeneration: d.generation,
+                        acknowledgeDuplicate:
+                          new FormData(e.currentTarget).get(
+                            "acknowledgeDuplicate",
+                          ) === "on",
                       });
                       setError(null);
                       q.invalidateQueries();
@@ -3083,6 +3153,17 @@ function Alerts() {
                   <Field title="Authorized retry reason">
                     <input name="reason" required minLength={5} />
                   </Field>
+                  {d.state === "AMBIGUOUS" && (
+                    <label>
+                      <input
+                        type="checkbox"
+                        name="acknowledgeDuplicate"
+                        required
+                      />{" "}
+                      I understand SMTP may already have accepted this message;
+                      retry can send a duplicate.
+                    </label>
+                  )}
                   <button className="secondary">Request retry</button>
                 </form>
               )}
@@ -3277,6 +3358,12 @@ function Rules({ user }: { user: any }) {
     "NEW_INSTITUTION, EXTENSION, CHANGE",
   );
   const [escalationDays, setEscalationDays] = useState(0);
+  const [windows, setWindows] = useState<Record<string, number>>({});
+  const [levels, setLevels] = useState<any[]>([
+    { afterDays: 0, role: "SUPERVISOR" },
+    { afterDays: 7, role: "BUREAU" },
+    { afterDays: 14, role: "AUTHORITY" },
+  ]);
   const [simulation, setSimulation] = useState<any>();
   const [error, setError] = useState<unknown>();
   const [message, setMessage] = useState("");
@@ -3304,6 +3391,10 @@ function Rules({ user }: { user: any }) {
       .map((s) => s.trim())
       .filter(Boolean),
     escalationDays: Number(escalationDays),
+    windows,
+    escalationLevels: levels,
+    adverseReferral: "AUTHORITY_REVIEW",
+    recipients: ["INSTITUTION", "ASSIGNEE"],
     calendar: "CALENDAR_DAYS",
     timezone: "Asia/Kolkata",
   });
@@ -3321,6 +3412,13 @@ function Rules({ user }: { user: any }) {
       ).join(", "),
     );
     setEscalationDays(r.config.escalationDays ?? 0);
+    setWindows(r.config.windows ?? {});
+    setLevels(
+      r.config.escalationLevels ?? [
+        { afterDays: r.config.escalationDays ?? 0, role: "SUPERVISOR" },
+        { afterDays: 7, role: "BUREAU" },
+      ],
+    );
     setSimulation(null);
     setMessage("");
   }
@@ -3334,12 +3432,15 @@ function Rules({ user }: { user: any }) {
               config: config(),
               source,
             })
-          : await post(
-              `/rules/${rule.id}/${operation}`,
-              operation === "save" || operation === "simulate"
+          : await post(`/rules/${rule.id}/${operation}`, {
+              expectedRevision: rule.revision,
+              expectedHash: rule.contentHash,
+              ...(operation === "save" ||
+              operation === "simulate" ||
+              operation === "publish"
                 ? { config: config() }
-                : {},
-            );
+                : {}),
+            });
       if (operation === "simulate") setSimulation(r);
       else {
         setMessage(
@@ -3355,6 +3456,9 @@ function Rules({ user }: { user: any }) {
       setBusy(false);
     }
   }
+  useEffect(() => {
+    if (rule && !selected) choose(rule);
+  }, [rule?.id]);
   return (
     <>
       <Heading
@@ -3459,6 +3563,83 @@ function Rules({ user }: { user: any }) {
               onChange={(e) => setEscalationDays(Number(e.target.value))}
             />
           </Field>
+          <details>
+            <summary>
+              Stage windows and designated escalation hierarchy · DEMO calendar
+              days
+            </summary>
+            <p className="muted">
+              Blank windows use the default deadline. Overdue work remains
+              visible during escalation grace. No statutory holiday calendar is
+              implemented.
+            </p>
+            <div className="filters">
+              {[
+                "SCRUTINY",
+                "RESCRUTINY",
+                "RESPONSE",
+                "EVC_SCHEDULING",
+                "EVC_REPORT",
+                "SAC",
+                "SHC",
+                "AUTHORITY",
+                "DOCUMENT_REVIEW",
+              ].map((stage) => (
+                <Field key={stage} title={label(stage) + " days"}>
+                  <input
+                    type="number"
+                    min={1}
+                    max={365}
+                    value={windows[stage] ?? ""}
+                    placeholder={String(days)}
+                    onChange={(e) => {
+                      const next = { ...windows };
+                      if (e.target.value) next[stage] = Number(e.target.value);
+                      else delete next[stage];
+                      setWindows(next);
+                    }}
+                  />
+                </Field>
+              ))}
+            </div>
+            {levels.map((level, index) => (
+              <div className="filters" key={index}>
+                <Field title={"Level " + (index + 1) + " · days overdue"}>
+                  <input
+                    type="number"
+                    min={0}
+                    max={365}
+                    value={level.afterDays}
+                    onChange={(e) =>
+                      setLevels(
+                        levels.map((x, i) =>
+                          i === index
+                            ? { ...x, afterDays: Number(e.target.value) }
+                            : x,
+                        ),
+                      )
+                    }
+                  />
+                </Field>
+                <Field title="Designated role">
+                  <select
+                    value={level.role}
+                    onChange={(e) =>
+                      setLevels(
+                        levels.map((x, i) =>
+                          i === index ? { ...x, role: e.target.value } : x,
+                        ),
+                      )
+                    }
+                  >
+                    {["SUPERVISOR", "BUREAU", "AUTHORITY"].map((role) => (
+                      <option key={role}>{role}</option>
+                    ))}
+                  </select>
+                </Field>
+              </div>
+            ))}
+          </details>
           <ErrorBox error={error} />
           {message && (
             <p role="status" className="success">
@@ -3837,7 +4018,10 @@ function Admin({ user }: { user: any }) {
             onSubmit={async (e) => {
               e.preventDefault();
               const f = new FormData(e.currentTarget);
-              const body = Object.fromEntries([...f].filter(([, v]) => !!v));
+              const body: any = Object.fromEntries(
+                [...f].filter(([, v]) => !!v),
+              );
+              body.global = f.get("global") === "on";
               const r = await action("/admin/grants", body);
               if (r) setMessage("Grant saved; previous sessions invalidated.");
             }}
@@ -3868,9 +4052,9 @@ function Admin({ user }: { user: any }) {
                 ))}
               </select>
             </Field>
-            <Field title="Region (blank = explicit global)">
+            <Field title="Region restriction">
               <select name="regionId">
-                <option value="">Global</option>
+                <option value="">None</option>
                 {options.data?.regions.map((r: any) => (
                   <option key={r.id} value={r.id}>
                     {r.name}
@@ -3878,7 +4062,7 @@ function Admin({ user }: { user: any }) {
                 ))}
               </select>
             </Field>
-            <Field title="Institution (for institution grants)">
+            <Field title="Institution restriction (required for institution role)">
               <select name="institutionId">
                 <option value="">None</option>
                 {options.data?.institutions.map((r: any) => (
@@ -3896,6 +4080,10 @@ function Admin({ user }: { user: any }) {
                 ))}
               </select>
             </Field>
+            <label>
+              <input name="global" type="checkbox" /> Explicit global scope
+              (leave region and institution blank)
+            </label>
             <button className="secondary stable">Grant role</button>
           </form>
         </Panel>

@@ -10,7 +10,14 @@ import helmet from "helmet";
 import { rateLimit } from "express-rate-limit";
 import bcrypt from "bcryptjs";
 import { randomBytes, randomUUID, createHash } from "node:crypto";
-import { mkdir, readFile, writeFile, access } from "node:fs/promises";
+import {
+  mkdir,
+  readFile,
+  writeFile,
+  access,
+  rename,
+  unlink,
+} from "node:fs/promises";
 import path from "node:path";
 import multer from "multer";
 import PDFDocument from "pdfkit";
@@ -45,6 +52,18 @@ import {
 import { schedule, visitCommand } from "../../../packages/domain/visits.ts";
 import { transport } from "../../../packages/domain/mail.ts";
 import { openapi } from "./openapi.ts";
+import { readiness } from "../../../packages/domain/readiness.ts";
+import { retryDelivery } from "../../../packages/domain/delivery.ts";
+import { ruleOperation } from "../../../packages/domain/rules.ts";
+import { grantRole } from "../../../packages/domain/grants.ts";
+import { invalidateDeadline } from "../../../packages/domain/invalidation.ts";
+import {
+  eligible,
+  grantMatches,
+  officialScope,
+} from "../../../packages/domain/permissions.ts";
+import { documentCompliance } from "../../../packages/domain/documents.ts";
+import { deadlineSubjects } from "../../../packages/domain/deadlines.ts";
 import { ageing } from "../../../packages/domain/ageing.ts";
 declare module "express-session" {
   interface SessionData {
@@ -141,7 +160,7 @@ async function actor(req: Request) {
     include: { grants: true },
   });
   ensure(
-    a && a.securityVersion === req.session.securityVersion,
+    a && a.active && a.securityVersion === req.session.securityVersion,
     "Session expired. Sign in again.",
     401,
   );
@@ -154,15 +173,8 @@ const safeUser = (a: Actor) => ({
   grants: a.grants,
 });
 app.get("/api/health", async (_req, res) => {
-  await db.$queryRaw`SELECT 1`;
-  await mkdir(process.env.STORAGE_PATH ?? "storage/private", {
-    recursive: true,
-  });
-  res.json({
-    status: "ready",
-    product: "Anumitra",
-    integration: "LOCAL_ADAPTER",
-  });
+  const result = await readiness();
+  res.status(result.dataAvailable ? 200 : 503).json(result);
 });
 app.get("/api/session", async (req, res) => {
   let user = null;
@@ -319,7 +331,7 @@ function filters(req: Request, a: Actor): Prisma.ApplicationWhereInput {
     ...(q.institution ? { institutionId: q.institution } : {}),
     ...(q.category ? { category: q.category } : {}),
     ...(q.cycle ? { cycle: q.cycle } : {}),
-    ...(q.owner ? { ownerId: q.owner } : {}),
+    ...(q.owner ? { ownerId: q.owner === "UNASSIGNED" ? null : q.owner } : {}),
     ...(q.from || q.to
       ? {
           createdAt: {
@@ -346,8 +358,16 @@ async function scopedFilter(req: Request, a: Actor) {
       : {}),
     ...(req.query.overdue === "true"
       ? {
-          dueAt: { lt: await clock() },
-          state: { notIn: ["DRAFT", "APPROVED", "REJECTED", "CONDITIONAL"] },
+          id: {
+            in: (
+              await deadlineSubjects(
+                { AND: [filters(req, a), { runId: await runId() }] },
+                now,
+              )
+            )
+              .filter((s) => s.due < now)
+              .map((s) => s.applicationId),
+          },
         }
       : {}),
   };
@@ -359,6 +379,7 @@ app.get("/api/options", async (req, res) => {
       ["ADMIN", "BUREAU", "AUTHORITY", "AUDITOR", "SUPERVISOR"].includes(
         g.role,
       ) &&
+      g.global &&
       !g.regionId &&
       !g.institutionId,
   );
@@ -366,22 +387,20 @@ app.get("/api/options", async (req, res) => {
     where: globalMasterView
       ? {}
       : {
-          OR: a.grants.map((g) =>
-            g.role === "INSTITUTION"
-              ? { id: g.institutionId ?? "DENIED" }
-              : g.regionId
-                ? { regionId: g.regionId }
-                : hasRole(
-                      a,
-                      "ADMIN",
-                      "SUPERVISOR",
-                      "BUREAU",
-                      "AUTHORITY",
-                      "AUDITOR",
-                    )
-                  ? {}
-                  : { id: "DENIED" },
-          ),
+          OR: [
+            {
+              id: {
+                in: a.grants
+                  .filter((g) => g.institutionId)
+                  .map((g) => g.institutionId!),
+              },
+            },
+            {
+              applications: {
+                some: { AND: [scope(a), { runId: await runId() }] },
+              },
+            },
+          ],
         },
   });
   const users = hasRole(a, "SUPERVISOR", "BUREAU", "ADMIN")
@@ -456,7 +475,7 @@ app.get("/api/dashboard", async (req, res) => {
       attempts: true,
       obligations: true,
       documents: {
-        include: { versions: { orderBy: { number: "desc" }, take: 1 } },
+        include: { versions: { orderBy: { number: "desc" } } },
       },
     },
   });
@@ -464,27 +483,27 @@ app.get("/api/dashboard", async (req, res) => {
     (m, x) => ((m[x.state] = (m[x.state] ?? 0) + 1), m),
     {},
   );
+  const subjects = await deadlineSubjects(where, now);
+  const overdue = subjects.filter((s) => s.due < now);
   res.json({
     total: list.length,
     open: list.filter(
       (x) => !["APPROVED", "CONDITIONAL", "REJECTED"].includes(x.state),
     ).length,
-    overdue: list.filter(
-      (x) =>
-        x.dueAt &&
-        x.dueAt < now &&
-        !["DRAFT", "APPROVED", "CONDITIONAL", "REJECTED"].includes(x.state),
-    ).length,
+    overdue: new Set(overdue.map((s) => s.applicationId)).size,
+    overdueSubjects: overdue.length,
+    overdueCountUnit:
+      "distinct cases; report lists individual deadline subjects",
     evc: counts.EVC ?? 0,
     obligations: list
       .flatMap((x) => x.obligations)
       .filter((x) => !["ACCEPTED", "WAIVED"].includes(x.state)).length,
     documents: list
       .flatMap((x) => x.documents)
-      .filter(
-        (d) =>
-          d.versions[0]?.validUntil &&
-          +d.versions[0].validUntil < +now + 7 * 86400000,
+      .filter((d) =>
+        ["EXPIRED", "EXPIRING"].includes(
+          documentCompliance(d.versions, now).status,
+        ),
       ).length,
     pendingEvidence: list
       .flatMap((x) => x.documents)
@@ -583,17 +602,35 @@ app.get("/api/applications/:id", async (req, res) => {
   const history = await db.audit.findMany({
     where: {
       applicationId: record.id,
-      ...(hasRole(a, "INSTITUTION") ? { visibility: "PUBLIC" } : {}),
+      ...(record.institutionView ? { visibility: "PUBLIC" } : {}),
     },
     orderBy: { createdAt: "desc" },
   });
   res.json({
     ...record,
     ...actions(a, record),
+    assignees: can(a, record, ["SUPERVISOR", "BUREAU"])
+      ? (
+          await db.user.findMany({
+            where: { active: true },
+            include: { grants: true },
+          })
+        )
+          .filter((user) => eligible(user, record))
+          .map((user) => ({ id: user.id, name: user.name }))
+      : [],
     history,
     brief: {
       whyBlocked: actions(a, record).blockingReasons,
       whoNext: record.ownerId ?? "Scoped coordinator to assign",
+      ownerName: record.ownerId
+        ? (
+            await db.user.findUnique({
+              where: { id: record.ownerId },
+              select: { name: true },
+            })
+          )?.name
+        : null,
       due: record.dueAt,
       governingVersion: record.workflow.version,
     },
@@ -724,75 +761,118 @@ app.post(
         issuer: z.string().max(200).optional(),
       })
       .parse(req.body);
+    const validUntil = metadata.validUntil
+      ? dateOnlyEnd(metadata.validUntil)
+      : null;
+    ensure(
+      ["DRAFT", "AWAITING_RESPONSE", "CONDITIONAL", "APPROVED"].includes(
+        record.state,
+      ),
+      "Uploads require an editable or post-decision evidence stage",
+    );
+    ensure(
+      !metadata.documentId ||
+        record.documents.some((d) => d.id === metadata.documentId),
+      "Document does not belong to this case",
+      404,
+    );
     const storageKey = randomUUID();
     const storage = path.resolve(process.env.STORAGE_PATH ?? "storage/private");
     await mkdir(storage, { recursive: true });
-    await writeFile(path.join(storage, storageKey), bytes, { flag: "wx" });
-    const result = await db.$transaction(async (tx) => {
-      await tx.$queryRaw`SELECT id FROM "Application" WHERE id=${id} FOR UPDATE`;
-      const fresh = await getApp(a, id, tx);
-      ensure(
-        ["DRAFT", "AWAITING_RESPONSE", "CONDITIONAL", "APPROVED"].includes(
-          fresh.state,
-        ),
-        "Uploads require draft, returned case or post-decision evidence",
-      );
-      let doc = metadata.documentId
-        ? await tx.document.findFirst({
-            where: { id: metadata.documentId, applicationId: id },
-          })
-        : null;
-      ensure(
-        !metadata.documentId || doc,
-        "Document does not belong to this case",
-        404,
-      );
-      if (!doc)
-        doc = await tx.document.create({
+    const staging = path.join(storage, ".staging");
+    await mkdir(staging, { recursive: true });
+    const stagedFile = path.join(staging, storageKey);
+    const finalFile = path.join(storage, storageKey);
+    const marker = path.join(staging, storageKey + ".pending");
+    await writeFile(marker, "pending private evidence transaction", {
+      flag: "wx",
+    });
+    await writeFile(stagedFile, bytes, { flag: "wx" });
+    let result;
+    try {
+      result = await db.$transaction(async (tx) => {
+        await tx.$queryRaw`SELECT id FROM "Application" WHERE id=${id} FOR UPDATE`;
+        const fresh = await getApp(a, id, tx);
+        ensure(
+          ["DRAFT", "AWAITING_RESPONSE", "CONDITIONAL", "APPROVED"].includes(
+            fresh.state,
+          ),
+          "Uploads require draft, returned case or post-decision evidence",
+        );
+        let doc = metadata.documentId
+          ? await tx.document.findFirst({
+              where: { id: metadata.documentId, applicationId: id },
+            })
+          : null;
+        ensure(
+          !metadata.documentId || doc,
+          "Document does not belong to this case",
+          404,
+        );
+        if (!doc)
+          doc = await tx.document.create({
+            data: {
+              applicationId: id,
+              title: metadata.title,
+              kind: metadata.kind,
+            },
+          });
+        const number =
+          1 +
+          (await tx.documentVersion.count({ where: { documentId: doc.id } }));
+        await rename(stagedFile, finalFile);
+        const v = await tx.documentVersion.create({
           data: {
-            applicationId: id,
-            title: metadata.title,
-            kind: metadata.kind,
+            documentId: doc.id,
+            number,
+            storageKey,
+            mime: mime!,
+            size: bytes.length,
+            hash: createHash("sha256").update(bytes).digest("hex"),
+            issuer: metadata.issuer,
+            validUntil,
           },
         });
-      const number =
-        1 + (await tx.documentVersion.count({ where: { documentId: doc.id } }));
-      const v = await tx.documentVersion.create({
-        data: {
-          documentId: doc.id,
-          number,
-          storageKey,
-          mime: mime!,
-          size: bytes.length,
-          hash: createHash("sha256").update(bytes).digest("hex"),
-          issuer: metadata.issuer,
-          validUntil: metadata.validUntil
-            ? dateOnlyEnd(metadata.validUntil)
-            : null,
-        },
+        const updated = await tx.application.update({
+          where: { id },
+          data: { version: { increment: 1 } },
+        });
+        await audit(
+          tx,
+          a,
+          updated,
+          "upload-document",
+          `Version ${number}: ${metadata.title}`,
+          fresh.state,
+          "PUBLIC",
+          [v.id],
+        );
+        await notify(
+          tx,
+          updated,
+          `${fresh.reference}: evidence awaiting verification`,
+          `${doc.id}:v${number}`,
+        );
+        return v;
       });
-      const updated = await tx.application.update({
-        where: { id },
-        data: { version: { increment: 1 } },
+    } catch (error) {
+      let referenced: boolean | null = null;
+      try {
+        referenced = !!(await db.documentVersion.count({
+          where: { storageKey },
+        }));
+      } catch {}
+      if (referenced === false)
+        await unlink(finalFile).catch((e) => {
+          if (e.code !== "ENOENT") throw e;
+        });
+      await unlink(stagedFile).catch((e) => {
+        if (e.code !== "ENOENT") throw e;
       });
-      await audit(
-        tx,
-        a,
-        updated,
-        "upload-document",
-        `Version ${number}: ${metadata.title}`,
-        fresh.state,
-        "PUBLIC",
-        [v.id],
-      );
-      await notify(
-        tx,
-        updated,
-        `${fresh.reference}: evidence awaiting verification`,
-        `${doc.id}:v${number}`,
-      );
-      return v;
-    });
+      if (referenced !== null) await unlink(marker).catch(() => {});
+      throw error;
+    }
+    await unlink(marker).catch(() => {});
     res.status(201).json(result);
   },
 );
@@ -802,14 +882,17 @@ app.get("/api/documents/:id/content", async (req, res) => {
     where: { id: String(req.params.id) },
     include: {
       document: {
-        include: { versions: { orderBy: { number: "desc" }, take: 1 } },
+        include: { versions: { orderBy: { number: "desc" } } },
       },
     },
   });
   ensure(v, "Document unavailable", 404);
-  await getApp(a, v.document.applicationId);
+  const record = await getApp(a, v.document.applicationId);
   ensure(
-    !hasRole(a, "INSTITUTION") || v.document.versions[0]?.id === v.id,
+    !record.institutionView ||
+      v.document.versions[0]?.id === v.id ||
+      v.document.versions.find((x) => x.reviewState === "ACCEPTED")?.id ===
+        v.id,
     "Earlier versions are reviewer-only",
     403,
   );
@@ -826,17 +909,37 @@ app.get("/api/documents/:id/content", async (req, res) => {
 });
 app.get("/api/documents", async (req, res) => {
   const a = await actor(req);
+  const now = await clock();
+  const docs = await db.document.findMany({
+    where: { application: { ...scope(a), runId: await runId() } },
+    include: {
+      application: { include: { institution: true } },
+      versions: { orderBy: { number: "desc" }, include: { reviews: true } },
+    },
+  });
+  const officialIds = new Set(
+    (
+      await db.application.findMany({
+        where: { ...officialScope(a), runId: await runId() },
+        select: { id: true },
+      })
+    ).map((x) => x.id),
+  );
   res.json(
-    await db.document.findMany({
-      where: { application: { ...scope(a), runId: await runId() } },
-      include: {
-        application: { include: { institution: true } },
-        versions: {
-          orderBy: { number: "desc" },
-          include: { reviews: true },
-          ...(hasRole(a, "INSTITUTION") ? { take: 1 } : {}),
-        },
-      },
+    docs.map((d) => {
+      const compliance = documentCompliance(d.versions, now);
+      const institutionOnly = !officialIds.has(d.applicationId);
+      return {
+        ...d,
+        compliance,
+        versions: institutionOnly
+          ? d.versions.filter(
+              (v) =>
+                v.id === compliance.submitted?.id ||
+                v.id === compliance.effective?.id,
+            )
+          : d.versions,
+      };
     }),
   );
 });
@@ -872,6 +975,15 @@ app.post("/api/documents/:id/review", async (req, res) => {
       where: { id: v.id },
       data: { reviewState: c.outcome },
     });
+    for (const version of record.documents.find((d) => d.id === v.documentId)!
+      .versions)
+      await invalidateDeadline(
+        tx,
+        record.id,
+        "DOCUMENT",
+        version.id,
+        "Authorized renewal review changed effective compliance",
+      );
     const updated = await tx.application.update({
       where: { id: record.id },
       data: { version: { increment: 1 } },
@@ -996,6 +1108,13 @@ app.post("/api/obligations/:id/commands", async (req, res) => {
           : {}),
       },
     });
+    await invalidateDeadline(
+      tx,
+      record.id,
+      "OBLIGATION",
+      o.id,
+      `Obligation ${c.command}; previous deadline revision superseded`,
+    );
     await audit(
       tx,
       a,
@@ -1041,6 +1160,7 @@ app.post("/api/applications/:id/migrate-policy", async (req, res) => {
       !["APPROVED", "REJECTED", "CONDITIONAL"].includes(record.state),
       "Decided cases cannot migrate",
     );
+    await tx.$queryRaw`SELECT id FROM "Workflow" WHERE id=${c.workflowId} FOR SHARE`;
     const target = await tx.workflow.findUnique({
       where: { id: c.workflowId },
     });
@@ -1065,8 +1185,19 @@ app.post("/api/applications/:id/migrate-policy", async (req, res) => {
     );
     const updated = await tx.application.update({
       where: { id: record.id },
-      data: { workflowId: target.id, version: { increment: 1 } },
+      data: {
+        workflowId: target.id,
+        version: { increment: 1 },
+        deadlineRevision: { increment: 1 },
+      },
     });
+    await invalidateDeadline(
+      tx,
+      record.id,
+      "APPLICATION",
+      record.id,
+      "Authorized policy migration; due time preserved, policy/deadline revision changed",
+    );
     await audit(
       tx,
       a,
@@ -1089,9 +1220,14 @@ app.post("/api/applications/:id/migrate-policy", async (req, res) => {
 app.get("/api/rules", async (req, res) => {
   await actor(req);
   res.json({
-    rules: await db.workflow.findMany({
-      orderBy: [{ name: "asc" }, { version: "desc" }],
-    }),
+    rules: (
+      await db.workflow.findMany({
+        orderBy: [{ name: "asc" }, { version: "desc" }],
+      })
+    ).map((rule) => ({
+      ...rule,
+      contentHash: hash(workflowSchema.parse(rule.config)),
+    })),
     sources: await db.policySource.findMany(),
   });
 });
@@ -1105,14 +1241,15 @@ app.post("/api/rules", async (req, res) => {
       source: z.string().min(5).max(1000),
     })
     .parse(req.body);
-  const version =
-    (
-      await db.workflow.aggregate({
-        where: { name: c.name },
-        _max: { version: true },
-      })
-    )._max.version ?? 0;
   const r = await db.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT 1 AS locked FROM pg_advisory_xact_lock(hashtext(${`policy-name:${c.name}`}))`;
+    const version =
+      (
+        await tx.workflow.aggregate({
+          where: { name: c.name },
+          _max: { version: true },
+        })
+      )._max.version ?? 0;
     const rule = await tx.workflow.create({
       data: { ...c, version: version + 1 },
     });
@@ -1129,69 +1266,37 @@ app.post("/api/rules", async (req, res) => {
 });
 app.post("/api/rules/:id/:operation", async (req, res) => {
   const a = await actor(req);
-  const operation = String(req.params.operation);
-  const rule = await db.workflow.findUniqueOrThrow({
-    where: { id: String(req.params.id) },
-  });
-  const config = workflowSchema.parse(req.body.config ?? rule.config);
-  if (operation === "simulate") {
-    res.json({
-      valid: true,
-      route: ["DRAFT", ...config.stages],
-      deadlineDays: config.deadlineDays,
-      comparison: { previous: rule.config, proposed: config },
-      authority:
-        "Only existing explicit authority grants may decide; configuration cannot grant permissions.",
-    });
-    return;
-  }
-  if (operation === "save") {
-    ensure(
-      hasRole(a, "ADMIN", "BUREAU") && rule.state === "DRAFT",
-      "Only editable drafts may change",
-      403,
-    );
-    res.json(
-      await db.workflow.update({ where: { id: rule.id }, data: { config } }),
-    );
-    return;
-  }
-  ensure(
-    hasRole(a, "BUREAU"),
-    "Bureau policy publisher required; technical admin cannot publish",
-    403,
-  );
-  ensure(
-    ["publish", "retire"].includes(operation),
-    "Unknown rule operation",
-    400,
-  );
-  ensure(
-    operation === "publish"
-      ? rule.state === "DRAFT"
-      : rule.state === "PUBLISHED",
-    "Invalid rule lifecycle",
-  );
-  const updated = await db.$transaction(async (tx) => {
-    const r = await tx.workflow.update({
-      where: { id: rule.id },
-      data: { state: operation === "publish" ? "PUBLISHED" : "RETIRED" },
-    });
-    await audit(
-      tx,
+  res.json(
+    await ruleOperation(
       a,
-      null,
-      `rule-${operation}`,
-      `Workflow ${r.id}; existing cases remain pinned`,
-    );
-    return r;
-  });
-  res.json(updated);
+      String(req.params.id),
+      String(req.params.operation),
+      req.body,
+    ),
+  );
 });
 app.get("/api/alerts", async (req, res) => {
   const a = await actor(req);
   const application = { ...scope(a), runId: await runId() };
+  const eventCaseIds = (
+    await db.application.findMany({ where: application, select: { id: true } })
+  ).map((x) => x.id);
+  const events = await db.escalation.findMany({
+    where: { applicationId: { in: eventCaseIds } },
+    orderBy: { createdAt: "desc" },
+  });
+  const recipients = await db.user.findMany({
+    where: { id: { in: events.flatMap((e) => e.recipientIds as string[]) } },
+    select: { id: true, name: true },
+  });
   res.json({
+    escalations: events.map((e) => ({
+      ...e,
+      recipientNames: (e.recipientIds as string[]).map(
+        (id) =>
+          recipients.find((u) => u.id === id)?.name ?? "Unavailable official",
+      ),
+    })),
     inbox: await db.notification.findMany({
       where: {
         userId: a.id,
@@ -1226,30 +1331,52 @@ app.post("/api/alerts/:id/read", async (req, res) => {
   });
   res.json({ ok: true });
 });
+app.post("/api/escalations/:id/acknowledge", async (req, res) => {
+  const a = await actor(req);
+  const c = z
+    .object({ reason: z.string().min(5), expectedState: z.string() })
+    .parse(req.body);
+  const result = await db.$transaction(async (tx) => {
+    const initial = await tx.escalation.findUniqueOrThrow({
+      where: { id: String(req.params.id) },
+    });
+    await tx.$queryRaw`SELECT id FROM "Application" WHERE id=${initial.applicationId} FOR UPDATE`;
+    await tx.$queryRaw`SELECT id FROM "Escalation" WHERE id=${initial.id} FOR UPDATE`;
+    const event = await tx.escalation.findUniqueOrThrow({
+      where: { id: initial.id },
+    });
+    const record = await getApp(a, event.applicationId, tx);
+    ensure(
+      can(a, record, ["SUPERVISOR", "BUREAU"]) ||
+        (event.recipientIds as string[]).includes(a.id),
+      "Designated recipient or scoped coordinator required",
+      403,
+    );
+    ensure(
+      event.state === c.expectedState &&
+        ["OPEN", "UNASSIGNED"].includes(event.state),
+      "Escalation changed or is already acknowledged/resolved",
+    );
+    const updated = await tx.escalation.update({
+      where: { id: event.id },
+      data: { state: "ACKNOWLEDGED", reason: c.reason },
+    });
+    await audit(
+      tx,
+      a,
+      record,
+      "escalation-acknowledged",
+      `Level ${event.level}: ${c.reason}`,
+      record.state,
+      "PUBLIC",
+    );
+    return updated;
+  });
+  res.json(result);
+});
 app.post("/api/deliveries/:id/retry", async (req, res) => {
   const a = await actor(req);
-  const o = await db.outbox.findUniqueOrThrow({
-    where: { id: String(req.params.id) },
-  });
-  const record = await getApp(a, o.applicationId);
-  ensure(
-    can(a, record, ["SUPERVISOR", "BUREAU"]),
-    "Retry permission required",
-    403,
-  );
-  ensure(
-    ["FAILED", "EXHAUSTED", "AMBIGUOUS"].includes(o.state),
-    "Delivery is not retryable",
-  );
-  const reason = z.string().min(5).parse(req.body.reason);
-  await db.$transaction(async (tx) => {
-    await tx.outbox.update({
-      where: { id: o.id },
-      data: { state: "QUEUED", attempts: 0, nextAt: new Date() },
-    });
-    await audit(tx, a, record, "retry-notification", reason);
-  });
-  res.json({ ok: true });
+  res.json(await retryDelivery(a, String(req.params.id), req.body));
 });
 app.get("/api/audits", async (req, res) => {
   const a = await actor(req);
@@ -1259,16 +1386,37 @@ app.get("/api/audits", async (req, res) => {
       select: { id: true },
     })
   ).map((x) => x.id);
+  const officialIds = (
+    await db.application.findMany({
+      where: { ...officialScope(a), runId: await runId() },
+      select: { id: true },
+    })
+  ).map((x) => x.id);
   res.json(
     await db.audit.findMany({
       where: {
         OR: [
           { applicationId: { in: ids } },
-          ...(hasRole(a, "ADMIN", "BUREAU", "AUDITOR")
+          ...(a.grants.some(
+            (g) => g.global && ["ADMIN", "BUREAU", "AUDITOR"].includes(g.role),
+          )
             ? [{ applicationId: null }]
             : []),
         ],
-        ...(hasRole(a, "INSTITUTION") ? { visibility: "PUBLIC" } : {}),
+        AND: [
+          {
+            OR: [
+              { visibility: "PUBLIC" },
+              { applicationId: { in: officialIds } },
+              ...(a.grants.some(
+                (g) =>
+                  g.global && ["ADMIN", "BUREAU", "AUDITOR"].includes(g.role),
+              )
+                ? [{ applicationId: null }]
+                : []),
+            ],
+          },
+        ],
       },
       orderBy: { createdAt: "desc" },
       take: 250,
@@ -1304,6 +1452,7 @@ app.get("/api/events", async (req, res) => {
       if (
         !stored ||
         !fresh ||
+        !fresh.active ||
         fresh.securityVersion !== stored.securityVersion ||
         hash(fresh.grants) !== hash(a.grants)
       ) {
@@ -1348,17 +1497,7 @@ app.get("/api/reports/:kind", async (req, res) => {
     .enum(["pendency", "evc", "compliance", "validity", "overdue", "regions"])
     .parse(req.params.kind);
   const awaitedNow = await clock();
-  let where: Prisma.ApplicationWhereInput = await scopedFilter(req, a);
-  if (kind === "overdue")
-    where = {
-      AND: [
-        where,
-        {
-          dueAt: { lt: await clock() },
-          state: { notIn: ["DRAFT", "APPROVED", "CONDITIONAL", "REJECTED"] },
-        },
-      ],
-    };
+  const where: Prisma.ApplicationWhereInput = await scopedFilter(req, a);
   const apps = await db.application.findMany({
     where,
     include: {
@@ -1367,96 +1506,126 @@ app.get("/api/reports/:kind", async (req, res) => {
       obligations: true,
       attempts: true,
       documents: {
-        include: { versions: { orderBy: { number: "desc" }, take: 1 } },
+        include: { versions: { orderBy: { number: "desc" } } },
       },
     },
     orderBy: { reference: "asc" },
   });
+  const overdueSubjects =
+    kind === "overdue" ? await deadlineSubjects(where, awaitedNow) : [];
   const rows: Record<string, unknown>[] =
-    kind === "compliance"
-      ? apps.flatMap((x) =>
-          x.obligations.map((o) => ({
-            reference: x.reference,
-            institution: x.institution.name,
-            condition: o.condition,
-            state: o.state,
-            due: o.dueAt.toISOString(),
-            originalDue: o.originalDueAt.toISOString(),
-          })),
-        )
-      : kind === "validity"
+    kind === "overdue"
+      ? overdueSubjects
+          .filter((s) => s.due < awaitedNow)
+          .map((s) => ({
+            reference: s.reference,
+            subjectType: s.type,
+            subjectId: s.id,
+            deadlineRevision: s.revision,
+            region: s.regionId,
+            institution: s.institutionId,
+            owner: s.ownerId ?? "Unassigned",
+            status: s.status,
+            description: s.label,
+            due: s.due.toISOString(),
+            policyVersion: s.policyId,
+            demoPolicy: true,
+            asOf: awaitedNow.toISOString(),
+          }))
+      : kind === "compliance"
         ? apps.flatMap((x) =>
-            x.documents.map((d) => ({
+            x.obligations.map((o) => ({
               reference: x.reference,
-              title: d.title,
-              version: d.versions[0]?.number,
-              review: d.versions[0]?.reviewState,
-              expires: d.versions[0]?.validUntil?.toISOString(),
+              institution: x.institution.name,
+              condition: o.condition,
+              state: o.state,
+              due: o.dueAt.toISOString(),
+              originalDue: o.originalDueAt.toISOString(),
             })),
           )
-        : kind === "evc"
-          ? apps
-              .filter((x) => x.state === "EVC" || x.visits.length)
-              .map((x) => ({
+        : kind === "validity"
+          ? apps.flatMap((x) =>
+              x.documents.map((d) => ({
                 reference: x.reference,
-                institution: x.institution.name,
-                state: x.visits.at(-1)?.state ?? "AWAITING_SCHEDULING",
-                start: x.visits.at(-1)?.startAt.toISOString(),
-              }))
-          : kind === "regions"
-            ? Object.entries(
-                apps.reduce<Record<string, number>>(
-                  (m, x) => (
-                    (m[x.institution.regionId] =
-                      (m[x.institution.regionId] ?? 0) + 1),
-                    m
+                title: d.title,
+                submittedVersion: d.versions[0]?.number,
+                submittedReview: d.versions[0]?.reviewState,
+                effectiveVersion:
+                  documentCompliance(d.versions, awaitedNow).effective
+                    ?.number ?? null,
+                validity: documentCompliance(d.versions, awaitedNow).status,
+                renewalPending: documentCompliance(d.versions, awaitedNow)
+                  .renewalPending,
+                expires:
+                  documentCompliance(
+                    d.versions,
+                    awaitedNow,
+                  ).effective?.validUntil?.toISOString() ?? null,
+              })),
+            )
+          : kind === "evc"
+            ? apps
+                .filter((x) => x.state === "EVC" || x.visits.length)
+                .map((x) => ({
+                  reference: x.reference,
+                  institution: x.institution.name,
+                  state: x.visits.at(-1)?.state ?? "AWAITING_SCHEDULING",
+                  start: x.visits.at(-1)?.startAt.toISOString(),
+                }))
+            : kind === "regions"
+              ? Object.entries(
+                  apps.reduce<Record<string, number>>(
+                    (m, x) => (
+                      (m[x.institution.regionId] =
+                        (m[x.institution.regionId] ?? 0) + 1),
+                      m
+                    ),
+                    {},
                   ),
-                  {},
-                ),
-              ).map(([region, cases]) => {
-                const group = apps.filter(
-                  (x) => x.institution.regionId === region,
-                );
-                return {
-                  region,
-                  cases,
-                  open: group.filter(
-                    (x) =>
-                      !["APPROVED", "REJECTED", "CONDITIONAL"].includes(
-                        x.state,
-                      ),
-                  ).length,
-                  meanInstitutionWaitDays: Number(
-                    (
-                      group.reduce(
-                        (n, x) => n + ageing(x, awaitedNow).institutionDays,
-                        0,
-                      ) / cases
-                    ).toFixed(2),
+                ).map(([region, cases]) => {
+                  const group = apps.filter(
+                    (x) => x.institution.regionId === region,
+                  );
+                  return {
+                    region,
+                    cases,
+                    open: group.filter(
+                      (x) =>
+                        !["APPROVED", "REJECTED", "CONDITIONAL"].includes(
+                          x.state,
+                        ),
+                    ).length,
+                    meanInstitutionWaitDays: Number(
+                      (
+                        group.reduce(
+                          (n, x) => n + ageing(x, awaitedNow).institutionDays,
+                          0,
+                        ) / cases
+                      ).toFixed(2),
+                    ),
+                    meanOfficialStageDays: Number(
+                      (
+                        group.reduce(
+                          (n, x) => n + ageing(x, awaitedNow).officialDays,
+                          0,
+                        ) / cases
+                      ).toFixed(2),
+                    ),
+                  };
+                })
+              : apps.map((x) => ({
+                  reference: x.reference,
+                  institution: x.institution.name,
+                  region: x.institution.regionId,
+                  category: x.category,
+                  state: x.state,
+                  owner: x.ownerId ?? "Unassigned",
+                  due: x.dueAt?.toISOString(),
+                  ageDays: Math.max(
+                    0,
+                    Math.floor((+awaitedNow - +x.createdAt) / 86400000),
                   ),
-                  meanOfficialStageDays: Number(
-                    (
-                      group.reduce(
-                        (n, x) => n + ageing(x, awaitedNow).officialDays,
-                        0,
-                      ) / cases
-                    ).toFixed(2),
-                  ),
-                };
-              })
-            : apps.map((x) => ({
-                reference: x.reference,
-                institution: x.institution.name,
-                region: x.institution.regionId,
-                category: x.category,
-                state: x.state,
-                owner: x.ownerId ?? "Unassigned",
-                due: x.dueAt?.toISOString(),
-                ageDays: Math.max(
-                  0,
-                  Math.floor((+awaitedNow - +x.createdAt) / 86400000),
-                ),
-              }));
+                }));
   if (req.query.format === "csv") {
     const keys = Object.keys(rows[0] ?? { reference: "" });
     res
@@ -1493,7 +1662,22 @@ app.get("/api/reports/:kind", async (req, res) => {
     pdf.end();
     return;
   }
-  res.json({ kind, total: rows.length, rows, clock: await clock() });
+  res.json({
+    kind,
+    total: rows.length,
+    countUnit:
+      kind === "overdue"
+        ? "deadline subjects"
+        : kind === "validity"
+          ? "documents"
+          : kind === "compliance"
+            ? "undertakings"
+            : "cases",
+    filters: req.query,
+    demoPolicy: true,
+    rows,
+    clock: awaitedNow,
+  });
 });
 app.get("/api/applications/:id/notice", async (req, res) => {
   const a = await actor(req);
@@ -1586,39 +1770,7 @@ app.post("/api/admin/users", async (req, res) => {
 });
 app.post("/api/admin/grants", async (req, res) => {
   const a = await actor(req);
-  ensure(
-    hasRole(a, "BUREAU"),
-    "Only an explicit bureau authority may administer grants; admin cannot elevate itself",
-    403,
-  );
-  const c = z
-    .object({
-      userId: z.string(),
-      role: z.enum([
-        "INSTITUTION",
-        "REVIEWER",
-        "SUPERVISOR",
-        "BUREAU",
-        "COMMITTEE",
-        "AUTHORITY",
-        "AUDITOR",
-        "ADMIN",
-      ]),
-      regionId: z.string().optional(),
-      institutionId: z.string().optional(),
-      committee: z.enum(["EVC", "SAC", "SHC"]).optional(),
-    })
-    .parse(req.body);
-  ensure(c.userId !== a.id, "Self-granting is disabled", 403);
-  await db.$transaction(async (tx) => {
-    await tx.grant.create({ data: c });
-    await tx.user.update({
-      where: { id: c.userId },
-      data: { securityVersion: { increment: 1 } },
-    });
-    await audit(tx, a, null, "grant-role", JSON.stringify(c));
-  });
-  res.json({ ok: true });
+  res.json(await grantRole(a, req.body));
 });
 app.post("/api/admin/clock", async (req, res) => {
   const a = await actor(req);
@@ -1703,6 +1855,23 @@ app.post("/api/integrations/import", async (req, res) => {
   );
   const results = [];
   for (const row of validated) {
+    const targetInstitution = await db.institution.findUnique({
+      where: { id: row.institutionId },
+    });
+    ensure(
+      targetInstitution &&
+        a.grants.some(
+          (g) =>
+            ((g.role === "ADMIN" && g.global) || g.role === "BUREAU") &&
+            grantMatches(g, {
+              institutionId: row.institutionId,
+              institution: targetInstitution,
+              bureau: "APPROVAL",
+            }),
+        ),
+      "Import target exceeds explicit bureau scope",
+      403,
+    );
     ensure(
       await db.institution.count({ where: { id: row.institutionId } }),
       "Unknown institution",

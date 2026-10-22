@@ -1,8 +1,10 @@
 import "dotenv/config";
 import PgBoss from "pg-boss";
 import pg from "pg";
-import { db } from "../../../packages/db/index.ts";
-import { scan, deliver } from "../../../packages/domain/alerts.ts";
+if (process.env.WORKER_DATABASE_URL)
+  process.env.DATABASE_URL = process.env.WORKER_DATABASE_URL;
+const { db } = await import("../../../packages/db/index.ts");
+const { scan, deliver } = await import("../../../packages/domain/alerts.ts");
 const coordinator = new pg.Client({
   connectionString: process.env.DATABASE_URL,
 });
@@ -20,23 +22,45 @@ const boss = new PgBoss(process.env.DATABASE_URL!);
 boss.on("error", (e) => console.error("Queue error", e.message));
 await boss.start();
 await boss.createQueue("notification");
-await boss.work<{ id: string }>(
+// Recover before accepting work: an interrupted SMTP attempt may already have been accepted.
+await db.$transaction(async (tx) => {
+  for (const intent of await tx.outbox.findMany({
+    where: { state: "ATTEMPTED" },
+  })) {
+    await tx.outbox.update({
+      where: { id: intent.id },
+      data: { state: "AMBIGUOUS" },
+    });
+    await tx.deliveryAttempt.create({
+      data: {
+        outboxId: intent.id,
+        generation: intent.generation,
+        state: "AMBIGUOUS",
+        detail:
+          "Worker restarted after a committed attempt marker; prior SMTP acceptance is unknown",
+      },
+    });
+  }
+});
+await boss.work<{ id: string; generation?: number }>(
   "notification",
   { batchSize: 20, pollingIntervalSeconds: 1 },
   async (jobs) => {
-    await Promise.all(jobs.map((job) => deliver(job.data.id)));
+    await Promise.all(
+      jobs.map((job) => deliver(job.data.id, job.data.generation ?? 1)),
+    );
   },
 );
-// A committed ATTEMPTED marker left by a previous process is ambiguous, not successful.
-await db.outbox.updateMany({
-  where: { state: "ATTEMPTED" },
-  data: { state: "AMBIGUOUS" },
-});
 let running = false;
 async function tick() {
   if (running) return;
   running = true;
   try {
+    await db.workerHeartbeat.upsert({
+      where: { id: "notification" },
+      create: { id: "notification", status: "SCANNING" },
+      update: { status: "SCANNING" },
+    });
     await scan();
     const pending = await db.outbox.findMany({
       where: {
@@ -49,18 +73,21 @@ async function tick() {
     for (const o of pending) {
       const jobId = await boss.send(
         "notification",
-        { id: o.id },
+        { id: o.id, generation: o.generation },
         {
-          singletonKey: o.id,
+          singletonKey: `${o.id}:g${o.generation}:a${o.generationAttempts}`,
           singletonSeconds: 30,
           retryLimit: 3,
           retryDelay: 2,
           retryBackoff: true,
-          priority: o.title.includes("OVERDUE_ESCALATION") ? 5 : 0,
+          priority: o.title.includes("ESCALATION") ? 5 : 0,
         },
       );
       if (jobId)
-        await db.outbox.update({ where: { id: o.id }, data: { jobId } });
+        await db.outbox.update({
+          where: { id: o.id, generation: o.generation },
+          data: { jobId },
+        });
     }
     const assigned = await db.outbox.findMany({
       where: { state: "QUEUED", jobId: { not: null } },
@@ -69,28 +96,40 @@ async function tick() {
     });
     for (const intent of assigned) {
       const job = await boss.getJobById("notification", intent.jobId!);
-      if (!job || ["failed", "cancelled"].includes(job.state)) {
-        await db.$transaction([
-          db.outbox.update({
-            where: { id: intent.id },
+      if (!job || ["failed", "cancelled", "completed"].includes(job.state)) {
+        await db.$transaction(async (tx) => {
+          const changed = await tx.outbox.updateMany({
+            where: {
+              id: intent.id,
+              generation: intent.generation,
+              state: "QUEUED",
+              jobId: intent.jobId,
+            },
             data: {
-              state: intent.attempts >= 3 ? "EXHAUSTED" : "FAILED",
+              state: intent.generationAttempts >= 3 ? "EXHAUSTED" : "FAILED",
               jobId: null,
               attempts: { increment: 1 },
+              generationAttempts: { increment: 1 },
               nextAt: new Date(Date.now() + 5000),
             },
-          }),
-          db.deliveryAttempt.create({
-            data: {
-              outboxId: intent.id,
-              state: "TRANSPORT_FAILED",
-              detail:
-                "Durable queue job missing or exhausted; relay will retry within its bound",
-            },
-          }),
-        ]);
+          });
+          if (changed.count)
+            await tx.deliveryAttempt.create({
+              data: {
+                outboxId: intent.id,
+                generation: intent.generation,
+                state: "TRANSPORT_FAILED",
+                detail:
+                  "Durable queue job missing or exhausted; relay will retry within its bound",
+              },
+            });
+        });
       }
     }
+    await db.workerHeartbeat.update({
+      where: { id: "notification" },
+      data: { status: "READY" },
+    });
   } catch (e) {
     console.error("Worker scan failed", e instanceof Error ? e.message : e);
   } finally {
@@ -98,6 +137,15 @@ async function tick() {
   }
 }
 const timer = setInterval(tick, 3000);
+const heartbeatTimer = setInterval(() => {
+  db.workerHeartbeat
+    .upsert({
+      where: { id: "notification" },
+      create: { id: "notification", status: running ? "SCANNING" : "READY" },
+      update: { status: running ? "SCANNING" : "READY" },
+    })
+    .catch((e) => console.error("Heartbeat failed", e.message));
+}, 5000);
 await tick();
 console.log(
   "Anumitra worker ready; durable PostgreSQL queue, local Mailpit only.",
@@ -105,6 +153,11 @@ console.log(
 for (const signal of ["SIGINT", "SIGTERM"])
   process.on(signal, async () => {
     clearInterval(timer);
+    clearInterval(heartbeatTimer);
+    await db.workerHeartbeat.updateMany({
+      where: { id: "notification" },
+      data: { status: "STOPPED" },
+    });
     await boss.stop({ graceful: true });
     await db.$disconnect();
     await coordinator.end();
