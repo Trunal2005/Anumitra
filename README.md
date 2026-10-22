@@ -6,6 +6,14 @@ Approval and Compliance Orchestration · SIH26262: Integrated AICTE Approval Wor
 
 Independent student prototype. Fictional records, demonstration policy values and a functioning local adapter. No official AICTE deployment, endorsement or live integration. No paid API, service, inference, hosting or account is required.
 
+## Work-in-progress checkpoint
+
+This repository preserves the current implementation; it is **not complete or production-ready**. Existing functionality includes local authentication, scoped PostgreSQL records, scrutiny/deficiency/resubmission workflows, EVC and committee stages, decisions and obligations, private document versions/PDF preview, a separate notification worker, local Mailpit capture, dashboards, reports, policy editing and local JSON/CSV adapters. Test evidence covers selected journeys, not every possible branch.
+
+Current limitations: official policy/deadline/quorum values remain demonstration assumptions; no authorized live AICTE integration is installed; Compose is supplied but unverified because the local Docker engine was stopped; malware scanning is not configured; policy migration/retirement and obligation extension/waiver branches lack exhaustive browser/concurrency verification. No production-scale, comprehensive accessibility or manual-effort-reduction claim is made. See [implementation status](docs/IMPLEMENTATION_STATUS.md) and [security/limitations](docs/SECURITY_AND_LIMITATIONS.md).
+
+Checkpoint validation: TypeScript and formatting checks were rerun successfully for this upload. Existing recorded evidence reports 17 backend/operations tests and two Chromium journeys passing during development. Those integration/browser tests and the production build were not rerun for this checkpoint, to preserve the existing demo state and honor the pause on rebuilding/development. No license is added by this checkpoint.
+
 ## Run locally on this Windows workspace
 
 Prerequisites: Node 20.19+ (or supported Node 22), PostgreSQL 18 binaries and local Mailpit. PostgreSQL binaries here are at `C:/Program Files/PostgreSQL/18/bin`. The downloaded Mailpit executable is in ignored `.local/mailpit.exe`.
