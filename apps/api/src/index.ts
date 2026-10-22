@@ -977,7 +977,8 @@ app.post("/api/documents/:id/review", async (req, res) => {
       "Superseded version cannot become current",
     );
     ensure(
-      v.reviewState === "PENDING",
+      record.documents.find((d) => d.id === v.documentId)?.versions[0]
+        ?.reviewState === "PENDING",
       "This immutable version already has a review decision; upload a new version for another verification",
     );
     await tx.documentReview.create({
@@ -1258,7 +1259,7 @@ app.post("/api/applications/:id/migrate-policy", async (req, res) => {
       a,
       updated,
       "migrate-policy",
-      `${c.reason}; from ${record.workflowId} to ${target.id}; deadlines preserved`,
+      `${c.reason}; from ${record.workflowId} to ${target.id}; application due ${record.dueAt?.toISOString() ?? "none"} preserved; stored undertaking/visit deadlines retained; pending-evidence review windows recalculated; prior-policy queued work retired`,
       record.state,
       "PUBLIC",
     );

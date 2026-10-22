@@ -362,11 +362,19 @@ test("pending and rejected renewals preserve effective expiry; acceptance switch
     doc.documentId,
     "2031-01-01",
   );
-  await supervisor.ok(`/documents/${accepted.id}/review`, "POST", {
-    documentVersionId: accepted.id,
-    outcome: "ACCEPTED",
-    reason: "Authorized accepted renewal switch regression",
-  });
+  const concurrentReviews = await Promise.all(
+    [0, 1].map(() =>
+      supervisor.request(`/documents/${accepted.id}/review`, "POST", {
+        outcome: "ACCEPTED",
+        reason: "Concurrent authorised renewal switch regression",
+      }),
+    ),
+  );
+  assert.deepEqual(concurrentReviews.map((r) => r.status).sort(), [200, 409]);
+  assert.equal(
+    await db.documentReview.count({ where: { versionId: accepted.id } }),
+    1,
+  );
   subjects = await deadlineSubjects({ id: app.id }, await clock());
   assert.ok(!subjects.some((s) => s.id === version.id));
   assert.ok(subjects.some((s) => s.id === accepted.id));

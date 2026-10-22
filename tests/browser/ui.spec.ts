@@ -1,5 +1,5 @@
 import "../safety.ts";
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page, type BrowserContext } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import PDFDocument from "pdfkit";
 async function evidencePdf() {
@@ -196,8 +196,8 @@ test("cross-role repair journey: repeated response, EVC, conditional undertaking
   const original = await db.demoClock.findUniqueOrThrow({
     where: { id: "current" },
   });
-  const contexts: any[] = [];
-  const pages: Record<string, any> = {};
+  const contexts: BrowserContext[] = [];
+  const pages: Record<string, Page> = {};
   async function login(role: string) {
     if (pages[role]) return pages[role];
     const context = await browser.newContext({
@@ -290,6 +290,8 @@ test("cross-role repair journey: repeated response, EVC, conditional undertaking
       institution.getByRole("heading", { name: "Document workspace" }),
     ).toBeVisible();
     const id = new URL(institution.url()).pathname.split("/").at(-1)!;
+    const visitLabel = `Fictional on-campus inspection ${id.slice(0, 8)}`;
+    const conditionLabel = `Journey undertaking: fictional campus evidence ${id.slice(0, 8)}`;
     await upload(institution, "Journey lease", "2026-10-22");
     await action(institution, id, "submit");
     await commit(institution);
@@ -330,51 +332,66 @@ test("cross-role repair journey: repeated response, EVC, conditional undertaking
     await supervisor.getByLabel("Start (browser timezone)").fill(local(start));
     await supervisor.getByLabel("End (browser timezone)").fill(local(end));
     await supervisor.getByLabel("EVC member", { exact: true }).check();
-    await supervisor
-      .getByLabel("Venue / meeting metadata")
-      .fill("Fictional on-campus test inspection");
+    await supervisor.getByLabel("Venue / meeting metadata").fill(visitLabel);
     await supervisor
       .getByLabel("Scheduling / rescheduling reason")
       .fill("Browser EVC scheduling with scoped assigned participant");
     await supervisor.getByRole("button", { name: "Propose visit" }).click();
     const card = supervisor
       .locator(".visit-card")
-      .filter({ hasText: "Fictional on-campus test inspection" });
+      .filter({ hasText: visitLabel });
     await expect(card).toBeVisible();
     await card
       .getByLabel("Recorded reason")
       .fill("Confirmed fictional venue and availability");
+    const confirmResponse = supervisor.waitForResponse(
+      (r) =>
+        r.url().includes("/visits/") &&
+        r.url().endsWith("/confirm") &&
+        r.request().method() === "POST",
+    );
     await card.getByRole("button", { name: "Confirm visit" }).click();
+    expect((await confirmResponse).status()).toBe(200);
     await db.demoClock.update({
       where: { id: "current" },
       data: { now: new Date(+end + 1000) },
     });
     const evc = await login("committee.evc");
     await evc.goto("/evc");
-    const ec = evc
-      .locator(".visit-card")
-      .filter({ hasText: "Fictional on-campus test inspection" });
+    const ec = evc.locator(".visit-card").filter({ hasText: visitLabel });
     await ec
       .getByLabel("Report / reason")
       .fill("Inspection completed; fictional evidence checked");
+    const reportResponse = evc.waitForResponse(
+      (r) =>
+        r.url().includes("/visits/") &&
+        r.url().endsWith("/report") &&
+        r.request().method() === "POST",
+    );
     await ec.getByRole("button", { name: "Submit report" }).click();
+    expect((await reportResponse).status()).toBe(200);
     await supervisor.reload();
     const sc = supervisor
       .locator(".visit-card")
-      .filter({ hasText: "Fictional on-campus test inspection" });
+      .filter({ hasText: visitLabel });
     await sc
       .getByLabel("Recorded reason")
       .fill("Completion report reviewed and accepted");
+    const completeResponse = supervisor.waitForResponse(
+      (r) =>
+        r.url().includes("/visits/") &&
+        r.url().endsWith("/complete") &&
+        r.request().method() === "POST",
+    );
     await sc.getByRole("button", { name: "Accept completion report" }).click();
+    expect((await completeResponse).status()).toBe(200);
     await action(evc, id, "record-recommendation", "ACCEPTED");
     await commit(evc);
     await action(evc, id, "complete-stage");
     await commit(evc);
     const authority = await login("authority");
     await action(authority, id, "record-authorized-decision", "CONDITIONAL");
-    await authority
-      .getByLabel("Condition / undertaking")
-      .fill("Journey undertaking: submit fictional evidence clarification");
+    await authority.getByLabel("Condition / undertaking").fill(conditionLabel);
     await authority
       .getByLabel("Condition due (your browser timezone)")
       .fill(local(new Date(+end + 3 * 86400000)));
@@ -382,25 +399,39 @@ test("cross-role repair journey: repeated response, EVC, conditional undertaking
     await institution.goto("/compliance");
     const obligation = institution
       .locator(".obligation-card")
-      .filter({ hasText: "Journey undertaking:" });
+      .filter({ hasText: conditionLabel });
     await obligation.getByLabel("Authorized action").selectOption("submit");
     await obligation
       .getByLabel("Evidence explanation / review reason")
       .fill("Fictional undertaking evidence submitted for review");
+    const submitted = institution.waitForResponse(
+      (r) =>
+        r.url().includes("/obligations/") &&
+        r.url().endsWith("/commands") &&
+        r.request().method() === "POST",
+    );
     await obligation
       .getByRole("button", { name: "Record submit", exact: true })
       .click();
+    expect((await submitted).status()).toBe(200);
     await supervisor.goto("/compliance");
     const review = supervisor
       .locator(".obligation-card")
-      .filter({ hasText: "Journey undertaking:" });
+      .filter({ hasText: conditionLabel });
     await review.getByLabel("Authorized action").selectOption("accept");
     await review
       .getByLabel("Evidence explanation / review reason")
       .fill("Verified fictional undertaking evidence");
+    const verified = supervisor.waitForResponse(
+      (r) =>
+        r.url().includes("/obligations/") &&
+        r.url().endsWith("/commands") &&
+        r.request().method() === "POST",
+    );
     await review
       .getByRole("button", { name: "Record accept", exact: true })
       .click();
+    expect((await verified).status()).toBe(200);
     await expect(review.getByText("ACCEPTED", { exact: true })).toBeVisible();
     await institution.goto("/applications/" + id);
     await upload(institution, "Journey lease", "2029-12-31", true);
@@ -509,6 +540,120 @@ test("cross-role repair journey: repeated response, EVC, conditional undertaking
       data: { now: original.now },
     });
     for (const context of contexts) await context.close();
+    await db.$disconnect();
+  }
+});
+
+test("the first live revision refreshes a stale initial compliance snapshot", async ({
+  page,
+}) => {
+  test.setTimeout(60000);
+  const { db } = await import("../../packages/db/index.ts");
+  const { Client } = await import("../helpers.ts");
+  try {
+    const clock = await db.demoClock.findUniqueOrThrow({
+      where: { id: "current" },
+    });
+    const decision = await db.decision.findFirstOrThrow({
+      where: {
+        outcome: "CONDITIONAL",
+        application: { institutionId: "I01", runId: clock.runId },
+      },
+      include: {
+        application: {
+          include: {
+            documents: {
+              include: { versions: { orderBy: { number: "desc" } } },
+            },
+          },
+        },
+      },
+    });
+    const owner = await db.user.findUniqueOrThrow({
+      where: { email: "institution.a@anumitra.test" },
+    });
+    const supervisor = await db.user.findUniqueOrThrow({
+      where: { email: "supervisor.north@anumitra.test" },
+    });
+    const condition = "SSE initial snapshot race " + Date.now();
+    const due = new Date(+clock.now + 86400000);
+    const fixture = await db.obligation.create({
+      data: {
+        applicationId: decision.applicationId,
+        decisionId: decision.id,
+        condition,
+        source: "DEMO synthetic live-update race fixture",
+        ownerId: owner.id,
+        requiredEvidence: "Fictional case evidence",
+        originalDueAt: due,
+        dueAt: due,
+      },
+    });
+    // Delay only delivery of live callbacks; requests and server events remain real.
+    await page.addInitScript(() => {
+      const target = window as any;
+      target.__deliverRefresh = false;
+      const Native = window.EventSource;
+      target.EventSource = class extends Native {
+        addEventListener(type: any, listener: any, options?: any) {
+          super.addEventListener(
+            type,
+            type === "refresh"
+              ? (event: any) => {
+                  if (target.__deliverRefresh) {
+                    if (typeof listener === "function")
+                      listener.call(this, event);
+                    else listener.handleEvent(event);
+                  }
+                }
+              : listener,
+            options,
+          );
+        }
+      };
+    });
+    await page.goto("/");
+    await page
+      .getByLabel("Email address")
+      .fill("supervisor.north@anumitra.test");
+    await page
+      .getByLabel("Password", { exact: true })
+      .fill(credentials.password);
+    await page.getByRole("button", { name: "Enter your workspace" }).click();
+    await expect(page.getByRole("heading", { name: /Welcome,/ })).toBeVisible();
+    await page.goto("/compliance");
+    const card = page
+      .locator(".obligation-card")
+      .filter({ hasText: condition });
+    await expect(card.getByText("OPEN", { exact: true })).toBeVisible();
+    const institution = await new Client().login("institution.a");
+    await institution.ok(`/obligations/${fixture.id}/commands`, "POST", {
+      command: "submit",
+      expectedRevision: 1,
+      documentVersionId: decision.application.documents[0].versions[0].id,
+      reason:
+        "Real institutional submission after the initial browser snapshot",
+    });
+    await expect
+      .poll(
+        () =>
+          db.outbox.count({
+            where: {
+              recipientId: supervisor.id,
+              state: { in: ["QUEUED", "FAILED", "ATTEMPTED"] },
+            },
+          }),
+        { timeout: 25000 },
+      )
+      .toBe(0);
+    await page.evaluate(() => {
+      (window as any).__deliverRefresh = true;
+    });
+    await expect(card.getByText("SUBMITTED", { exact: true })).toBeVisible({
+      timeout: 8000,
+    });
+    await expect(card.getByLabel("Authorized action")).toBeVisible();
+  } finally {
     await db.$disconnect();
   }
 });

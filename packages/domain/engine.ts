@@ -681,7 +681,10 @@ export async function command(
         a,
         updated,
         c.command,
-        c.reason || "Submission validated",
+        (c.reason || "Submission validated") +
+          (state !== app.state
+            ? `; business time ${now.toISOString()}; deadline ${app.dueAt?.toISOString() ?? "none"} r${app.deadlineRevision} -> ${updated.dueAt?.toISOString() ?? "none"} r${updated.deadlineRevision}; continuous DEMO calendar-day window`
+            : ""),
         app.state,
         "PUBLIC",
         c.documentVersionId ? [c.documentVersionId] : evidence,

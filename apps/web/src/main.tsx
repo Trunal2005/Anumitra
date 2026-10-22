@@ -453,7 +453,7 @@ function App() {
       setConnected("Live");
       const d = JSON.parse((e as MessageEvent).data);
       const next = d.revision + ":" + d.count;
-      if (revision && next !== revision)
+      if (next !== revision)
         q.invalidateQueries({
           predicate: (x) =>
             !["session", "options"].includes(String(x.queryKey[0])),
