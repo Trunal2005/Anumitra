@@ -1,12 +1,12 @@
 
 Running 4 tests using 1 worker
 
-  ok 1 tests\browser\ui.spec.ts:22:1 › welcome and authenticated workspaces use real API and retain responsive design (22.1s)
-  ok 2 tests\browser\ui.spec.ts:147:1 › institution can save and submit a draft through browser forms (6.4s)
-  ok 3 tests\browser\ui.spec.ts:225:1 › cross-role repair journey: repeated response, EVC, conditional undertaking, effective renewal and escalation retry (2.4m)
-  ok 4 tests\browser\ui.spec.ts:583:1 › the first live revision refreshes a stale initial compliance snapshot (5.0s)
+  ok 1 tests\browser\ui.spec.ts:22:1 › welcome and authenticated workspaces use real API and retain responsive design (20.9s)
+  ok 2 tests\browser\ui.spec.ts:147:1 › institution can save and submit a draft through browser forms (5.9s)
+  ok 3 tests\browser\ui.spec.ts:225:1 › cross-role repair journey: repeated response, EVC, conditional undertaking, effective renewal and escalation retry (2.2m)
+  ok 4 tests\browser\ui.spec.ts:583:1 › the first live revision refreshes a stale initial compliance snapshot (11.6s)
 
-  4 passed (3.0m)
+  4 passed (2.8m)
 
 To open last HTML report run:
 [36m[39m

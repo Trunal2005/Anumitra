@@ -1,45 +1,43 @@
-# Repair verification — 23 October 2026 (IST)
+# Prototype audit and verification — 23 October 2026 (IST)
 
-Anumitra / SIH26262 is an independent local prototype. The complete isolated gate now passes in one sequential invocation. Earlier failed and split-run results remain historical evidence.
+Audited source: **9ad109d664a891f2657f95ce54a8f3bd5e9808b8**, clean main at entry, matching the prior manifest. No new application defect was reproduced in the exercised paths. Application, tests, dependencies, schema, policy values and visual design remain unchanged. This audit updates documentation/classification and records fresh execution; it does not claim complete regulatory or production readiness.
 
-## Verified source and complete gate
+Source digest: `8ab13929135abb6c076b208ee604acbace3ededfcb543056559e34b7d742a542`. The documentation publication commit is checked against this same implementation digest. [verification.json](evidence/repair/verification.json) records the exact source revision, hashes, full invocation arguments, isolated target and timestamps.
 
-Exact source commit: `3c01372a7002c496b4c9eeb3fe3bc8123d88c547`, based on the preserved `5e9fbfa` checkpoint. Its change is confined to tests/browser/ui.spec.ts. Application code, dependencies, schema, policy values and orange/gold UI are unchanged by this continuation. The publication commit adds documentation/evidence only; its source digest is checked against the tested manifest.
+## PS A–F outcome
 
-Source digest: `8ab13929135abb6c076b208ee604acbace3ededfcb543056559e34b7d742a542`. [verification.json](evidence/repair/verification.json) records HEAD, per-file hashes, empty command arguments, isolated target, checks and UTC timestamps. [sequential-gates.json](evidence/repair/sequential-gates.json) summarizes this same full run.
+The [requirement-by-requirement matrix](REQUIREMENTS.md) classifies every A–F row and cross-cutting claim using Verified working, Partially verified, Unverified or Missing, with code/API/UI and execution evidence. A, D and E have working demonstrated prototype paths. B, C and F have working core paths with explicit partial verification: legacy missing waiting durations cannot be reconstructed; dedicated overdue VISIT-to-SMTP recipient coverage is incomplete; not every report PDF/filter combination was exercised. These are bounded coverage/data limitations, not a claim that those endpoints are absent.
 
-| Executed command | Actual result |
+The primary SIH listing returned HTTP 403 on this audit's direct retrieval. The review uses the supplied full engineering brief/A–F groups and retained PS mapping; it does not assert a newly verified official statement revision. Numeric policy applicability, appointments, deadlines and quorum remain DEMO.
+
+## Executed checks on the audited source
+
+| Check / command | Result and evidence |
 |---|---|
-| `npm run typecheck` | PASS, exit 0; [output](evidence/repair/sequential-typecheck.txt) |
-| `npm run format:check` | PASS, exit 0; [output](evidence/repair/sequential-format.txt) |
-| `npm run verify:isolated` | PASS, exit 0; fresh isolated database with six migrations/fictional seed, TypeScript and production build, **31/31 backend/operations/repair tests**, API restart preservation and **4/4 browser journeys**, all in the same invocation, no skips |
-| `npm audit --json` | PASS, exit 0; zero vulnerabilities; [output](evidence/repair/sequential-audit.json) |
-| `git diff --check` / staged whitespace check | PASS after whitespace-only normalization of the new text logs |
+| `npm run typecheck` | PASS, exit 0; [output](evidence/audit-2026-10-23/typecheck.txt) |
+| `npm run format:check` | PASS, exit 0; [output](evidence/audit-2026-10-23/format.txt) |
+| `npm run verify:isolated` | PASS, exit 0 in one sequential invocation; fresh six-migration/fictional-seed isolated target, TypeScript and production build, **31/31 backend tests**, API restart preservation and **4/4 Chromium journeys**, no skips; [full output](evidence/audit-2026-10-23/full-run.txt), [TAP](evidence/repair/backend.tap), [browser](evidence/repair/browser.txt) |
+| `node --import tsx docs/evidence/audit-2026-10-23/obligation-ui-probe.mjs` | PASS supplemental real UI/API exercise, using only the retained isolated database; [source-guarded reproduction script](evidence/audit-2026-10-23/obligation-ui-probe.mjs), [results](evidence/audit-2026-10-23/undertaking-ui.json), [extension capture](evidence/audit-2026-10-23/undertaking-extension.png) |
+| `npm audit --json` | PASS, zero vulnerabilities; [JSON](evidence/audit-2026-10-23/dependency-audit.json) |
+| `npm run doctor -- --strict` | PASS against existing normal demo; API/database/schema/storage/worker/SMTP ready; [output](evidence/audit-2026-10-23/doctor.txt) |
+| Git whitespace and known-credential/key scans | Checked before publication; credentials, storage, backups and runtime service logs excluded |
 
-Full output: [sequential-full-run.txt](evidence/repair/sequential-full-run.txt). Raw results: [backend.tap](evidence/repair/backend.tap), [browser.txt](evidence/repair/browser.txt). Backend duration: 138.268 seconds. Browser duration: 3.0 minutes; draft/upload/submit 6.4 seconds, cross-role 2.4 minutes, controlled first-event SSE regression 5.0 seconds. Vite built successfully in 28.01 seconds and emitted a non-fatal warning about chunks above 500 kB; no bundle optimization was undertaken.
+Native backend duration: 209.204 seconds. Browser journeys: 2.8 minutes total, including repeated response/EVC/conditional-decision/undertaking/renewal/escalation/retry and controlled first-SSE-event regression. The successful build retains a non-fatal warning about chunks above 500 kB. No concurrent install/build was run during the complete gate. The disposable database is named in verification.json; its private files and credentials remain isolated under ignored .local/test-runs.
 
-Executed environment: Windows, Node 20.19.4, native PostgreSQL 18.6, local Mailpit and Chromium. Disposable target: `anumitra_test_1792751932630`, own restricted API/worker roles, random fictional credentials and private .local/test-runs storage. Test API 3100, SMTP 1125, inbox 8125. The harness finishes its own build before backend/browser execution; no separate install/build or clean-copy process ran concurrently. The normal demo API/worker were left running without restart. No normal-demo reset, seed, migration, credential overwrite or private-file cleanup ran.
+The supplemental exercise proved authority UI extension/waiver, 403 supervisor denial, 409 non-later/closed-condition rejection, exact IST deadline rendering, original deadline preservation, revision history and both human actions in audit. Its initial probe incorrectly expected 400 for a conflict guard. That test-setup assumption was corrected to the inspected 409 contract with exact error assertions; [initial failed output](evidence/audit-2026-10-23/probe-status-assumption.txt) is retained. No application assertion or production guard was weakened. The extension capture was visually inspected.
 
-## Exact failure and synchronization repair
+A repeat initially found its previously consumed OPEN fixture already waived; [that output](evidence/audit-2026-10-23/probe-reused-fixture.txt) is retained. The published probe now creates its own new fictional condition through authenticated institution/reviewer/authority commands, then performs extension/waiver through the UI. That exact retained script passed; its SHA-256 and application source digest are in undertaking-ui.json. It refuses an unmarked database or mismatched implementation, requires a free test API port, and stops only its own API child. This supplemental evidence script is separate from the unchanged main test suite.
 
-The failed selector was `page.getByLabel('Current document version')`, at line 175 of the original browser spec. Its five-second `toBeVisible()` assertion started immediately after clicking Upload new immutable version. A Playwright click resolves after the browser action; it does not await the async form handler's upload and subsequent query refresh.
+## Native services and preservation
 
-UploadForm awaits POST /api/applications/:id/documents, then calls onDone to invalidate the application query. ApplicationWorkspace renders the selector only when that query's documents contain a version. The failed run recorded HTTP 201, and its later snapshot contained the selector. The assertion raced the upload/read/render sequence. Concurrent clean-copy work may have contributed to latency; that hardware contribution is not proved, and the selector was not renamed.
+The pre-existing project PostgreSQL (55432), API (3000), single worker and Mailpit (SMTP 1025 / HTTP 8025) were identified and healthy. They were reused. No normal-demo reset, seed, migration, storage cleanup, credential overwrite or process termination ran. Full-suite and supplemental mutations used only fictional records in the marked disposable database. The supplemental API child was owned and stopped by its probe; the normal worker was not duplicated. Final HTTP/browser and strict-doctor checks are performed after the ordinary push; no deployment is involved.
 
-The test now registers both response listeners **before** clicking. It asserts HTTP 201 for this application's exact upload URL, then waits for a real HTTP 200 application read whose documents contain the newly returned version ID. Old or unrelated reads cannot satisfy that barrier. It then runs the original five-second visibility assertion and additionally checks the selector's value equals that exact ID. No assertion timeout, test timeout or retry setting was increased; no fixed sleeps, forced reloads, direct cache updates or mocked API responses were added.
+## Hosted CI and historical evidence
 
-The full gate retains the controlled first-SSE-event regression and cross-role journey: repeated rejected responses, EVC scheduling/report/recommendation, separate human conditional decision, undertaking submission/review, pending effective-document renewal, escalation and deliberate ambiguous-delivery retry disclosure. Backend scope/export/private-file, interval/ageing, concurrent review, renewal, rollback, policy race/migration, actual pg-boss/SMTP ambiguity/restart and cancellation/reservation regressions remain.
+Hosted CI is now directly verified for the audited source 9ad109d: [successful run 39942039627](https://github.com/Trunal2005/Anumitra/actions/runs/39942039627), including dependency installation, format check, full isolated gate and audit. [Retained job/step metadata](evidence/audit-2026-10-23/ci-9ad109d.json) records the exact SHA. This does not assert a CI outcome for a later documentation-only commit, nor does it verify the project's local Compose deployment path.
 
-## Historical evidence
+The [previous successful 3c01372 report](TEST_REPORT_REPAIR_3c01372.md), [manifest](evidence/repair/verification-3c01372.json), [TAP](evidence/repair/backend-3c01372.tap), [browser output](evidence/repair/browser-3c01372.txt) and original commit 9ad109d preserve the earlier gate/captures. The failed 0d6faa2 full run, its browser-only rerun, the earlier SSE failure and all prior reports remain historical. No old failure is presented as a pass. Previous clean-copy/restore/normal-upgrade evidence is not relabelled as a new check in this audit.
 
-The unsuccessful full command is preserved unchanged in [full-run-0d6faa2.txt](evidence/repair/full-run-0d6faa2.txt), [browser-upload-timing-0d6faa2.txt](evidence/repair/browser-upload-timing-0d6faa2.txt) and [full-verification-0d6faa2.json](evidence/repair/full-verification-0d6faa2.json). It failed despite 31 backend and 3 browser passes. The subsequent browser-only run passed four, but was never a passing complete gate.
+## Remaining limits
 
-Previous outputs were copied before refreshing latest paths: [backend-0d6faa2.tap](evidence/repair/backend-0d6faa2.tap), [browser-only-0d6faa2.txt](evidence/repair/browser-only-0d6faa2.txt), [browser-only-verification-0d6faa2.json](evidence/repair/browser-only-verification-0d6faa2.json). The [historical report](TEST_REPORT_REPAIR_0d6faa2.md) and commit 5e9fbfac1602fa2747731a73f97c38b4e655ed53 retain the previous checkpoint and screenshots.
-
-Clean-copy installation/migrate/seed and 157-file isolated restore results belong to source 0d6faa2; they were not rerun or relabelled as checks of this test-only change. Earlier populated-copy and normal additive upgrade evidence remains preserved. None of those normal migrations was repeated. Current tests provision only their separate marked database and private storage. New public text logs have trailing whitespace normalized; original bytes are retained privately.
-
-## Limits
-
-Docker/Compose execution and hosted CI have not been verified in this continuation. Publishing may trigger the supplied public-repository CI workflow; no hosted outcome is claimed here. All numeric deadlines, grace periods, quorum and eligibility values remain DEMO and need qualified policy-owner verification.
-
-No authorised live AICTE integration, malware/authenticity scanning, exactly-once SMTP, full accessibility, national-scale performance, production readiness or selection-probability claim is made. Selected browser captures and synthetic scenarios are not a human-effort study. No paid service/inference, software licence or deployment was added.
+Local Compose execution remains unverified. Official numeric policies and statutory appointments need qualified policy-owner review. No authorised live AICTE adapter, antivirus/authenticity scanner, exactly-once SMTP, full accessibility, scale benchmark, production certification or selection-probability claim is made. Local JSON/CSV adapters, bounded file checks and explicit NOT_SCANNED status remain honest prototype capabilities. No paid service/inference, new licence or deployment was added.

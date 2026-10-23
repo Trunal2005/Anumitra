@@ -1,0 +1,15 @@
+node:internal/modules/run_main:123
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Need a fictional open northern obligation in the isolated target
+    at <anonymous> (C:\projects\sih\Anumitra(SIH26262)\docs\evidence\audit-2026-10-23\obligation-ui-probe.mjs:55:10)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: undefined,
+  expected: true,
+  operator: '=='
+}
+
+Node.js v20.19.4

@@ -31,3 +31,7 @@ The earlier access failures above are historical. Browser retrieval during repai
 | Adverse scrutiny referral to AUTHORITY_REVIEW | Explicit optional draft policy setting | Only cases pinned to a version enabling it | DEMO route, not a claim about legally permissible bypasses |
 
 Existing published versions and cases are preserved; the repair does not silently replace their numeric policies. A policy owner must independently approve applicable clauses/pages, processing category, cycle, calendars, appointments and superseding notices before any real regulatory use. No clause or deadline is invented from the available cover pages/definitions.
+
+## Subsequent prototype audit — 23 October 2026 (IST)
+
+A direct web retrieval of https://www.sih.gov.in/sih2026PS returned HTTP 403 during this audit. The earlier successful retrieval remains historical. Current functional review uses the supplied A–F engineering brief and retained requirement mapping; no freshly verified official statement revision, numerical rule or clause is claimed. No policy values were changed or applied to the normal demo.

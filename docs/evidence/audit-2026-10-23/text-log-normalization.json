@@ -1,0 +1,41 @@
+{
+  "originalsRetainedPrivately": true,
+  "changes": "Only LF and trailing whitespace; results unchanged",
+  "files": [
+    {
+      "file": "doctor.txt",
+      "originalSha256": "1662c101ec47ca47ce8ffedfaecb09d902f84e3013aeb84c99d0ddeac12dd9fd",
+      "publishedSha256": "1662c101ec47ca47ce8ffedfaecb09d902f84e3013aeb84c99d0ddeac12dd9fd"
+    },
+    {
+      "file": "format.txt",
+      "originalSha256": "a132e20a2c3de37050619ad5e42ecca09e186e83c1eb2ed58c4e547fda1582ca",
+      "publishedSha256": "ea2a38c1ca81af5169b8da4e84e8c8570030aa166ce4e56f639bc38cfcf60c6b"
+    },
+    {
+      "file": "full-run.txt",
+      "originalSha256": "c1ca3bb852a89149222da40fc096a105853c67170691156afbada6ca8bc0e5d4",
+      "publishedSha256": "0f638d907fcf316f9dbcf3047732ec339f659d28370a81c0098eba59879015f8"
+    },
+    {
+      "file": "probe-reused-fixture.txt",
+      "originalSha256": "07ab171c424e442c471d0f182679fc40da49cc5dba194dee4952057cde8fa54a",
+      "publishedSha256": "8fcb7251970e040ad97ce6ed2cc137efa3eb43ab4161937bff3e743b091c3d7d"
+    },
+    {
+      "file": "probe-status-assumption.txt",
+      "originalSha256": "1b9fc953259cf66ceded4b409e527715a4a6c54886ac218fe6efb992e0f67ee3",
+      "publishedSha256": "8ffa94894c70c2132ecdd79f756db632c0c3527213e0200b1b1ab4ea227d59e0"
+    },
+    {
+      "file": "typecheck.txt",
+      "originalSha256": "035c383b0de1269fddcbae715ad369530b39d38b583aa587aa7c885a0697fbad",
+      "publishedSha256": "25b07a7df4f886fb3689f8d37bdaa098feba335aa47f49f76adf29bcdd2f73a0"
+    },
+    {
+      "file": "undertaking-ui-run.txt",
+      "originalSha256": "5d63103d10487ae5edf781e8b3e7ebf5330ca52a2273bbe2b6fe72766a22c4d4",
+      "publishedSha256": "a4e252fcee728f2497e4497ef5eb6516047a597ee258e76b5a2c5e756831ee7f"
+    }
+  ]
+}

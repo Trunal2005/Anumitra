@@ -1,0 +1,25 @@
+{
+  "recordedAt": "2026-10-23T11:24:30.030Z",
+  "testedSource": "9ad109d664a891f2657f95ce54a8f3bd5e9808b8",
+  "sourceDigest": "8ab13929135abb6c076b208ee604acbace3ededfcb543056559e34b7d742a542",
+  "fullGate": {
+    "command": "npm run verify:isolated",
+    "exitCode": 0,
+    "backendPassed": 31,
+    "browserPassed": 4,
+    "skipped": 0,
+    "target": "/anumitra_test_1792753931355"
+  },
+  "supplementalUI": "undertaking-ui.json",
+  "normalDemoMaintenance": false,
+  "noRuntimeDefectReproduced": true,
+  "applicationSourceChanged": false,
+  "ciRun": "https://github.com/Trunal2005/Anumitra/actions/runs/39942039627",
+  "ciSource": "9ad109d664a891f2657f95ce54a8f3bd5e9808b8",
+  "ciConclusion": "success",
+  "partialRows": [
+    "B2",
+    "C3",
+    "F3"
+  ]
+}

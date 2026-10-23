@@ -1,7 +1,7 @@
 {
   "arguments": [],
   "source": {
-    "gitHead": "3c01372a7002c496b4c9eeb3fe3bc8123d88c547",
+    "gitHead": "9ad109d664a891f2657f95ce54a8f3bd5e9808b8",
     "sourceDigest": "8ab13929135abb6c076b208ee604acbace3ededfcb543056559e34b7d742a542",
     "files": [
       {
@@ -323,9 +323,9 @@
     ]
   },
   "status": "PASSED",
-  "startedAt": "2026-10-23T10:40:04.960Z",
-  "sourceRevision": "3c01372a7002c496b4c9eeb3fe3bc8123d88c547",
-  "target": "/anumitra_test_1792751932630",
+  "startedAt": "2026-10-23T11:12:36.615Z",
+  "sourceRevision": "9ad109d664a891f2657f95ce54a8f3bd5e9808b8",
+  "target": "/anumitra_test_1792753931355",
   "databaseIsDisposable": true,
   "services": [
     "isolated PostgreSQL",
@@ -337,5 +337,5 @@
     "API restart preserved all case IDs, versions and policy pins",
     "browser passed"
   ],
-  "finishedAt": "2026-10-23T10:45:32.749Z"
+  "finishedAt": "2026-10-23T11:19:03.918Z"
 }

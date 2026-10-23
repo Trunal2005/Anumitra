@@ -1,0 +1,18 @@
+node:internal/modules/run_main:123
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+409 !== 400
+
+    at <anonymous> (C:\projects\sih\Anumitra(SIH26262)\.local\audit-obligation-ui.mjs:33:9)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: 409,
+  expected: 400,
+  operator: 'strictEqual'
+}
+
+Node.js v20.19.4
