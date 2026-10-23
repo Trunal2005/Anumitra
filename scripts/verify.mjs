@@ -74,8 +74,12 @@ delete runtime.MIGRATION_DATABASE_URL;
 const children = [];
 function start(args, name, executable = process.execPath) {
   const log = openSync(path.join(directory, name + ".log"), "a");
+  const serviceEnvironment = { ...process.env, ...runtime };
+  delete serviceEnvironment.MIGRATION_DATABASE_URL;
+  delete serviceEnvironment.RUNTIME_DATABASE_URL;
+  delete serviceEnvironment.PGPASSWORD;
   const child = spawn(executable, args, {
-    env: { ...process.env, ...runtime },
+    env: serviceEnvironment,
     windowsHide: true,
     stdio: ["ignore", log, log],
   });
