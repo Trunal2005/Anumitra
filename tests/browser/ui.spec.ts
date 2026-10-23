@@ -169,10 +169,46 @@ test("institution can save and submit a draft through browser forms", async ({
     mimeType: "application/pdf",
     buffer: await evidencePdf(),
   });
-  await page
-    .getByRole("button", { name: "Upload new immutable version" })
-    .click();
+  const applicationPath = "/api" + new URL(page.url()).pathname;
+  const uploadedVersion = page
+    .waitForResponse(
+      (response) =>
+        new URL(response.url()).pathname === applicationPath + "/documents" &&
+        response.request().method() === "POST",
+    )
+    .then(async (response) => {
+      expect(response.status()).toBe(201);
+      return response.json();
+    });
+  // A click and even HTTP 201 precede the query refresh that renders the selector.
+  // Observe the real read containing this version; a stale/SSE read is insufficient.
+  const refreshedApplication = page.waitForResponse(async (response) => {
+    if (
+      new URL(response.url()).pathname !== applicationPath ||
+      response.request().method() !== "GET" ||
+      response.status() !== 200
+    )
+      return false;
+    const uploaded = await uploadedVersion;
+    try {
+      const application = await response.json();
+      return application.documents.some(
+        (document: { versions: { id: string }[] }) =>
+          document.versions.some((version) => version.id === uploaded.id),
+      );
+    } catch {
+      return false; // A cancelled read cannot establish the refreshed snapshot.
+    }
+  });
+  const [uploaded] = await Promise.all([
+    uploadedVersion,
+    refreshedApplication,
+    page.getByRole("button", { name: "Upload new immutable version" }).click(),
+  ]);
   await expect(page.getByLabel("Current document version")).toBeVisible();
+  await expect(page.getByLabel("Current document version")).toHaveValue(
+    uploaded.id,
+  );
   await page
     .getByRole("button", { name: "Commit Submit", exact: true })
     .click();
