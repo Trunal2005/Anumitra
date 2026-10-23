@@ -1,0 +1,36 @@
+{
+  "recordedAt": "2026-10-23T10:46:52.397Z",
+  "sourceCommit": "3c01372a7002c496b4c9eeb3fe3bc8123d88c547",
+  "sourceDigest": "8ab13929135abb6c076b208ee604acbace3ededfcb543056559e34b7d742a542",
+  "command": "npm run verify:isolated",
+  "arguments": [],
+  "exitCode": 0,
+  "backend": {
+    "passed": 31,
+    "failed": 0,
+    "skipped": 0
+  },
+  "browser": {
+    "passed": 4,
+    "failed": 0,
+    "skipped": 0
+  },
+  "testDatabase": "/anumitra_test_1792751932630",
+  "normalDemoResetSeedMigrationCleanup": false,
+  "concurrentInstallOrBuildProcess": false,
+  "checks": [
+    "backend/operations/repair tests passed",
+    "API restart preserved all case IDs, versions and policy pins",
+    "browser passed"
+  ],
+  "artifacts": [
+    "verification.json",
+    "backend.tap",
+    "browser.txt",
+    "sequential-full-run.txt",
+    "sequential-typecheck.txt",
+    "sequential-format.txt",
+    "sequential-audit.json"
+  ],
+  "historicalFailure": "full-verification-0d6faa2.json"
+}

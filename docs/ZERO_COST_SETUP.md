@@ -33,6 +33,8 @@ Restart it with `npm run bootstrap`. That command preserves seeded data. An auth
 
 ## Isolated repair verification
 
+Run the complete gate sequentially, without a concurrent install/build or clean-copy check against this checkout. The harness builds first, then runs backend tests and browser journeys, recording the exact source HEAD/hashes in docs/evidence/repair/verification.json. A separate browser-only pass is not a complete gate. Fresh migrations and seeds target only the new marked test database; the normal demo is refused.
+
 `npm run verify:isolated` creates a new `anumitra_test_<timestamp>` database with its own restricted runtime role, private storage, random fictional-account password, API 3100 and Mailpit SMTP 1125 / HTTP 8125. The normal 3000/1025/8025 demo and its clock/credentials are not used. Existing ports must be available. Install Chromium with `npx playwright install chromium`. Provide local owner configuration in ignored `.local/migration.env`, or `MIGRATION_DATABASE_URL` on CI. No reset/drop cleanup runs; disposable data remains under `.local/test-runs` for investigation.
 
 `npm test` runs backend/operations/repair tests with the same isolation. `npm run test:browser` provisions a new isolated browser target. Direct test-file execution against the normal `.env` is deliberately refused. `node scripts/verify-clean-checkout.mjs` copies only Git-visible source into a new private directory, runs npm ci/generate/build and fresh/second migration-seed checks. `node scripts/in-test.mjs scripts/verify-persistence.mjs` verifies a backup/restore and every private-file hash in another retained test database.

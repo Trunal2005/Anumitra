@@ -1,12 +1,8 @@
 {
-  "arguments": [
-    "--existing",
-    "--browser-only",
-    "--skip-build"
-  ],
+  "arguments": [],
   "source": {
-    "gitHead": "0d6faa22898c62565cfef30a3e84106c1135256b",
-    "sourceDigest": "7072e06232a95539c78930e0de166b3b5592d150bf25d353d8f04a3780a785f9",
+    "gitHead": "3c01372a7002c496b4c9eeb3fe3bc8123d88c547",
+    "sourceDigest": "8ab13929135abb6c076b208ee604acbace3ededfcb543056559e34b7d742a542",
     "files": [
       {
         "file": ".dockerignore",
@@ -294,7 +290,7 @@
       },
       {
         "file": "tests/browser/ui.spec.ts",
-        "sha256": "fbb9d4db6ee54e816fc0e3f3714c4664512e0ef2a8330e1803d3254650861dfd"
+        "sha256": "b89d622b24e7037002dc98510f0098cd862624d32c89aeda11669e0eb7763f90"
       },
       {
         "file": "tests/helpers.ts",
@@ -327,9 +323,9 @@
     ]
   },
   "status": "PASSED",
-  "startedAt": "2026-10-23T02:07:07.415Z",
-  "sourceRevision": "0d6faa22898c62565cfef30a3e84106c1135256b",
-  "target": "/anumitra_test_1792720602431",
+  "startedAt": "2026-10-23T10:40:04.960Z",
+  "sourceRevision": "3c01372a7002c496b4c9eeb3fe3bc8123d88c547",
+  "target": "/anumitra_test_1792751932630",
   "databaseIsDisposable": true,
   "services": [
     "isolated PostgreSQL",
@@ -337,8 +333,9 @@
     "isolated Mailpit"
   ],
   "checks": [
+    "backend/operations/repair tests passed",
     "API restart preserved all case IDs, versions and policy pins",
     "browser passed"
   ],
-  "finishedAt": "2026-10-23T02:09:50.810Z"
+  "finishedAt": "2026-10-23T10:45:32.749Z"
 }

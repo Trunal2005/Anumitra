@@ -4,6 +4,8 @@ Anumitra is an independent SIH26262 student prototype. Submission readiness mean
 
 The twelve reviewed findings and their regression mapping are in [REPAIR_PLAN](REPAIR_PLAN.md). Current execution results, revision, failures and environmental limits belong to [TEST_REPORT_REPAIR](TEST_REPORT_REPAIR.md); the original TEST_REPORT is historical evidence.
 
+The complete isolated gate passed on source 3c01372a7002c496b4c9eeb3fe3bc8123d88c547: 31 backend tests, API restart preservation and all four browser journeys in one sequential invocation. The upload test now waits for the committed version and refreshed application response, retaining its five-second UI assertion. The original failure remains historical.
+
 Supported primary environment: Windows, Node 20.19.4, native PostgreSQL 18, local Mailpit and Chromium. Install dependencies, generate Prisma, apply additive migrations with the migration account, provision the restricted runtime account, build, then start API and worker separately. See README and ZERO_COST_SETUP. Tests provision their own database, credentials, ports and storage; they refuse the normal demo.
 
 External limitations remain explicit:

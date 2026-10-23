@@ -12,6 +12,8 @@ The existing React/Express/PostgreSQL application includes the October 2026 subm
 
 Use [current repair verification](docs/TEST_REPORT_REPAIR.md), [readiness](docs/SUBMISSION_READINESS.md), [coverage](docs/REQUIREMENTS.md) and [limitations](docs/SECURITY_AND_LIMITATIONS.md). The original [test report](docs/TEST_REPORT.md) remains historical evidence. Compose and hosted CI execution remain unverified locally. Official numeric configuration, authorised live integration and antivirus protection are not claimed. No project licence has been selected.
 
+The complete `npm run verify:isolated` gate passed on source `3c01372a7002c496b4c9eeb3fe3bc8123d88c547`: 31 backend tests, API restart preservation and all four browser journeys in one sequential invocation. The upload journey synchronizes on the committed version and its application read, retaining the five-second UI assertion. The earlier full-run failure is preserved in the dated report.
+
 ## Run locally on this Windows workspace
 
 Prerequisites: Node 20.19+ (or supported Node 22), PostgreSQL 18 binaries and local Mailpit. PostgreSQL binaries here are at `C:/Program Files/PostgreSQL/18/bin`. The downloaded Mailpit executable is in ignored `.local/mailpit.exe`.

@@ -1,0 +1,22 @@
+{
+  "recordedAt": "2026-10-23T10:49:41.814Z",
+  "originalBytesRetainedPrivately": true,
+  "changes": "Line endings/trailing whitespace only; results unchanged.",
+  "files": [
+    {
+      "file": "sequential-full-run.txt",
+      "originalSha256": "08421420933dc0233431cab7d549841632de98d786a9d83b75cf74ce47b231a4",
+      "publishedSha256": "3a07c11a6173a1cc58f396e20f6f0f0679c5e7699f6a88fc45dd5093c0d17d33"
+    },
+    {
+      "file": "sequential-typecheck.txt",
+      "originalSha256": "035c383b0de1269fddcbae715ad369530b39d38b583aa587aa7c885a0697fbad",
+      "publishedSha256": "25b07a7df4f886fb3689f8d37bdaa098feba335aa47f49f76adf29bcdd2f73a0"
+    },
+    {
+      "file": "sequential-format.txt",
+      "originalSha256": "a132e20a2c3de37050619ad5e42ecca09e186e83c1eb2ed58c4e547fda1582ca",
+      "publishedSha256": "ea2a38c1ca81af5169b8da4e84e8c8570030aa166ce4e56f639bc38cfcf60c6b"
+    }
+  ]
+}
