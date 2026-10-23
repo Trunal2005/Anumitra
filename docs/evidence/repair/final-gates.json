@@ -1,0 +1,88 @@
+{
+  "checkedAt": "2026-10-23T02:13:45.006Z",
+  "codeRevision": "0d6faa22898c62565cfef30a3e84106c1135256b",
+  "sourceDigest": "7072e06232a95539c78930e0de166b3b5592d150bf25d353d8f04a3780a785f9",
+  "sourceUnchangedBetweenBackendBrowserAndCleanCopy": true,
+  "typecheck": {
+    "command": "npm run typecheck",
+    "exitCode": 0
+  },
+  "formatting": {
+    "command": "npm run format:check",
+    "exitCode": 0
+  },
+  "audit": {
+    "command": "npm audit --json",
+    "exitCode": 0,
+    "vulnerabilities": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 0,
+      "critical": 0,
+      "total": 0
+    }
+  },
+  "originalFullRun": {
+    "command": "npm run verify:isolated",
+    "exitCode": 1,
+    "report": "full-verification-0d6faa2.json",
+    "reason": "One five-second browser upload-render assertion failed; preserved separately."
+  },
+  "backend": {
+    "passed": 31,
+    "failed": 0,
+    "skipped": 0,
+    "evidence": "backend.tap"
+  },
+  "browser": {
+    "command": "npm run verify:isolated -- --existing --browser-only --skip-build",
+    "exitCode": 0,
+    "passed": 4,
+    "assertionsUnchanged": true,
+    "evidence": "browser.txt"
+  },
+  "cleanCopy": {
+    "command": "node scripts/verify-clean-checkout.mjs",
+    "exitCode": 0,
+    "checks": [
+      "ci",
+      "run db:generate",
+      "run build",
+      "scripts/prepare-test.mjs",
+      "scripts/migrate.mjs",
+      "--import tsx packages/db/seed.ts",
+      "existing .env without private cluster/password safely refused"
+    ]
+  },
+  "restore": {
+    "command": "node scripts/in-test.mjs scripts/verify-persistence.mjs",
+    "exitCode": 0,
+    "executedAt": "2026-10-23T02:10:14.174Z",
+    "source": "/anumitra_test_1792720602431",
+    "restoredDatabase": "anumitra_test_restore_1792721412456",
+    "retained": true,
+    "verifiedPrivateFiles": 157,
+    "sourceCounts": {
+      "applications": "151",
+      "audits": "1335",
+      "versions": "157"
+    },
+    "restoredCounts": {
+      "applications": "151",
+      "audits": "1335",
+      "versions": "157"
+    }
+  },
+  "normalDemo": {
+    "migrationSeedResetCleanupRunInContinuation": false,
+    "existingCredentialStillMatches": true,
+    "strictReadiness": "ready"
+  },
+  "limitations": [
+    "Initial browser timing failure retained; contention suspected, not proved.",
+    "Container execution unavailable in recorded check.",
+    "Hosted CI unobserved.",
+    "Official numeric policy assumptions remain DEMO."
+  ]
+}

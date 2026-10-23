@@ -1,0 +1,50 @@
+
+Running 4 tests using 1 worker
+
+  ok 1 tests\browser\ui.spec.ts:22:1 › welcome and authenticated workspaces use real API and retain responsive design (28.2s)
+  x  2 tests\browser\ui.spec.ts:147:1 › institution can save and submit a draft through browser forms (32.4s)
+  ok 3 tests\browser\ui.spec.ts:189:1 › cross-role repair journey: repeated response, EVC, conditional undertaking, effective renewal and escalation retry (1.8m)
+  ok 4 tests\browser\ui.spec.ts:547:1 › the first live revision refreshes a stale initial compliance snapshot (12.9s)
+
+
+  1) tests\browser\ui.spec.ts:147:1 › institution can save and submit a draft through browser forms
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: getByLabel('Current document version')
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for getByLabel('Current document version')[22m
+
+
+      173 |     .getByRole("button", { name: "Upload new immutable version" })
+      174 |     .click();
+    > 175 |   await expect(page.getByLabel("Current document version")).toBeVisible();
+          |                                                             ^
+      176 |   await page
+      177 |     .getByRole("button", { name: "Commit Submit", exact: true })
+      178 |     .click();
+        at C:\projects\sih\Anumitra(SIH26262)\tests\browser\ui.spec.ts:175:61
+
+    Error Context: test-results\browser\ui-institution-can-save-an-1ea90-draft-through-browser-forms\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\browser\ui-institution-can-save-an-1ea90-draft-through-browser-forms\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\browser\ui-institution-can-save-an-1ea90-draft-through-browser-forms\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    tests\browser\ui.spec.ts:147:1 › institution can save and submit a draft through browser forms ─
+  3 passed (3.7m)
+
+To open last HTML report run:
+[36m[39m
+[36m  npx playwright show-report[39m
+[36m[39m

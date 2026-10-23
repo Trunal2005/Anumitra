@@ -1,0 +1,32 @@
+{
+  "sourceRevision": "08758db7c45a687dd753fef678537e231ca75c14",
+  "executedAt": "2026-10-22T18:08:21.678Z",
+  "target": "/anumitra_test_1792692471533",
+  "officialInstitutionScope": {},
+  "dates": [
+    {
+      "value": "2026-02-31",
+      "result": "Tue Mar 03 2026 23:59:59 GMT+0530 (India Standard Time)"
+    },
+    {
+      "value": "2026-02-29",
+      "result": "Sun Mar 01 2026 23:59:59 GMT+0530 (India Standard Time)"
+    },
+    {
+      "value": "2026-02-28",
+      "result": "Sat Feb 28 2026 23:59:59 GMT+0530 (India Standard Time)"
+    }
+  ],
+  "openAttemptsAfterRejectedResponse": [
+    {
+      "stage": "RESCRUTINY",
+      "state": "OPEN"
+    }
+  ],
+  "expiredAcceptedVersionReminderCountWithPendingRenewal": 0,
+  "completedTransportRetry": {
+    "jobState": "completed",
+    "intentAfterSmtp": "FAILED",
+    "selectedByQueuedRelayAfterRetry": 0
+  }
+}

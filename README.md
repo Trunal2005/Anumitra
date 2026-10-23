@@ -6,13 +6,11 @@ Approval and Compliance Orchestration · SIH26262: Integrated AICTE Approval Wor
 
 Independent student prototype. Fictional records, demonstration policy values and a functioning local adapter. No official AICTE deployment, endorsement or live integration. No paid API, service, inference, hosting or account is required.
 
-## Work-in-progress checkpoint
+## Correctness repair checkpoint
 
-This repository preserves the current implementation; it is **not complete or production-ready**. Existing functionality includes local authentication, scoped PostgreSQL records, scrutiny/deficiency/resubmission workflows, EVC and committee stages, decisions and obligations, private document versions/PDF preview, a separate notification worker, local Mailpit capture, dashboards, reports, policy editing and local JSON/CSV adapters. Test evidence covers selected journeys, not every possible branch.
+The existing React/Express/PostgreSQL application includes the October 2026 submission audit repairs. It is an independent local prototype, not production-ready. Implemented areas include authentication, intersected role scope, private evidence and PDF preview, repeated deficiency/response cycles, five route families, EVC/committee recommendations, human decisions, undertakings, effective-document renewal, designated escalation events, durable retries, six reports and versioned demo policies.
 
-Current limitations: official policy/deadline/quorum values remain demonstration assumptions; no authorized live AICTE integration is installed; Compose is supplied but unverified because the local Docker engine was stopped; malware scanning is not configured; policy migration/retirement and obligation extension/waiver branches lack exhaustive browser/concurrency verification. No production-scale, comprehensive accessibility or manual-effort-reduction claim is made. See [implementation status](docs/IMPLEMENTATION_STATUS.md) and [security/limitations](docs/SECURITY_AND_LIMITATIONS.md).
-
-Checkpoint validation: TypeScript and formatting checks were rerun successfully for this upload. Existing recorded evidence reports 17 backend/operations tests and two Chromium journeys passing during development. Those integration/browser tests and the production build were not rerun for this checkpoint, to preserve the existing demo state and honor the pause on rebuilding/development. No license is added by this checkpoint.
+Use [current repair verification](docs/TEST_REPORT_REPAIR.md), [readiness](docs/SUBMISSION_READINESS.md), [coverage](docs/REQUIREMENTS.md) and [limitations](docs/SECURITY_AND_LIMITATIONS.md). The original [test report](docs/TEST_REPORT.md) remains historical evidence. Compose and hosted CI execution remain unverified locally. Official numeric configuration, authorised live integration and antivirus protection are not claimed. No project licence has been selected.
 
 ## Run locally on this Windows workspace
 
@@ -24,6 +22,8 @@ npm run bootstrap
 ```
 
 Bootstrap creates an isolated password-protected PostgreSQL cluster on **127.0.0.1:55432**, applies migrations, generates 20 fictional institutions and 120 applications, bundles the frontend, separates runtime/migration credentials, and starts Mailpit if the executable is available. Existing demo data is preserved. It never resets an existing database.
+
+For this already upgraded workspace, a restart does not require bootstrap, migrations or seeding. If PostgreSQL is stopped, start the existing cluster with `& 'C:\Program Files\PostgreSQL\18\bin\pg_ctl.exe' -D .local/db -l .local/postgres.log -o '-p 55432 -h 127.0.0.1' -w start`. Start local Mailpit with `.local/mailpit.exe --listen 127.0.0.1:8025 --smtp 127.0.0.1:1025 --database .local/mailpit.db`, then start API and worker below. Check for existing processes before starting duplicates.
 
 Start these in two terminals:
 
@@ -73,6 +73,6 @@ npm run format:check
 npm audit
 ```
 
-The API, PostgreSQL and Mailpit must be running for tests. Browser tests use Chromium; first install it with `npx playwright install chromium`. Tests intentionally create fictional records and audit history; they do not destroy/reset the database. Browser verification is headless Chromium, not mocked workflow APIs.
+Tests provision their own disposable database, storage, credentials, API (3100) and Mailpit (1125/8125), using the configured local migration owner. The normal demo is refused as a test target. Install Chromium with `npx playwright install chromium`. Run `npm run verify:isolated` for the complete real-API/browser verification; no reset/drop cleanup runs.
 
 See [demo guide](docs/DEMO_GUIDE.md), [requirements and coverage](docs/REQUIREMENTS.md), [test report](docs/TEST_REPORT.md), [implementation status](docs/IMPLEMENTATION_STATUS.md), [architecture](docs/ARCHITECTURE.md), [permissions](docs/PERMISSIONS.md), [policy register](docs/POLICY_REGISTER.md), [design fidelity](docs/DESIGN_FIDELITY.md), [zero-cost operations](docs/ZERO_COST_SETUP.md), [API contract](docs/API.md), and [security/limitations](docs/SECURITY_AND_LIMITATIONS.md).

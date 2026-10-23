@@ -1,3 +1,15 @@
+# Implementation status — repair, 23 October 2026
+
+The existing architecture and orange/gold design are retained. Current changes add shared intersected grant scope/assignment/delegation, central stage intervals with database non-overlap constraints, current-attempt negative recommendations and human adverse decisions, effective-document renewal semantics, staged uploads/cleanup, stage-specific deadlines, persisted designated escalation/acknowledgement, retry generations, locked policy publication, shared overdue subjects, separate restricted worker credentials, readiness and isolated verification/CI.
+
+Use [TEST_REPORT_REPAIR](TEST_REPORT_REPAIR.md) for the final source identity and actual executed results; [REQUIREMENTS](REQUIREMENTS.md) maps every A–F bullet. The historical execution below belongs to the original reviewed checkpoint and must not be substituted for the repair results.
+
+Final continuation checks on source 0d6faa2: 31 backend/operations/repair tests passed; all four unchanged browser journeys passed on a sequential rerun; typecheck, build, formatting and zero-advisory audit passed. Clean-copy installation/database preparation and a separate 157-file restore passed. The first full command failed one browser timing assertion during concurrent clean-copy work; that trace and its limits remain in the dated report. This is a local verification checkpoint, not hosted CI or production certification.
+
+Published existing policies and case pins remain unchanged; new fictional seeds demonstrate different stage windows and escalation levels. Existing credentials, institutional records, private files and old audit evidence are preserved. Legacy missing waiting time remains unknown rather than fabricated. Docker execution, hosted CI and official deployment are not claimed. Primary policy sources became accessible on recheck, but configured numeric values remain DEMO. No paid service, AI feature, licence, production certification or reduction percentage was introduced.
+
+## Historical implementation status — original checkpoint
+
 # Implementation status • 22 October 2026
 
 Anumitra is a running local TypeScript application covering SIH26262 groups A–F: real PostgreSQL persistence, authenticated/scoped workspaces, immutable evidence, scrutiny/deficiency/re-scrutiny, five configured routes, separate committees/decisions, obligations, validity, durable jobs, Mailpit, dashboards, reports, policy lifecycle and local adapters. Source is in apps/, packages/, scripts/ and tests/; actual screenshots are in docs/evidence/.

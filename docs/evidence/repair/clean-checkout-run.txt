@@ -1,0 +1,7 @@
+Clean checkout passed: ci
+Clean checkout passed: run db:generate
+Clean checkout passed: run build
+Clean checkout passed: scripts/prepare-test.mjs
+Clean checkout passed: scripts/migrate.mjs
+Clean checkout passed: --import tsx packages/db/seed.ts
+Clean checkout installation/build/new database/second migrate-seed verification passed.

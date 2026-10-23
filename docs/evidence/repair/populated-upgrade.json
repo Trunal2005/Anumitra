@@ -1,0 +1,30 @@
+{
+  "executedAt": "2026-10-22T19:15:00.551Z",
+  "mode": "ISOLATED_RESTORE_UPGRADE",
+  "database": "/anumitra_test_upgrade_1792696495961",
+  "preserved": {
+    "cases": {
+      "preserved": 334,
+      "after": 334
+    },
+    "snapshots": {
+      "preserved": 308,
+      "after": 308
+    },
+    "decisions": {
+      "preserved": 28,
+      "after": 28
+    },
+    "versions": {
+      "preserved": 326,
+      "after": 326
+    },
+    "audits": {
+      "preserved": 1591,
+      "after": 1591
+    }
+  },
+  "invalidStageIntervalCounts": 0,
+  "verifiedPrivateFiles": 326,
+  "retained": true
+}

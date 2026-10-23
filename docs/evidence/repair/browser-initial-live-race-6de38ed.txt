@@ -1,0 +1,40 @@
+
+Running 3 tests using 1 worker
+
+  ok 1 tests\browser\ui.spec.ts:22:1 › welcome and authenticated workspaces use real API and retain responsive design (24.2s)
+  ok 2 tests\browser\ui.spec.ts:147:1 › institution can save and submit a draft through browser forms (5.4s)
+  x  3 tests\browser\ui.spec.ts:189:1 › cross-role repair journey: repeated response, EVC, conditional undertaking, effective renewal and escalation retry (1.1m)
+
+
+  1) tests\browser\ui.spec.ts:189:1 › cross-role repair journey: repeated response, EVC, conditional undertaking, effective renewal and escalation retry
+
+    TimeoutError: locator.selectOption: Timeout 10000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('.obligation-card').filter({ hasText: 'Journey undertaking:' }).getByLabel('Authorized action')[22m
+
+
+      395 |       .locator(".obligation-card")
+      396 |       .filter({ hasText: "Journey undertaking:" });
+    > 397 |     await review.getByLabel("Authorized action").selectOption("accept");
+          |                                                  ^
+      398 |     await review
+      399 |       .getByLabel("Evidence explanation / review reason")
+      400 |       .fill("Verified fictional undertaking evidence");
+        at C:\projects\sih\Anumitra(SIH26262)\tests\browser\ui.spec.ts:397:50
+
+    attachment #1: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\browser\ui-cross-role-repair-journ-aa5ef-enewal-and-escalation-retry\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\browser\ui-cross-role-repair-journ-aa5ef-enewal-and-escalation-retry\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    tests\browser\ui.spec.ts:189:1 › cross-role repair journey: repeated response, EVC, conditional undertaking, effective renewal and escalation retry
+  2 passed (1.7m)
+
+To open last HTML report run:
+[36m[39m
+[36m  npx playwright show-report[39m
+[36m[39m

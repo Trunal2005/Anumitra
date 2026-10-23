@@ -1,0 +1,14 @@
+{
+  "product": "Anumitra",
+  "status": "ready",
+  "dataAvailable": true,
+  "checks": {
+    "api": true,
+    "database": true,
+    "schema": true,
+    "storage": true,
+    "worker": true,
+    "smtp": true
+  },
+  "integration": "LOCAL_ADAPTER"
+}

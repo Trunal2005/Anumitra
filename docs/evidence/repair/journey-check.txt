@@ -1,0 +1,12 @@
+
+Running 1 test using 1 worker
+
+  ok 1 tests\browser\ui.spec.ts:189:1 › cross-role repair journey: repeated response, EVC, conditional undertaking, effective renewal and escalation retry (2.1m)
+
+  1 passed (2.2m)
+
+To open last HTML report run:
+[36m[39m
+[36m  npx playwright show-report[39m
+[36m[39m
+Disposable target retained for inspection; normal demo untouched.

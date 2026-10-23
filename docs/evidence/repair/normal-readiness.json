@@ -1,0 +1,20 @@
+{
+  "checkedAt": "2026-10-23T02:12:45.822Z",
+  "existingLocalCredentialMatchesStoredHash": true,
+  "activeCases": 116,
+  "ineligibleAssignedOwners": 0,
+  "unassignedCases": 0,
+  "health": {
+    "product": "Anumitra",
+    "status": "ready",
+    "dataAvailable": true,
+    "checks": {
+      "database": true,
+      "schema": true,
+      "storage": true,
+      "worker": true,
+      "smtp": true
+    },
+    "integration": "LOCAL_ADAPTER"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "executedAt": "2026-10-23T02:10:14.174Z",
+  "source": "/anumitra_test_1792720602431",
+  "restoredDatabase": "anumitra_test_restore_1792721412456",
+  "retained": true,
+  "verifiedPrivateFiles": 157,
+  "sourceCounts": {
+    "applications": "151",
+    "audits": "1335",
+    "versions": "157"
+  },
+  "restoredCounts": {
+    "applications": "151",
+    "audits": "1335",
+    "versions": "157"
+  }
+}

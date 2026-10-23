@@ -1,0 +1,17 @@
+{
+  "executedAt": "2026-10-23T02:05:23.379Z",
+  "sourceFiles": 152,
+  "isolatedDatabase": "/anumitra_test_1792721112430",
+  "checks": [
+    "ci",
+    "run db:generate",
+    "run build",
+    "scripts/prepare-test.mjs",
+    "scripts/migrate.mjs",
+    "--import tsx packages/db/seed.ts",
+    "existing .env without private cluster/password safely refused"
+  ],
+  "dependencyInstall": true,
+  "normalDemoUntouched": true,
+  "retainedPrivateCheckout": true
+}

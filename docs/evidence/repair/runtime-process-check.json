@@ -1,0 +1,43 @@
+{
+  "listeners": [
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 55432,
+      "OwningProcess": 10288
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 8025,
+      "OwningProcess": 27892
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3000,
+      "OwningProcess": 24712
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 1025,
+      "OwningProcess": 27892
+    }
+  ],
+  "isolatedTestPortsClosed": true,
+  "checkedAt": "2026-10-23T02:12:45.1190700Z",
+  "normalServices": [
+    {
+      "ProcessId": 27892,
+      "Name": "mailpit.exe",
+      "CommandLine": "\"C:\\projects\\sih\\Anumitra(SIH26262)\\.local\\mailpit.exe\" --listen 127.0.0.1:8025 --smtp 127.0.0.1:1025 --database \"C:\\projects\\sih\\Anumitra(SIH26262)\\.local\\mailpit.db\""
+    },
+    {
+      "ProcessId": 24712,
+      "Name": "node.exe",
+      "CommandLine": "\"C:\\Program Files\\nodejs\\node.exe\" --import tsx apps/api/src/index.ts"
+    },
+    {
+      "ProcessId": 25656,
+      "Name": "node.exe",
+      "CommandLine": "\"C:\\Program Files\\nodejs\\node.exe\" --import tsx apps/worker/src/index.ts"
+    }
+  ]
+}

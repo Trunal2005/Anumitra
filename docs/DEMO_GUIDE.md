@@ -1,27 +1,30 @@
-# Jury demonstration guide
+# Anumitra demonstration: 5-7 minute operator guide
 
-Start API, worker, PostgreSQL and Mailpit as in README. Copy the local demo password from `.local/demo-credentials.json`; do not display the secrets file on a public recording. All seeded names/documents are fictional.
+Use a synthetic local instance. The cross-role story is exercised by the third Chromium journey in tests/browser/ui.spec.ts; its measured automation duration belongs to TEST_REPORT_REPAIR. The speaking schedule below is an estimate, not a measured human study. No normal demo reset is required.
 
-| Scenario / PS | Account and clicks | Expected evidence | Hinglish |
-|---|---|---|---|
-| A: persistent application | institution.a → Applications → New application → Only Scrutiny → details → save | Database draft, application reference, revision and create audit | Pehle draft save hota hai; submit alag action hai. |
-| A/E: evidence + submission | Same case → Add private evidence → PDF → upload → Commit Submit | Immutable version, frozen submission, assigned scrutiny stage, audit and outbox | Upload verification nahi hai; officer alag se verify karega. |
-| A: deficiency | Sign out; reviewer.north → case → Raise deficiency → checklist LEASE + reason | Returned attempt, deficiency round, reason, institution-visible notice | Reason aur purana evidence history mein rehta hai. |
-| A: response | institution.a → same case → renew existing document → upload → Submit response → selected deficiency + document | New pending version, response linked to deficiency, re-scrutiny | Sirf deficient item ka response link hota hai. |
-| A: verification | reviewer.north → Verify response ACCEPTED → Review document ACCEPTED → Complete stage | Guarded move to authority; attempts/history retained | Jab tak evidence verify nahi hota, next stage block hai. |
-| A/D: human decision | authority → case → Record authorized decision CONDITIONAL → reason + undertaking + future due | Decision evidence snapshot; open obligation remains | Approval ke baad bhi undertaking track hoti rahegi. |
-| D: evidence vs compliance | institution.a → Undertakings → upload/select evidence → Submit; supervisor.north → Accept/Return | SUBMITTED is distinct from ACCEPTED; review reason and revision | Submission compliance closure nahi hai. |
-| B: scoped overview | supervisor.north → Overview → stage/count/workload links | Persisted counts reconcile with filtered register; ageing separates waits | Dashboard ka har count actual records se aata hai. |
-| C: EVC conflict | supervisor.north → EVC scheduling → eligible new-institution case → declared-available EVC member and future dates | Proposed visit and reservation; overlapping case rejected | Same member ki overlapping booking server reject karta hai. |
-| C/A: visit lifecycle | Supervisor confirms → admin advances demo business clock beyond visit → committee.evc submits report → supervisor reviews completion | Visit report separate from recommendation; complete stage only after recommendation | Schedule, report, recommendation aur final decision alag hain. |
-| A: SAC vs SHC | Choose EVC + SAC or EVC + SHC route; after EVC use committee.sac or committee.shc | Only configured distinct committee appears; authority still decides | Har case dono committees se force nahi hota. |
-| E: renewal | Institution → case → renew document; supervisor → Document registry → verify pending renewal | New version is pending; old authorized versions retained; expiry does not revoke approval | Naya upload purani acceptance inherit nahi karta. |
-| F: notifications | admin → advance demo clock; supervisor → Alerts & delivery; open Mailpit port 8025 | Persisted deadline intents, inbox, SMTP attempt/acceptance and exhaustion | Mail local Mailpit mein capture hoti hai; Gmail delivery ka claim nahi hai. |
-| F: reports/audit | Any scoped role → Reports & audit → type/filters → CSV or Print/PDF | Same scope/filters; readable demo report; immutable action chronology | Export aur dashboard ka scope same hai. |
-| Configuration | admin → Rules → select route → edit → Validate/simulate → Create draft; bureau → publish | Diff and validated route; old cases retain original workflow ID/version | Rule change se purane cases chupke migrate nahi hote. |
-| Integration | admin/bureau → Administration → local JSON/CSV preview → commit; repeat same external ID | Preview, draft/master/metadata creation, unchanged replay, sync logs | Yeh local adapter hai, live government integration nahi. |
-| Isolation | institution.b tries institution.a case URL; admin attempts decision | Unavailable/denied; no regulatory authority from technical role | Sirf UI hide nahi; backend bhi access deny karta hai. |
+Before presenting, run `npm run doctor -- --strict`, keep API/worker/PostgreSQL/Mailpit running, and check the visible DEMO business clock. Normal application port is 3000; Mailpit is 8025. Read the password locally from ignored `.local/demo-credentials.json`; never project or commit it. Accounts end in `@anumitra.test`: institution.a, reviewer.north, supervisor.north, committee.evc, authority, admin and bureau. Test credentials live separately in their private test directory. Every institution/recipient/document is fictional.
 
-For a fresh repeatable demonstration, admin → Administration → fresh demo run → type NEW_DEMO_RUN. This creates a separate run and preserves historical data. It is server-disabled outside demo mode. The worker must be running for alerts with the browser closed.
+| Speaking time | Real interaction | Verify/explain |
+|---|---|---|
+| 0:00-0:20 | Show disclosure and scoped overview | Independent prototype, local adapter, DEMO numeric policies, human decisions |
+| 0:20-1:05 | Institution creates Scrutiny + EVC case, fills details, saves, uploads a fictional lease PDF, submits | Persistent draft versus immutable submission; private PDF.js preview |
+| 1:05-2:00 | Reviewer raises clarification with reason; institution responds; reviewer rejects twice, then accepts third response | New institutional waiting interval after each rejection; exact response/evidence/review history |
+| 2:00-2:20 | Reviewer accepts document and completes scrutiny | Guarded automatic routing; eligible assignment or visible unassigned queue |
+| 2:20-3:15 | Supervisor schedules non-overlapping future EVC with available member and confirms; admin advances DEMO clock past end; EVC member reports; supervisor accepts completion | Scheduling, report review and recommendation are separate; business time differs from auth/retry time |
+| 3:15-3:45 | EVC member recommends and completes stage; authority records conditional decision with future undertaking due date | Recommendation is not an approval; human decision freezes evidence and creates a condition |
+| 3:45-4:25 | Institution submits undertaking evidence; supervisor verifies acceptance with reason | SUBMITTED differs from ACCEPTED; history remains after approval |
+| 4:25-5:05 | Institution renews lease with future expiry; supervisor filters document registry to the case | Expired accepted v1 remains effective while future-dated v2 is pending |
+| 5:05-5:45 | Let worker scan; open designated escalation events, acknowledge with reason; inspect local inbox, SMTP history and Mailpit | Named officials/role/level or UNASSIGNED; local capture only, no automatic legal penalty |
+| 5:45-6:15 | Supervisor accepts renewal | Effective v2 becomes current; resolved deadline work closes; historic evidence remains |
+| 6:15-6:45 | Show overdue/validity reports, filters, CSV/PDF and case audit | Distinct case versus subject counts; post-decision compliance remains monitored |
+| 6:45-7:00 | Show denied cross-institution URL and limitations | Backend scope; no official integration, statutory appointment, antivirus or scale claim |
 
-Proof scenarios are executable in `npm test`; Chromium journeys in `npm run test:browser`; real screenshots in `docs/evidence`. See TEST_REPORT for what was actually executed and limits. Background checks may add fictional cases; a new demo run restores the standard active workload of 120.
+Use a lease expiry on/before the displayed business date, followed by a future renewal date. Advance only the clearly labelled demo clock. Avoid the fictional seed's booked EVC slot; choose a later declared-available slot or show the conflict guard. If no eligible official exists, use a scoped coordinator's eligible-assignee action; never invent statutory authority.
+
+Configuration can be shown separately: save a next draft, simulate, then bureau publishes the saved revision/hash. Old case pins remain unchanged. Existing published numeric policies are preserved and may differ from new seed windows. Adverse scrutiny referral requires a pinned DEMO policy explicitly enabling AUTHORITY_REVIEW, then a separate human final decision.
+
+Retry recovery is a separate controlled failure demonstration in the disposable test instance: actual SMTP failure with a completed pg-boss job, new retry generation, then Mailpit acceptance. A post-SMTP database acknowledgement failure produces AMBIGUOUS; deliberate retry requires duplicate-risk acknowledgement. The browser journey uses a labelled synthetic ambiguous fixture for the disclosure form. Do not present that fixture alone as a real crash reproduction; the backend regression supplies that evidence.
+
+Fallback: retain current repair screenshots and raw logs. If doctor shows the worker missing, restart it once and inspect its private log; do not reset a database/case. SMTP failure is degraded delivery while approval data remains available. Container setup is unverified on this host. A fallback screenshot is historical evidence, not a new live execution.
+
+No manual-versus-app human task study has been conducted. There are no participants, manual baseline timings or justified improvement percentages.
