@@ -6,6 +6,8 @@ Approval and Compliance Orchestration · SIH26262: Integrated AICTE Approval Wor
 
 Independent student prototype. Fictional records, demonstration policy values and a functioning local adapter. No official AICTE deployment, endorsement or live integration. No paid API, service, inference, hosting or account is required.
 
+Start with the setup commands below. The [documentation index](docs/README.md) separates implementation guides, current verification and historical reports. Requirements are maintained in [the A–F matrix](docs/REQUIREMENTS.md); the old AI build prompt is no longer part of the project tree.
+
 ## Correctness repair checkpoint
 
 The existing React/Express/PostgreSQL application includes the October 2026 submission audit repairs. It is an independent local prototype, not production-ready. Implemented areas include authentication, intersected role scope, private evidence and PDF preview, repeated deficiency/response cycles, five route families, EVC/committee recommendations, human decisions, undertakings, effective-document renewal, designated escalation events, durable retries, six reports and versioned demo policies.
