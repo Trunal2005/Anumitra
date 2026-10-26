@@ -1,0 +1,44 @@
+
+Running 1 test using 1 worker
+
+  x  1 tests\browser\ui.spec.ts:754:1 › readable reports, contextual history, scoped next actors and reviewed simulator provenance use the real API (8.7s)
+
+
+  1) tests\browser\ui.spec.ts:754:1 › readable reports, contextual history, scoped next actors and reviewed simulator provenance use the real API 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: getByRole('columnheader', { name: /^Accepted effective version$/i })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for getByRole('columnheader', { name: /^Accepted effective version$/i })[22m
+
+
+      875 |         name: /^Accepted effective version$/i,
+      876 |       }),
+    > 877 |     ).toBeVisible();
+          |       ^
+      878 |     await expect(
+      879 |       page
+      880 |         .getByRole("cell", { name: "No accepted version", exact: true })
+        at C:\projects\sih\Anumitra(SIH26262)\tests\browser\ui.spec.ts:877:7
+
+    attachment #1: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\browser\ui-readable-reports-contex-c192d-provenance-use-the-real-API\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\browser\ui-readable-reports-contex-c192d-provenance-use-the-real-API\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    tests\browser\ui.spec.ts:754:1 › readable reports, contextual history, scoped next actors and reviewed simulator provenance use the real API 
+
+To open last HTML report run:
+[36m[39m
+[36m  npx playwright show-report[39m
+[36m[39m

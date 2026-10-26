@@ -1,0 +1,71 @@
+
+Running 5 tests using 1 worker
+
+  ok 1 tests\browser\ui.spec.ts:22:1 › welcome and authenticated workspaces use real API and retain responsive design (10.8s)
+  ok 2 tests\browser\ui.spec.ts:147:1 › institution can save and submit a draft through browser forms (2.3s)
+  x  3 tests\browser\ui.spec.ts:225:1 › cross-role repair journey: repeated response, EVC, conditional undertaking, effective renewal and escalation retry (36.9s)
+  ok 4 tests\browser\ui.spec.ts:640:1 › the first live revision refreshes a stale initial compliance snapshot (5.0s)
+  x  5 tests\browser\ui.spec.ts:754:1 › readable reports, contextual history, scoped next actors and reviewed simulator provenance use the real API (45.0s)
+
+
+  1) tests\browser\ui.spec.ts:225:1 › cross-role repair journey: repeated response, EVC, conditional undertaking, effective renewal and escalation retry 
+
+    TimeoutError: locator.selectOption: Timeout 10000ms exceeded.
+    Call log:
+    [2m  - waiting for getByLabel('Report', { exact: true })[22m
+
+
+      621 |     await supervisor
+      622 |       .getByLabel("Report", { exact: true })
+    > 623 |       .selectOption("overdue");
+          |        ^
+      624 |     await supervisor.screenshot({
+      625 |       path:
+      626 |         (process.env.TEST_EVIDENCE_DIR ?? "docs/evidence/repair") +
+        at C:\projects\sih\Anumitra(SIH26262)\tests\browser\ui.spec.ts:623:8
+
+    attachment #1: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\browser\ui-cross-role-repair-journ-aa5ef-enewal-and-escalation-retry\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\browser\ui-cross-role-repair-journ-aa5ef-enewal-and-escalation-retry\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) tests\browser\ui.spec.ts:754:1 › readable reports, contextual history, scoped next actors and reviewed simulator provenance use the real API 
+
+    [31mTest timeout of 45000ms exceeded.[39m
+
+    Error: locator.selectOption: Test ended.
+    Call log:
+    [2m  - waiting for getByLabel('Report', { exact: true })[22m
+
+
+      868 |     const page = await signIn("supervisor.north");
+      869 |     await page.goto("/reports");
+    > 870 |     await page.getByLabel("Report", { exact: true }).selectOption("validity");
+          |                                                      ^
+      871 |     await expect(
+      872 |       page.getByRole("columnheader", {
+      873 |         name: "Accepted effective version",
+        at C:\projects\sih\Anumitra(SIH26262)\tests\browser\ui.spec.ts:870:54
+
+    Error Context: test-results\browser\ui-readable-reports-contex-c192d-provenance-use-the-real-API\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\browser\ui-readable-reports-contex-c192d-provenance-use-the-real-API\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\browser\ui-readable-reports-contex-c192d-provenance-use-the-real-API\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2 failed
+    tests\browser\ui.spec.ts:225:1 › cross-role repair journey: repeated response, EVC, conditional undertaking, effective renewal and escalation retry 
+    tests\browser\ui.spec.ts:754:1 › readable reports, contextual history, scoped next actors and reviewed simulator provenance use the real API 
+  3 passed (1.8m)
+
+To open last HTML report run:
+[36m[39m
+[36m  npx playwright show-report[39m
+[36m[39m

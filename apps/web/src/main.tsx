@@ -3340,7 +3340,9 @@ function Reports() {
                   <thead>
                     <tr>
                       {Object.keys(data.data.rows[0]).map((k) => (
-                        <th key={k}>{reportHeading(k)}</th>
+                        <th key={k} scope="col">
+                          {reportHeading(k)}
+                        </th>
                       ))}
                     </tr>
                   </thead>
@@ -3348,7 +3350,7 @@ function Reports() {
                     {data.data.rows.map((r: any, i: number) => (
                       <tr key={i}>
                         {Object.entries(r).map(([key, v], j: number) => (
-                          <td key={j}>{String(v ?? "—")}</td>
+                          <td key={j}>{reportValue(key, v)}</td>
                         ))}
                       </tr>
                     ))}

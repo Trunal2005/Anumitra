@@ -1,0 +1,76 @@
+
+Running 1 test using 1 worker
+
+REPORT_TABLE_ACCESSIBILITY - table:
+  - rowgroup:
+    - row "Reference Title Latest submitted version Latest submission review Accepted effective version Effective evidence validity Renewal review Accepted evidence expires":
+      - cell "Reference"
+      - cell "Title"
+      - cell "Latest submitted version"
+      - cell "Latest submission review"
+      - cell "Accepted effective version"
+      - cell "Effective evidence validity"
+      - cell "Renewal review"
+      - cell "Accepted evidence expires"
+  - rowgroup:
+    - row "AN-6EF59402 Fictional presentation evidence 2 Accepted 2 Current No renewal pending 2029-12-31T18:29:59.999Z":
+      - cell "AN-6EF59402"
+      - cell "Fictional presentation evidence"
+      - cell "2"
+      - cell "Accepted"
+      - cell "2"
+      - cell "Current"
+      - cell "No renewal pending"
+      - cell "2029-12-31T18:29:59.999Z"
+    - row "AN-A6FD7E24 Fictional presentation evidence 1 Pending Not recorded No accepted version Renewal pending Not recorded":
+      - cell "AN-A6FD7E24"
+      - cell "Fictional presentation evidence"
+      - cell "1"
+      - cell "Pending"
+      - cell "Not recorded"
+      - cell "No accepted version"
+      - cell "Renewal pending"
+      - cell "Not recorded"
+(node:9048) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  1 tests\browser\ui.spec.ts:754:1 › readable reports, contextual history, scoped next actors and reviewed simulator provenance use the real API (8.6s)
+
+
+  1) tests\browser\ui.spec.ts:754:1 › readable reports, contextual history, scoped next actors and reviewed simulator provenance use the real API 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: getByRole('columnheader', { name: /^Accepted effective version$/i })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for getByRole('columnheader', { name: /^Accepted effective version$/i })[22m
+
+
+      876 |         name: /^Accepted effective version$/i,
+      877 |       }),
+    > 878 |     ).toBeVisible();
+          |       ^
+      879 |     await expect(
+      880 |       page
+      881 |         .getByRole("cell", { name: "No accepted version", exact: true })
+        at C:\projects\sih\Anumitra(SIH26262)\tests\browser\ui.spec.ts:878:7
+
+    attachment #1: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\browser\ui-readable-reports-contex-c192d-provenance-use-the-real-API\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\browser\ui-readable-reports-contex-c192d-provenance-use-the-real-API\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    tests\browser\ui.spec.ts:754:1 › readable reports, contextual history, scoped next actors and reviewed simulator provenance use the real API 
+
+To open last HTML report run:
+[36m[39m
+[36m  npx playwright show-report[39m
+[36m[39m

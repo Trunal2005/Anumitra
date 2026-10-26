@@ -2,7 +2,7 @@
 
 ## Deterministic evaluator story — 26 October 2026
 
-Use one new **clearly fictional** `Scrutiny + EVC` application for the entire story. Do not reset the normal demo, alter its published policies, or use actual institutional documents. The repeatable browser scenario in `tests/browser/ui.spec.ts` creates a fresh fictional case in isolated storage; references are unique to avoid overwriting earlier runs, while the ordered actions and expected transitions are fixed. Old screenshot/page tours are not substitutes for this workflow.
+Use one new **clearly fictional** `Scrutiny + EVC` application for the entire story. Do not reset the normal demo, alter its published policies, or use actual institutional documents. The repeatable browser scenario in `tests/browser/ui.spec.ts` creates a fresh fictional case in isolated storage; it temporarily uses its own test-only run namespace and restores the prior isolated clock/run afterward. References are unique to avoid overwriting earlier runs, while the ordered actions and expected transitions are fixed. Old screenshot/page tours are not substitutes for this workflow.
 
 To exercise the story on a fresh isolated target, use `npm run test:browser -- --journey-only --evidence-dir=docs/evidence/product-demo-2026-10-26`. Choose a new evidence-folder name on a later attempt to retain earlier output. This command starts only isolated test services and uses synthetic PDFs. It does not bootstrap, migrate, seed or reset the normal demo. Retrieve passwords locally from the ignored credentials file for the chosen instance; do not project it. These accounts are fictional prototype roles, not statutory appointments.
 

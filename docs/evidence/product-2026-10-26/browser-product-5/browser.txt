@@ -1,0 +1,11 @@
+
+Running 1 test using 1 worker
+
+  ok 1 tests\browser\ui.spec.ts:754:1 › readable reports, contextual history, scoped next actors and reviewed simulator provenance use the real API (8.6s)
+
+  1 passed (10.3s)
+
+To open last HTML report run:
+[36m[39m
+[36m  npx playwright show-report[39m
+[36m[39m

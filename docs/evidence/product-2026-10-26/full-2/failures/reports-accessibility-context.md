@@ -1,0 +1,171 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - link "Skip to workspace" [ref=e4] [cursor=pointer]:
+    - /url: "#main"
+  - complementary [ref=e5]:
+    - link "Anumitra." [ref=e6] [cursor=pointer]:
+      - /url: /
+      - generic [ref=e7]: Anumitra.
+    - paragraph [ref=e8]: WORKSPACE
+    - navigation "Main navigation" [ref=e9]:
+      - link "Overview" [ref=e10] [cursor=pointer]:
+        - /url: /overview
+        - img [ref=e11]
+        - text: Overview
+        - img [ref=e16]
+      - link "Applications" [ref=e18] [cursor=pointer]:
+        - /url: /applications
+        - img [ref=e19]
+        - text: Applications
+        - img [ref=e21]
+      - link "EVC scheduling" [ref=e23] [cursor=pointer]:
+        - /url: /evc
+        - img [ref=e24]
+        - text: EVC scheduling
+        - img [ref=e26]
+      - link "Committee work" [ref=e28] [cursor=pointer]:
+        - /url: /committees
+        - img [ref=e29]
+        - text: Committee work
+        - img [ref=e34]
+      - link "Undertakings" [ref=e36] [cursor=pointer]:
+        - /url: /compliance
+        - img [ref=e37]
+        - text: Undertakings
+        - img [ref=e41]
+      - link "Document registry" [ref=e43] [cursor=pointer]:
+        - /url: /documents
+        - img [ref=e44]
+        - text: Document registry
+        - img [ref=e47]
+      - link "Alerts & delivery" [ref=e49] [cursor=pointer]:
+        - /url: /alerts
+        - img [ref=e50]
+        - text: Alerts & delivery
+        - img [ref=e53]
+      - link "Reports & audit" [ref=e55] [cursor=pointer]:
+        - /url: /reports
+        - img [ref=e56]
+        - text: Reports & audit
+        - img [ref=e58]
+      - link "Rules & policy" [ref=e60] [cursor=pointer]:
+        - /url: /rules
+        - img [ref=e61]
+        - text: Rules & policy
+        - img [ref=e65]
+    - generic [ref=e67]:
+      - generic [ref=e68]:
+        - img [ref=e69]
+        - generic [ref=e71]:
+          - strong [ref=e72]: Prototype environment
+          - generic [ref=e73]: Local adapter · Demo policies
+      - link "Nr North regional supervisor Supervisor" [ref=e74] [cursor=pointer]:
+        - /url: /profile
+        - generic [ref=e75]: Nr
+        - generic [ref=e76]:
+          - strong [ref=e77]: North regional supervisor
+          - generic [ref=e78]: Supervisor
+      - button "Sign out" [ref=e79] [cursor=pointer]:
+        - img [ref=e80]
+        - text: Sign out
+  - generic [ref=e83]:
+    - banner [ref=e84]:
+      - generic [ref=e85]:
+        - text: Workspace
+        - img [ref=e86]
+        - generic [ref=e88]: Reports & audit
+      - generic [ref=e89]:
+        - generic [ref=e90]: Live
+        - button "Pause live refresh" [ref=e92] [cursor=pointer]:
+          - img [ref=e93]
+        - button "Refresh records" [ref=e96] [cursor=pointer]:
+          - img [ref=e97]
+        - button "Pause decorative motion" [ref=e102] [cursor=pointer]:
+          - img [ref=e103]
+        - link "Notification inbox" [ref=e106] [cursor=pointer]:
+          - /url: /alerts
+          - img [ref=e107]
+        - generic [ref=e110]: "N"
+    - main [ref=e111]:
+      - generic [ref=e113]:
+        - paragraph [ref=e114]: EVIDENCE YOU CAN TAKE WITH YOU
+        - heading "Reports & audit trail." [level=1] [ref=e115]
+      - generic [ref=e116]:
+        - generic [ref=e117]:
+          - button "Consolidated reports" [ref=e118] [cursor=pointer]
+          - button "Action history" [ref=e119] [cursor=pointer]
+        - generic [ref=e120]:
+          - generic [ref=e121]:
+            - generic [ref=e122]: Report
+            - combobox "Report" [ref=e123]:
+              - option "Pendency" [selected]
+              - option "Evc"
+              - option "Compliance"
+              - option "Validity"
+              - option "Overdue"
+              - option "Regions"
+          - generic [ref=e124]:
+            - generic [ref=e125]: Region
+            - combobox "Region" [ref=e126]:
+              - option "Authorized scope" [selected]
+              - option "Demo North"
+              - option "Demo South"
+              - option "Demo East"
+              - option "Demo West"
+          - generic [ref=e127]:
+            - generic [ref=e128]: Stage
+            - combobox "Stage" [ref=e129]:
+              - option "All" [selected]
+              - option "DRAFT"
+              - option "SCRUTINY"
+              - option "EVC"
+              - option "SAC"
+              - option "SHC"
+              - option "AUTHORITY"
+              - option "CONDITIONAL"
+              - option "APPROVED"
+          - link "CSV" [ref=e130] [cursor=pointer]:
+            - /url: /api/reports/pendency?&format=csv
+            - img [ref=e131]
+            - text: CSV
+          - link "Print / PDF" [ref=e133] [cursor=pointer]:
+            - /url: /api/reports/pendency?&format=pdf
+            - img [ref=e134]
+            - text: Print / PDF
+        - paragraph [ref=e137]: "Same application filters and scope as the register. Business clock: 21 Nov 2026, 2:30 pm IST. CSV formula prefixes are neutralized."
+        - region "Scrollable report table" [ref=e138]:
+          - table [ref=e139]:
+            - rowgroup [ref=e140]:
+              - row "Reference Institution Region Category State Owner Age days" [ref=e141]:
+                - cell "Reference" [ref=e142]
+                - cell "Institution" [ref=e143]
+                - cell "Region" [ref=e144]
+                - cell "Category" [ref=e145]
+                - cell "State" [ref=e146]
+                - cell "Owner" [ref=e147]
+                - cell "Age days" [ref=e148]
+            - rowgroup [ref=e149]:
+              - row "AN-024CB111 Demo Sahyadri Institute 1 R1 NEW_INSTITUTION DRAFT Unassigned 25" [ref=e150]:
+                - cell "AN-024CB111" [ref=e151]
+                - cell "Demo Sahyadri Institute 1" [ref=e152]
+                - cell "R1" [ref=e153]
+                - cell "NEW_INSTITUTION" [ref=e154]
+                - cell "DRAFT" [ref=e155]
+                - cell "Unassigned" [ref=e156]
+                - cell "25" [ref=e157]
+              - row "AN-BAEA3A4E Demo Sahyadri Institute 1 R1 NEW_INSTITUTION CONDITIONAL 03ba072c-82fe-4c75-b496-eab846db2766 2026-11-05T09:00:00.000Z 25" [ref=e158]:
+                - cell "AN-BAEA3A4E" [ref=e159]
+                - cell "Demo Sahyadri Institute 1" [ref=e160]
+                - cell "R1" [ref=e161]
+                - cell "NEW_INSTITUTION" [ref=e162]
+                - cell "CONDITIONAL" [ref=e163]
+                - cell "03ba072c-82fe-4c75-b496-eab846db2766" [ref=e164]
+                - cell "2026-11-05T09:00:00.000Z" [ref=e165]
+                - cell "25" [ref=e166]
+        - paragraph [ref=e167]: 2 cases within authorized scope
+    - contentinfo [ref=e168]:
+      - generic [ref=e169]: ANUMITRA · SIH26262
+      - generic [ref=e170]: Independent prototype. Demonstration rules. Asia/Kolkata.
+```

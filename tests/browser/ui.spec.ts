@@ -619,7 +619,7 @@ test("cross-role repair journey: repeated response, EVC, conditional undertaking
     await expect(renewed.getByText("Current", { exact: true })).toBeVisible();
     await supervisor.goto("/reports");
     await supervisor
-      .getByLabel("Report", { exact: true })
+      .getByRole("combobox", { name: "Report", exact: true })
       .selectOption("overdue");
     await supervisor.screenshot({
       path:
@@ -867,7 +867,9 @@ test("readable reports, contextual history, scoped next actors and reviewed simu
     await fixtureUpload(unreviewed.id);
     const page = await signIn("supervisor.north");
     await page.goto("/reports");
-    await page.getByLabel("Report", { exact: true }).selectOption("validity");
+    await page
+      .getByRole("combobox", { name: "Report", exact: true })
+      .selectOption("validity");
     await expect(
       page.getByRole("columnheader", {
         name: "Accepted effective version",

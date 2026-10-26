@@ -49,3 +49,18 @@ Normal-demo reset, bootstrap, seed, migration, upload cleanup and credential ove
 `node scripts/verify.mjs --existing --browser-only --skip-build '--browser-grep=cross-role|readable reports' --evidence-dir=docs/evidence/product-2026-10-26/browser-setup-2` reused only the marked disposable target. The namespaced cross-role story reached SMTP_ACCEPTED, then hit the existing 10-second screenshot limit while capturing the entire live notification page. Evidence capture now scrolls to the exercised delivery and takes the visible viewport with animations disabled; the delivery assertion and timeouts remain unchanged. The other test exposed strict locator ambiguity: `getByLabel("Report")` matched both the select and “Scrollable report table”. It now uses the exact label. This rerun is not a full passing gate.
 
 The full-1 case snapshot also reproduced a post-decision guidance gap: after undertaking acceptance, a pending renewal still displayed no pending application transition. The next-step helper now shows the authorized evidence reviewer and identifies the existing accepted expiry explicitly, or the configured DEMO first-review deadline where no accepted version exists. Expired/rejected renewal returns the next action to the institution. Added backend and real-browser assertions cover this follow-up.
+
+
+### Second complete run: FAILED, retained
+
+[full-2/verification.json](evidence/product-2026-10-26/full-2/verification.json) records source `a86e275a6ba83962535a18cdc6ab33ea4983ae8d`. Build/typecheck, 35/35 backend tests (329.614 seconds, no skips) and restart preservation passed. Chromium passed 3/5; both remaining failures were the new exact-label selector, not the business states: `getByLabel("Report", {exact:true})` includes wrapping option text under Playwright's label-text lookup. The accessible snapshot confirms a combobox named exactly “Report”. Both calls now use `getByRole("combobox", {name:"Report", exact:true})`, which cannot match the report table region. No assertion or timeout was removed or extended. The workflow passed the real SMTP retry, rejected-v2 expiry and accepted-v3 current-state assertions before reaching that selector. The raw failed run and sanitized accessible context are retained.
+
+
+### Targeted semantic-selector run: FAILED, retained
+
+[browser-selector-3](evidence/product-2026-10-26/browser-selector-3/verification.json) passed the complete cross-role journey (24.5 seconds). The other test reached the validity report and exposed two further facts: the header role query failed, and browser cells still used raw `String(...)` despite the shared formatter being imported and used for exports. The captured real UI/trace confirms raw enums/booleans remained. Browser cells now call `reportValue(key, value)`; the original exact column-header assertion is retained; see the subsequent accessibility diagnosis. Cell assertions still require human labels and forbid raw boolean/NO_ACCEPTED_VERSION values. This failed attempt is retained, not represented as success.
+
+
+### Header accessibility diagnosis
+
+The product-only rebuild in `browser-product-4` still failed the column-header assertion. The actual `browser-header-diagnosis/browser.txt` accessibility tree then showed the precise cause: Chromium exposed every heading as `cell`, not `columnheader`; this was not a case mismatch. It also confirmed readable “Accepted”, “No accepted version”, “Renewal pending” and “No renewal pending” values. Report `<th>` elements now explicitly declare `scope="col"`. The exact semantic column-header assertion is retained; diagnostic logging is removed from the final test. No timeout was increased. All raw failed diagnostic attempts remain separate evidence.

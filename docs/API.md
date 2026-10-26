@@ -43,3 +43,10 @@ Send a unique `Idempotency-Key`; identical retries by the same actor and unchang
 Application-import fields: externalId, institutionId, workflowId, category, cycle, contact, programme, intake. Unlisted fields (including status/decision) are rejected. The local adapter creates drafts, never a government approval. Master import takes entity `institutions` (id/name/regionId) or `documentMetadata` (externalId/applicationId/kind/title). Metadata remains pending private file upload. Existing master scope cannot be overwritten silently. Synchronization attempts and preview results are logged.
 
 Document scanner contract: versions expose scanState; no local malware engine is installed, so state is NOT_SCANNED. File header/content allowlisting and sandboxed streaming are separate defenses, not proof of document authenticity.
+
+
+## Institution-master review contract — 26 October 2026
+
+Institution preview/commit now requires the [reviewed local contract](INTEGRATION_CONTRACT.md). Preview returns a persisted `reviewId` bound to the actor, intersected grants, normalized payload and current-master snapshot. Commit must send that ID with the same content; conflicts reject the complete batch and existing masters are never overwritten or retired. Provenance is explicitly FICTIONAL_SIMULATION or UNVERIFIED_LOCAL. `GET /api/integrations/simulator/institutions?cursor=0` provides the two-page fictional local fixture to authorized global admin/bureau accounts; it is not an official sandbox or external API. Existing application draft and document-metadata adapters remain local.
+
+Scoped application details now include `brief.next` (role, task, due, assignee). Post-decision document follow-up uses accepted expiry or the configured first-review deadline rather than the old application deadline. Scoped history may include correlated escalation context, labelled current where applicable; institutional projections omit structured recipient identities. Machine report JSON retains typed enums/booleans; human labels apply to UI/CSV/PDF.
