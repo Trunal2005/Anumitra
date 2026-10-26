@@ -1,0 +1,185 @@
+TAP version 13
+# Subtest: technical user creation, Mailpit recovery, one-time tokens and SSE session invalidation
+ok 1 - technical user creation, Mailpit recovery, one-time tokens and SSE session invalidation
+  ---
+  duration_ms: 3672.7294
+  ...
+# Subtest: master and document metadata imports are previewed and preserve evidence gates
+ok 2 - master and document metadata imports are previewed and preserve evidence gates
+  ---
+  duration_ms: 177.3592
+  ...
+# Subtest: contracts reject cycles, unsafe stages, status mass assignment and injection
+ok 3 - contracts reject cycles, unsafe stages, status mass assignment and injection
+  ---
+  duration_ms: 5.8088
+  ...
+# Subtest: unauthenticated and CSRF requests are denied
+ok 4 - unauthenticated and CSRF requests are denied
+  ---
+  duration_ms: 5.3324
+  ...
+# Subtest: scope isolation applies to records, documents, summaries, counts and exports
+ok 5 - scope isolation applies to records, documents, summaries, counts and exports
+  ---
+  duration_ms: 334.6994
+  ...
+# Subtest: persistent scrutiny → deficiency → response → targeted re-scrutiny → authority → conditional decision
+ok 6 - persistent scrutiny → deficiency → response → targeted re-scrutiny → authority → conditional decision
+  ---
+  duration_ms: 521.005
+  ...
+# Subtest: contradictory transitions cannot both commit
+ok 7 - contradictory transitions cannot both commit
+  ---
+  duration_ms: 163.2459
+  ...
+# Subtest: internal observations never reach institution history
+ok 8 - internal observations never reach institution history
+  ---
+  duration_ms: 133.6008
+  ...
+# Subtest: concurrent EVC reservations are serialized and visit completion requires a report
+ok 9 - concurrent EVC reservations are serialized and visit completion requires a report
+  ---
+  duration_ms: 288.0883
+  ...
+# Subtest: published versions are immutable; technical admin cannot publish or decide
+ok 10 - published versions are immutable; technical admin cannot publish or decide
+  ---
+  duration_ms: 45.0488
+  ...
+# Subtest: unsafe file content and unsupported types are rejected without database insert
+ok 11 - unsafe file content and unsupported types are rejected without database insert
+  ---
+  duration_ms: 29.246
+  ...
+# Subtest: local import preview has no side effects and replay is idempotent
+ok 12 - local import preview has no side effects and replay is idempotent
+  ---
+  duration_ms: 46.6047
+  ...
+# Subtest: stale reminders are superseded and valid notifications reach local SMTP
+ok 13 - stale reminders are superseded and valid notifications reach local SMTP
+  ---
+  duration_ms: 1768.1275
+  ...
+# Subtest: demo clock rejects ordinary users and session security version invalidates access
+ok 14 - demo clock rejects ordinary users and session security version invalidates access
+  ---
+  duration_ms: 336.805
+  ...
+# Subtest: all five route families preserve recommendation/decision separation
+ok 15 - all five route families preserve recommendation/decision separation
+  ---
+  duration_ms: 1290.5613
+  ...
+# Subtest: SMTP failures have bounded attempts and stale obligation revisions are suppressed
+ok 16 - SMTP failures have bounded attempts and stale obligation revisions are suppressed
+  ---
+  duration_ms: 94.3073
+  ...
+# Subtest: demo scans are logically unique and database blocks immutable audit edits
+ok 17 - demo scans are logically unique and database blocks immutable audit edits
+  ---
+  duration_ms: 2665.2871
+  ...
+# Subtest: calendar validation rejects impossible dates and preserves leap-year IST end of day
+ok 18 - calendar validation rejects impossible dates and preserves leap-year IST end of day
+  ---
+  duration_ms: 1.9969
+  ...
+# Subtest: authenticated institution-only officials, intersected dimensions, multi-grant union and bounded delegation
+ok 19 - authenticated institution-only officials, intersected dimensions, multi-grant union and bounded delegation
+  ---
+  duration_ms: 1606.1659
+  ...
+# Subtest: two rejected responses create disjoint waiting/review intervals, immutable snapshots, replay and concurrency gates
+ok 20 - two rejected responses create disjoint waiting/review intervals, immutable snapshots, replay and concurrency gates
+  ---
+  duration_ms: 657.8925
+  ...
+# Subtest: pending and rejected renewals preserve effective expiry; acceptance switches the deadline subject
+ok 21 - pending and rejected renewals preserve effective expiry; acceptance switches the deadline subject
+  ---
+  duration_ms: 15919.4926
+  ...
+# Subtest: upload rejects invalid metadata, foreign ownership, forbidden stage and database rollback without orphan bytes
+ok 22 - upload rejects invalid metadata, foreign ownership, forbidden stage and database rollback without orphan bytes
+  ---
+  duration_ms: 309.3817
+  ...
+# Subtest: policy publication binds saved revision/hash, audits draft save and prevents stale lifecycle races
+ok 23 - policy publication binds saved revision/hash, audits draft save and prevents stale lifecycle races
+  ---
+  duration_ms: 48.8968
+  ...
+# Subtest: actual pg-boss completed failed job retries in a new generation with one inbox and retained attempt history
+ok 24 - actual pg-boss completed failed job retries in a new generation with one inbox and retained attempt history
+  ---
+  duration_ms: 28440.4308
+  ...
+# Subtest: negative verification is deliberately referred for a human rejection; old committee recommendations cannot satisfy a new attempt
+ok 25 - negative verification is deliberately referred for a human rejection; old committee recommendations cannot satisfy a new attempt
+  ---
+  duration_ms: 2294.5441
+  ...
+# Subtest: escalation grace preserves overdue visibility, routes designated officials, deduplicates notes and audits acknowledgement/closure
+ok 26 - escalation grace preserves overdue visibility, routes designated officials, deduplicates notes and audits acknowledgement/closure
+  ---
+  duration_ms: 35217.4235
+  ...
+# Subtest: consolidated overdue reconciles post-decision undertakings and effective documents on one case
+ok 27 - consolidated overdue reconciles post-decision undertakings and effective documents on one case
+  ---
+  duration_ms: 24205.3366
+  ...
+# Subtest: compatible policy migration preserves due time, revises deadline identity and retains pins through retirement
+ok 28 - compatible policy migration preserves due time, revises deadline identity and retains pins through retirement
+  ---
+  duration_ms: 442.1565
+  ...
+# Subtest: authenticated mixed grants preserve per-case internal visibility and scoped SSE counts
+ok 29 - authenticated mixed grants preserve per-case internal visibility and scoped SSE counts
+  ---
+  duration_ms: 3602.1118
+  ...
+# Subtest: acceptance atomically resolves missing-acceptance alerts and a reviewed version cannot be rewritten
+ok 30 - acceptance atomically resolves missing-acceptance alerts and a reviewed version cannot be rewritten
+  ---
+  duration_ms: 9884.6381
+  ...
+# Subtest: reasoned visit cancellation atomically closes reminders, releases reservations and restores scheduling monitoring
+ok 31 - reasoned visit cancellation atomically closes reminders, releases reservations and restores scheduling monitoring
+  ---
+  duration_ms: 21760.4211
+  ...
+# Subtest: institution master preview enforces intersected scope, atomic review, provenance and replay
+ok 32 - institution master preview enforces intersected scope, atomic review, provenance and replay
+  ---
+  duration_ms: 1672.3269
+  ...
+# Subtest: next-step guidance follows institution response and post-decision undertaking actors, not stale owners
+ok 33 - next-step guidance follows institution response and post-decision undertaking actors, not stale owners
+  ---
+  duration_ms: 1687.3957
+  ...
+# Subtest: separate resolved escalations retain subject-level history and hide recipient identities from institutional views
+ok 34 - separate resolved escalations retain subject-level history and hide recipient identities from institutional views
+  ---
+  duration_ms: 24280.7076
+  ...
+# Subtest: overdue VISIT escalation reaches the designated supervisor in real local SMTP and resolves on cancellation
+ok 35 - overdue VISIT escalation reaches the designated supervisor in real local SMTP and resolves on cancellation
+  ---
+  duration_ms: 25427.1906
+  ...
+1..35
+# tests 35
+# suites 0
+# pass 35
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 215225.9441

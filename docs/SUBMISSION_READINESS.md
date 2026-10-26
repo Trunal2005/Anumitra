@@ -1,3 +1,11 @@
+# Current checkpoint — 26 October 2026
+
+Use [the dated product report](TEST_REPORT_2026-10-26.md) for the current source and verification. Exact source `54206f21b8e69f2e946c9421800cada99aa466f7` passed the full sequential gate: 35 backend tests, API restart preservation and five Chromium journeys. Scoped reviewed imports, fictional simulator provenance, readable reports, contextual history and accurate next-role guidance were added. Earlier results below belong to 23 October and are retained as history.
+
+B2 historical missing waiting intervals, F3 exhaustive report/filter coverage and authorized external integration remain partial. Current primary retrieval/reuse limits are in POLICY_REGISTER; no real institution dataset or authorized workflow API contract was verified. All numerical policy is DEMO. Local Compose and broader security/accessibility assurance remain unverified; malware scanning/live AICTE integration remain missing. Public CI status must be checked for each SHA; entry 679b12b failed its audit despite passing tests. No measured efficiency, production or selection claim is made.
+
+## Historical 23 October review
+
 # Submission readiness — repair review, 23 October 2026
 
 Anumitra is an independent SIH26262 student prototype. Submission readiness means a reproducible synthetic demonstration, scoped access, correct tested workflows and traceable human decisions. It does not mean official approval, production certification or guaranteed selection.

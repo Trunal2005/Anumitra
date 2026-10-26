@@ -1,0 +1,7 @@
+{
+  "rolsuper": false,
+  "rolcreatedb": false,
+  "rolcreaterole": false,
+  "can_insert_decision": false,
+  "can_update_state": false
+}

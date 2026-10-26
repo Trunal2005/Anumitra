@@ -2,7 +2,7 @@
 
 Entry checkout: `679b12b07d0479779964d35e090ffc3aa3d705c6`, clean local `main`. Its 79 implementation/configuration hashes matched the earlier report's tested source `9ad109d664a891f2657f95ce54a8f3bd5e9808b8`. The documentation cleanup did not establish a new passing dependency audit.
 
-Implementation checkpoint for this improvement: `041b641a00f6e6899132d02b97d830a5b53314ce`. Complete verification is in progress; this file does not yet claim the new full gate passed. Raw new runs are separated under [product-2026-10-26](evidence/product-2026-10-26/). Earlier reports and evidence remain unchanged.
+Implementation checkpoint for this improvement: `041b641a00f6e6899132d02b97d830a5b53314ce`. The final passing source is `54206f21b8e69f2e946c9421800cada99aa466f7`; see the final complete-run result below. This earlier checkpoint is retained for failure attribution. Raw new runs are separated under [product-2026-10-26](evidence/product-2026-10-26/). Earlier reports and evidence remain unchanged.
 
 ## Reproduced defects
 
@@ -24,11 +24,11 @@ Implementation checkpoint for this improvement: `041b641a00f6e6899132d02b97d830a
 - Only Zod was pinned forward, from 4.1.12 to patched 4.6.7, with its lockfile. No force upgrade, service dependency, schema migration or paid component was introduced.
 - `verify.mjs --evidence-dir=docs/evidence/...` writes new results to a separate dated folder, retaining historical outputs.
 
-## Checks recorded so far
+## Early checks and retained failures
 
 `npm run typecheck`, `npm run format:check` and authored-file whitespace checks passed before the full gate. The four newly added backend regressions passed in [targeted-1](evidence/product-2026-10-26/targeted-1/verification.json), with 14 unrelated tests explicitly skipped by the requested name pattern. That targeted manifest records its exact working-tree hashes and entry HEAD; it is not relabelled as the later complete gate.
 
-The new full invocation is `npm run verify:isolated -- --evidence-dir=docs/evidence/product-2026-10-26/full-1`. It includes fresh isolated migrations/fictional data, TypeScript/production build, all backend scenarios, API restart preservation and all Chromium journeys. Its completion and exact revision will be recorded below after execution.
+The new full invocation is `npm run verify:isolated -- --evidence-dir=docs/evidence/product-2026-10-26/full-1`. It includes fresh isolated migrations/fictional data, TypeScript/production build, all backend scenarios, API restart preservation and all Chromium journeys. Its failed result is recorded below; it is not the final passing run.
 
 ### First complete run: FAILED, retained
 
@@ -64,3 +64,34 @@ The full-1 case snapshot also reproduced a post-decision guidance gap: after und
 ### Header accessibility diagnosis
 
 The product-only rebuild in `browser-product-4` still failed the column-header assertion. The actual `browser-header-diagnosis/browser.txt` accessibility tree then showed the precise cause: Chromium exposed every heading as `cell`, not `columnheader`; this was not a case mismatch. It also confirmed readable “Accepted”, “No accepted version”, “Renewal pending” and “No renewal pending” values. Report `<th>` elements now explicitly declare `scope="col"`. The exact semantic column-header assertion is retained; diagnostic logging is removed from the final test. No timeout was increased. All raw failed diagnostic attempts remain separate evidence.
+
+
+## Final complete run — PASSED
+
+**Exact tested source: `54206f21b8e69f2e946c9421800cada99aa466f7`**, descended from entry 679b12b without history rewriting. [Manifest](evidence/product-2026-10-26/full-3/verification.json), [full raw output](evidence/product-2026-10-26/full-3/full-run.txt), [backend TAP](evidence/product-2026-10-26/full-3/backend.tap) and [browser output](evidence/product-2026-10-26/full-3/browser.txt) identify the same run. It ran from 2026-10-26T13:37:37.725Z to 2026-10-26T13:42:54.906Z (UTC). No concurrent install/build process ran. All mutations used the marked disposable target and private test storage; no normal-demo reset, bootstrap, migration or seed was run.
+
+| Command / check | Actual result |
+|---|---|
+| `npm run verify:isolated -- --evidence-dir=docs/evidence/product-2026-10-26/full-3` | Exit 0; PASSED |
+| Isolated migrations / synthetic fixtures | Six migrations on fresh disposable database; fictional seed; restricted API/worker roles |
+| `tsc --noEmit`, PDF assets and Vite production build inside gate | Passed; existing >500 kB chunk warning remains |
+| Complete backend / operations / repair suite | **35 passed, 0 failed, 0 skipped**, 215.226 seconds |
+| API restart | All case IDs, versions and workflow policy pins preserved |
+| Chromium, one worker | **5 passed**, approximately 1.6 minutes; cross-role journey 53.8 seconds; product journey 8.3 seconds |
+| `npm run format:check` | Passed; [raw output](evidence/product-2026-10-26/format-check.txt) |
+| `npm audit --json` | Exit 0, zero advisories at retrieval; [raw output](evidence/product-2026-10-26/dependency-audit.json) |
+| Authored-file whitespace / outgoing private-value checks | Passed; private credentials/traces, normal databases/uploads and build/dependency files remain excluded |
+| Local Compose / official network contract / malware scanning | Not run / not available; no success claimed |
+
+Implementation/config/test manifest SHA-256: `9884f9294f392db86b58081964646b84da0ae520c45bdcd76b3594dffaf72f41`. Documentation/evidence changes after this source commit are excluded by the manifest's explicit file list and do not change those source hashes. A subsequent published documentation commit must be checked against this digest rather than relabelling an untested application revision.
+
+The browser story now covers two-item repeated responses, EVC scheduling/report/completion, committee recommendation, explicit human conditional decision, undertaking verification, pending and rejected renewal preserving accepted expiry, later v3 acceptance, designated escalation and real local SMTP retry. The fifth journey separately checks readable report cells/column semantics, focus/mobile overflow, contextual history, next-role guidance, real simulator review/commit and unauthorized access. Screenshots in full-3 were visually inspected; finite checks do not establish complete WCAG conformance or every export/policy permutation.
+
+[Public entry CI](https://github.com/Trunal2005/Anumitra/actions/runs/40225073084) is recorded as failed on its Zod audit, not successful. Publication CI is checked separately after push and must be identified by its own SHA/run URL; this pre-publication report does not infer hosted success from the local gate. No real institution directory/reuse permission or authorized AICTE contract was established; [contract](INTEGRATION_CONTRACT.md) and [policy recheck](POLICY_REGISTER.md) state the exact simulator/provenance/access boundaries.
+
+
+## Native handoff
+
+Existing PostgreSQL on 127.0.0.1:55432 was reused. Only stopped API, worker and Mailpit were started, with hidden process windows and ignored logs; no normal reset/bootstrap/migration/seed was executed. `npm run doctor -- --strict` exited 0: API, database, schema, storage, worker and SMTP all ready; integration LOCAL_ADAPTER. [Doctor](evidence/product-2026-10-26/native-doctor.txt) and [health](evidence/product-2026-10-26/native-health.json) are retained. Application `http://127.0.0.1:3000/` and Mailpit `http://127.0.0.1:8025/` each returned HTTP 200.
+
+The request to open a visible in-app browser timed out attaching its webview; the application panel fallback reported queued. No visible desktop page opening is claimed. Actual authenticated UI behavior and desktop/mobile screenshots were verified through Chromium in the complete gate. The localhost services remain available independently of this desktop-display limitation.
