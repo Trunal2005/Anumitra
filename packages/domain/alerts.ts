@@ -4,6 +4,7 @@ import { transport } from "./mail.ts";
 import { deadlineSubjects } from "./deadlines.ts";
 import { resolveRecipients } from "./recipients.ts";
 import { workflowSchema } from "../contracts/index.ts";
+import { escalationEvidence } from "./history.ts";
 export async function scan() {
   const now = await clock();
   const currentRun = await runId();
@@ -100,6 +101,7 @@ export async function scan() {
               `Level ${i + 1} ${level.role}; subject ${identity}; recipients ${recipients.map((r) => r.id).join(",") || "UNASSIGNED"}`,
               app.state,
               "PUBLIC",
+              escalationEvidence(event),
             );
           } else if (
             JSON.stringify(old.recipientIds) !==
@@ -121,6 +123,7 @@ export async function scan() {
               `Level ${i + 1}: recipient eligibility changed`,
               app.state,
               "PUBLIC",
+              escalationEvidence(event),
             );
           }
           await notify(
@@ -171,6 +174,7 @@ export async function scan() {
             `Subject ${event.subjectType}:${event.subjectId} revision ${event.deadlineRevision}`,
             app.state,
             "PUBLIC",
+            escalationEvidence(event, "RESOLVED"),
           );
       });
     }

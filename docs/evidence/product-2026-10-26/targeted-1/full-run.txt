@@ -1,0 +1,136 @@
+Prisma schema loaded from packages\db\schema.prisma
+Environment variables loaded from .env
+Datasource "db": PostgreSQL database "anumitra_test_1793018335332", schema "public" at "127.0.0.1:55432"
+
+6 migrations found in prisma/migrations
+
+Applying migration `202610220001_initial`
+Applying migration `202610220002_invariants`
+Applying migration `202610220003_version_bytes`
+Applying migration `202610220004_submission_repairs`
+Applying migration `202610220005_attempt_invariants`
+Applying migration `202610230006_legacy_delivery_upgrade`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 202610220001_initial/
+    └─ migration.sql
+  └─ 202610220002_invariants/
+    └─ migration.sql
+  └─ 202610220003_version_bytes/
+    └─ migration.sql
+  └─ 202610220004_submission_repairs/
+    └─ migration.sql
+  └─ 202610220005_attempt_invariants/
+    └─ migration.sql
+  └─ 202610230006_legacy_delivery_upgrade/
+    └─ migration.sql
+      
+All migrations have been successfully applied.
+{
+  runId: '296af2b9-1f13-4d98-959b-9faa4d3ffcd6',
+  applications: 120,
+  institutions: 20
+}
+TAP version 13
+# Subtest: calendar validation rejects impossible dates and preserves leap-year IST end of day
+ok 1 - calendar validation rejects impossible dates and preserves leap-year IST end of day # SKIP test name does not match pattern
+  ---
+  duration_ms: 3.8096
+  ...
+# Subtest: authenticated institution-only officials, intersected dimensions, multi-grant union and bounded delegation
+ok 2 - authenticated institution-only officials, intersected dimensions, multi-grant union and bounded delegation # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.3295
+  ...
+# Subtest: two rejected responses create disjoint waiting/review intervals, immutable snapshots, replay and concurrency gates
+ok 3 - two rejected responses create disjoint waiting/review intervals, immutable snapshots, replay and concurrency gates # SKIP test name does not match pattern
+  ---
+  duration_ms: 1.5846
+  ...
+# Subtest: pending and rejected renewals preserve effective expiry; acceptance switches the deadline subject
+ok 4 - pending and rejected renewals preserve effective expiry; acceptance switches the deadline subject # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.2363
+  ...
+# Subtest: upload rejects invalid metadata, foreign ownership, forbidden stage and database rollback without orphan bytes
+ok 5 - upload rejects invalid metadata, foreign ownership, forbidden stage and database rollback without orphan bytes # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.5288
+  ...
+# Subtest: policy publication binds saved revision/hash, audits draft save and prevents stale lifecycle races
+ok 6 - policy publication binds saved revision/hash, audits draft save and prevents stale lifecycle races # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.4665
+  ...
+# Subtest: actual pg-boss completed failed job retries in a new generation with one inbox and retained attempt history
+ok 7 - actual pg-boss completed failed job retries in a new generation with one inbox and retained attempt history # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.4103
+  ...
+# Subtest: negative verification is deliberately referred for a human rejection; old committee recommendations cannot satisfy a new attempt
+ok 8 - negative verification is deliberately referred for a human rejection; old committee recommendations cannot satisfy a new attempt # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.2417
+  ...
+# Subtest: escalation grace preserves overdue visibility, routes designated officials, deduplicates notes and audits acknowledgement/closure
+ok 9 - escalation grace preserves overdue visibility, routes designated officials, deduplicates notes and audits acknowledgement/closure # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.7569
+  ...
+# Subtest: consolidated overdue reconciles post-decision undertakings and effective documents on one case
+ok 10 - consolidated overdue reconciles post-decision undertakings and effective documents on one case # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.4365
+  ...
+# Subtest: compatible policy migration preserves due time, revises deadline identity and retains pins through retirement
+ok 11 - compatible policy migration preserves due time, revises deadline identity and retains pins through retirement # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.26
+  ...
+# Subtest: authenticated mixed grants preserve per-case internal visibility and scoped SSE counts
+ok 12 - authenticated mixed grants preserve per-case internal visibility and scoped SSE counts # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.3707
+  ...
+# Subtest: acceptance atomically resolves missing-acceptance alerts and a reviewed version cannot be rewritten
+ok 13 - acceptance atomically resolves missing-acceptance alerts and a reviewed version cannot be rewritten # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.2895
+  ...
+# Subtest: reasoned visit cancellation atomically closes reminders, releases reservations and restores scheduling monitoring
+ok 14 - reasoned visit cancellation atomically closes reminders, releases reservations and restores scheduling monitoring # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.9047
+  ...
+# Subtest: institution master preview enforces intersected scope, atomic review, provenance and replay
+ok 15 - institution master preview enforces intersected scope, atomic review, provenance and replay
+  ---
+  duration_ms: 2780.0719
+  ...
+# Subtest: next-step guidance follows institution response and post-decision undertaking actors, not stale owners
+ok 16 - next-step guidance follows institution response and post-decision undertaking actors, not stale owners
+  ---
+  duration_ms: 2866.1083
+  ...
+# Subtest: separate resolved escalations retain subject-level history and hide recipient identities from institutional views
+ok 17 - separate resolved escalations retain subject-level history and hide recipient identities from institutional views
+  ---
+  duration_ms: 14955.0031
+  ...
+# Subtest: overdue VISIT escalation reaches the designated supervisor in real local SMTP and resolves on cancellation
+ok 18 - overdue VISIT escalation reaches the designated supervisor in real local SMTP and resolves on cancellation
+  ---
+  duration_ms: 5177.5275
+  ...
+1..18
+# tests 18
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 14
+# todo 0
+# duration_ms 32252.0891
+Disposable target retained for inspection; normal demo untouched.

@@ -7,6 +7,17 @@ import { provisionRuntime } from "./runtime-role.mjs";
 import pg from "pg";
 import { sourceState } from "./source-state.mjs";
 import { provisionWorker } from "./worker-role.mjs";
+const evidenceDirectory =
+  process.argv
+    .find((a) => a.startsWith("--evidence-dir="))
+    ?.slice("--evidence-dir=".length) ?? "docs/evidence/repair";
+if (
+  !/^docs\/evidence\/[A-Za-z0-9_/-]+$/.test(evidenceDirectory) ||
+  evidenceDirectory.includes("..")
+)
+  throw new Error(
+    "Evidence directory must be a safe repository docs/evidence subdirectory",
+  );
 const existing = process.argv.includes("--existing");
 let state;
 if (existing) {
@@ -17,8 +28,9 @@ if (existing) {
   };
 } else state = await createTestEnvironment();
 const { env, directory } = state;
+env.TEST_EVIDENCE_DIR = evidenceDirectory;
 assertTestTarget(env.DATABASE_URL);
-mkdirSync("docs/evidence/repair", { recursive: true });
+mkdirSync(evidenceDirectory, { recursive: true });
 function run(args, custom = env, file) {
   const fd = file ? openSync(file, "w") : undefined;
   const result = spawnSync(process.execPath, args, {
@@ -55,7 +67,7 @@ if (!existing) {
   const privileges = await provisionWorker(owner, worker.href);
   env.WORKER_DATABASE_URL = worker.href;
   writeFileSync(
-    "docs/evidence/repair/worker-privileges.json",
+    path.join(evidenceDirectory, "worker-privileges.json"),
     JSON.stringify(privileges, null, 2),
   );
   env.DATABASE_URL = runtime.href;
@@ -139,7 +151,7 @@ try {
         "tests/repair.test.ts",
       ],
       runtime,
-      "docs/evidence/repair/regressions.tap",
+      path.join(evidenceDirectory, "regressions.tap"),
     );
     report.checks.push(
       process.argv.some((argument) =>
@@ -161,7 +173,7 @@ try {
           "tests/repair.test.ts",
         ],
         runtime,
-        "docs/evidence/repair/backend.tap",
+        path.join(evidenceDirectory, "backend.tap"),
       );
       report.checks.push("backend/operations/repair tests passed");
     }
@@ -206,7 +218,7 @@ try {
             : []),
         ],
         runtime,
-        "docs/evidence/repair/browser.txt",
+        path.join(evidenceDirectory, "browser.txt"),
       );
       report.checks.push("browser passed");
       worker.kill();
@@ -228,7 +240,7 @@ try {
   }
   report.finishedAt = new Date();
   writeFileSync(
-    "docs/evidence/repair/verification.json",
+    path.join(evidenceDirectory, "verification.json"),
     JSON.stringify(report, null, 2),
   );
   console.log(

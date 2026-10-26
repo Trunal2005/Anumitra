@@ -35,3 +35,20 @@ Existing published versions and cases are preserved; the repair does not silentl
 ## Subsequent prototype audit — 23 October 2026 (IST)
 
 A direct web retrieval of https://www.sih.gov.in/sih2026PS returned HTTP 403 during this audit. The earlier successful retrieval remains historical. Current functional review uses the supplied A–F engineering brief and retained requirement mapping; no freshly verified official statement revision, numerical rule or clause is claimed. No policy values were changed or applied to the normal demo.
+
+## Product improvement recheck — 26 October 2026 (IST)
+
+Only public primary/official sources were investigated. No authenticated portal, private endpoint, browser cookie or access-control bypass was used. Search indexing is distinguished from successful retrieval. No statutory values or appointments were changed.
+
+| Title / source | URL | Retrieval result / applicable section | Verification limit |
+|---|---|---|---|
+| SIH2026 PS listing, entry 26262 | https://www.sih.gov.in/sih2026PS | Direct request: HTTP 403 on 2026-10-26; retained A–F and Regulatory Safeguard mapping used | Fresh official statement revision inaccessible; supplied scope remains the functional review basis |
+| AICTE Approval Process Handbook | https://www.aicte.gov.in/sites/default/files/approval/APH%20Final.pdf | Direct request: HTTP 403; alternative https://aicte.gov.in/sites/default/files/APH%20Final.pdf returned 404 | No fresh page/section applicability or calendar certified |
+| AICTE-hosted APH copy | https://aicte-qa.aicte-india.org/sites/default/files/APH%20Final.pdf | Search index identifies APH 2024–2027; direct PDF retrieval timed out | Indexed text is background discovery, not verified current policy applicability or an extracted operational rule |
+| 2026–27 V2 addendum | https://aicte.gov.in/downloads/aph/Final%20Addendum%202026-27_V2.pdf | Direct request: HTTP 403 | Earlier accessible evidence remains historical; current supersession/clauses unverified |
+| AICTE approved-institution dashboard | https://facilities.aicte-india.org/dashboard/pages/angulardashboard.php#!/approved | Direct public-page request timed out | Current reusable master file, source version, download checksum and reuse terms could not be verified; no real institution dataset imported |
+| AICTE One Nation One Data (ONOD) | https://onod.aicte-india.org/ | Indexed public landing text describes AISHE-based HEI details and Open APIs; direct request returned 502 | Landing text does not supply an authorised approval-workflow API contract, sandbox credentials, consent/retention agreement or status feed; none verified in this review |
+
+The searches did not establish an authorised approval-workflow endpoint, usable credentials, official integration specification or permission to reuse a current downloadable institution directory. This is an access/verification limit, not proof that AICTE has no APIs. No real lease, internal case, committee or audit record was obtained. Source/version/checksum, authentication, consent, retention, usage rights and applicable sections need independent confirmation before real data or network integration.
+
+The safest implemented path remains the [local institution-master contract simulator](INTEGRATION_CONTRACT.md): labelled fictional fixture, cursors, normalized-row checksums, scoped review-before-commit and durable source provenance. Manual files remain UNVERIFIED_LOCAL. Numeric configuration remains DEMO, including deadlines, grace, eligibility, quorum and calendar conventions.

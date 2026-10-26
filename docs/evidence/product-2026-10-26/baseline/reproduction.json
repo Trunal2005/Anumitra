@@ -1,0 +1,27 @@
+{
+  "sourceCommit": "679b12b07d0479779964d35e090ffc3aa3d705c6",
+  "dateIST": "2026-10-26",
+  "target": "retained isolated fictional database only",
+  "masterScopePreview": {
+    "expected": 403,
+    "observed": 200
+  },
+  "validityReport": {
+    "rawNoAcceptedVersionCells": 17,
+    "bareBooleanCells": 58
+  },
+  "terminalCase": {
+    "state": "CONDITIONAL",
+    "stalePanelActor": "Fictional mixed-role official"
+  },
+  "ci": {
+    "run": 40225073084,
+    "fullVerification": "success",
+    "overall": "failure",
+    "failedStep": "npm audit --audit-level=high",
+    "advisory": "GHSA-mrhx-c7xc-m3w5",
+    "package": "zod",
+    "declaredVersion": "4.1.12"
+  },
+  "normalDemoBusinessMutations": false
+}

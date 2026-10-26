@@ -335,14 +335,44 @@ test("cross-role repair journey: repeated response, EVC, conditional undertaking
     await action(reviewer, id, "raise-deficiency");
     await reviewer
       .getByLabel("Checklist item")
-      .fill("Fictional lease clarification");
+      .fill("Fictional lease clarification\nFictional programme clarification");
     await commit(reviewer);
-    for (const outcome of ["REJECTED", "REJECTED", "ACCEPTED"]) {
+    const reviewerApi = await new Client().login("reviewer.north");
+    const checklist = (await reviewerApi.ok("/applications/" + id))
+      .deficiencies;
+    expect(checklist).toHaveLength(2);
+    for (const [round, outcome] of [
+      "REJECTED",
+      "REJECTED",
+      "ACCEPTED",
+    ].entries()) {
       await action(institution, id, "submit-response");
+      await institution
+        .getByLabel("Target deficiency")
+        .selectOption(checklist[0].id);
       await commit(institution);
+      if (round === 0) {
+        await action(institution, id, "submit-response");
+        await institution
+          .getByLabel("Target deficiency")
+          .selectOption(checklist[1].id);
+        await commit(institution);
+      }
       await action(reviewer, id, "verify-response", outcome);
+      await reviewer
+        .getByLabel("Target deficiency")
+        .selectOption(checklist[0].id);
       await commit(reviewer);
+      if (outcome === "REJECTED")
+        expect((await reviewerApi.ok("/applications/" + id)).state).toBe(
+          "AWAITING_RESPONSE",
+        );
     }
+    await action(reviewer, id, "verify-response", "ACCEPTED");
+    await reviewer
+      .getByLabel("Target deficiency")
+      .selectOption(checklist[1].id);
+    await commit(reviewer);
     await action(reviewer, id, "review-document", "ACCEPTED");
     await commit(reviewer);
     await action(reviewer, id, "complete-stage");
@@ -480,7 +510,7 @@ test("cross-role repair journey: repeated response, EVC, conditional undertaking
     const document = supervisor
       .locator(".document-card")
       .filter({ hasText: "Journey lease" });
-    await expect(document.getByText("EXPIRED", { exact: true })).toBeVisible();
+    await expect(document.getByText("Expired", { exact: true })).toBeVisible();
     await expect(
       document.getByText(/Renewal pending verification/),
     ).toBeVisible();
@@ -558,10 +588,22 @@ test("cross-role repair journey: repeated response, EVC, conditional undertaking
       .filter({ hasText: "Journey lease" });
     await renewed
       .getByLabel("Verification reason")
+      .fill("Fictional replacement returned for a corrected version");
+    await renewed.getByRole("button", { name: "Return evidence" }).click();
+    await expect(renewed.getByText("Expired", { exact: true })).toBeVisible();
+    await expect(renewed.getByText(/Effective v1/)).toBeVisible();
+    await institution.goto("/applications/" + id);
+    await upload(institution, "Journey lease", "2029-12-31", true);
+    await supervisor.reload();
+    await supervisor
+      .getByPlaceholder("Search authorized documents…")
+      .fill(current.reference);
+    await renewed
+      .getByLabel("Verification reason")
       .fill("Authorized renewal accepted after browser review");
     await renewed.getByRole("button", { name: "Accept evidence" }).click();
-    await expect(renewed.getByText(/Effective v2/)).toBeVisible();
-    await expect(renewed.getByText("CURRENT", { exact: true })).toBeVisible();
+    await expect(renewed.getByText(/Effective v3/)).toBeVisible();
+    await expect(renewed.getByText("Current", { exact: true })).toBeVisible();
     await supervisor.goto("/reports");
     await supervisor.getByLabel("Report").selectOption("overdue");
     await supervisor.screenshot({
@@ -690,6 +732,154 @@ test("the first live revision refreshes a stale initial compliance snapshot", as
     });
     await expect(card.getByLabel("Authorized action")).toBeVisible();
   } finally {
+    await db.$disconnect();
+  }
+});
+
+test("readable reports, contextual history, scoped next actors and reviewed simulator provenance use the real API", async ({
+  browser,
+}) => {
+  const { db } = await import("../../packages/db/index.ts");
+  const contexts: BrowserContext[] = [];
+  async function signIn(role: string) {
+    const context = await browser.newContext({
+      baseURL: process.env.TEST_API_ORIGIN,
+      viewport: { width: 1440, height: 900 },
+    });
+    contexts.push(context);
+    const page = await context.newPage();
+    await page.goto("/");
+    await page.getByLabel("Email address").fill(role + "@anumitra.test");
+    await page
+      .getByLabel("Password", { exact: true })
+      .fill(credentials.password);
+    await page.getByRole("button", { name: "Enter your workspace" }).click();
+    await expect(page.getByRole("heading", { name: /Welcome/ })).toBeVisible();
+    return page;
+  }
+  const evidence = process.env.TEST_EVIDENCE_DIR ?? "docs/evidence/repair";
+  try {
+    const page = await signIn("supervisor.north");
+    await page.goto("/reports");
+    await page.getByLabel("Report").selectOption("validity");
+    await expect(
+      page.getByRole("columnheader", {
+        name: "Accepted effective version",
+        exact: true,
+      }),
+    ).toBeVisible();
+    await expect(
+      page
+        .getByRole("cell", { name: "No accepted version", exact: true })
+        .first(),
+    ).toBeVisible();
+    await expect(
+      page
+        .locator("td")
+        .filter({ hasText: /^(true|false|NO_ACCEPTED_VERSION)$/ }),
+    ).toHaveCount(0);
+    await expect(
+      page
+        .getByRole("cell", { name: "No renewal pending", exact: true })
+        .first(),
+    ).toBeVisible();
+    await page.screenshot({
+      path: evidence + "/product-reports-1440.png",
+      fullPage: true,
+    });
+    for (const width of [390, 768]) {
+      await page.setViewportSize({ width, height: 800 });
+      const scroll = page.getByRole("region", {
+        name: "Scrollable report table",
+      });
+      await scroll.focus();
+      await expect(scroll).toBeFocused();
+      await page.keyboard.press("ArrowRight");
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth,
+        ),
+      ).toBe(true);
+      await page.screenshot({
+        path: evidence + `/product-reports-${width}.png`,
+        fullPage: true,
+      });
+    }
+    await page.setViewportSize({ width: 1440, height: 900 });
+    const run = await db.demoClock.findUniqueOrThrow({
+      where: { id: "current" },
+    });
+    const condition = await db.application.findFirstOrThrow({
+      where: {
+        runId: run.runId,
+        institutionId: "I01",
+        state: "CONDITIONAL",
+        obligations: { some: { state: "ACCEPTED" } },
+      },
+    });
+    await page.goto("/applications/" + condition.id);
+    await expect(
+      page.getByText("No application transition pending", { exact: true }),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "History", exact: true }).click();
+    await expect(page.locator(".escalation-context").first()).toBeVisible();
+    await expect(page.locator(".escalation-context").first()).toContainText(
+      "Current event status:",
+    );
+    await page.screenshot({
+      path: evidence + "/product-case-history.png",
+      fullPage: true,
+    });
+    const admin = await signIn("admin");
+    await admin.goto("/admin");
+    await admin
+      .getByRole("button", { name: "Load fictional simulator sample" })
+      .click();
+    await expect(admin.getByLabel("Local records")).toHaveValue(
+      /SIM-INSTITUTE-001/,
+    );
+    const preview = admin.waitForResponse(
+      (r) =>
+        r.url().endsWith("/api/integrations/master") &&
+        r.request().method() === "POST",
+    );
+    await admin
+      .getByRole("button", { name: "Validate preview", exact: true })
+      .click();
+    const previewResponse = await preview;
+    expect(previewResponse.status()).toBe(200);
+    const plan = await previewResponse.json();
+    expect(plan.provenance.classification).toBe("FICTIONAL_SIMULATION");
+    expect(plan.reviewId).toBeTruthy();
+    await admin.screenshot({
+      path: evidence + "/product-master-preview.png",
+      fullPage: true,
+    });
+    const committed = admin.waitForResponse(
+      (r) =>
+        r.url().endsWith("/api/integrations/master") &&
+        r.request().method() === "POST",
+    );
+    await admin
+      .getByRole("button", { name: "Commit validated import" })
+      .click();
+    const committedResponse = await committed;
+    expect(committedResponse.status()).toBe(200);
+    expect((await committedResponse.json()).results).toHaveLength(2);
+    const institution = await signIn("institution.a");
+    const foreign = await db.application.findFirstOrThrow({
+      where: { runId: run.runId, institutionId: "I02" },
+    });
+    const denied = await institution.request.get(
+      "/api/applications/" + foreign.id,
+    );
+    expect(denied.status()).toBe(404);
+    const simulatorDenied = await institution.request.get(
+      "/api/integrations/simulator/institutions",
+    );
+    expect(simulatorDenied.status()).toBe(403);
+  } finally {
+    for (const context of contexts) await context.close();
     await db.$disconnect();
   }
 });

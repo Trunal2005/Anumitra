@@ -21,6 +21,10 @@ import { scan, deliver } from "../packages/domain/alerts.ts";
 import { deadlineSubjects } from "../packages/domain/deadlines.ts";
 import { scope, eligible } from "../packages/domain/permissions.ts";
 import { documentCompliance } from "../packages/domain/documents.ts";
+import {
+  reportValue,
+  reportHeading,
+} from "../packages/contracts/presentation.ts";
 const institution = await new Client().login("institution.a"),
   supervisor = await new Client().login("supervisor.north"),
   reviewer = await new Client().login("reviewer.north"),
@@ -1309,6 +1313,374 @@ test("reasoned visit cancellation atomically closes reminders, releases reservat
       })
     ).status,
     409,
+  );
+  await time(original);
+});
+
+test("institution master preview enforces intersected scope, atomic review, provenance and replay", async () => {
+  const admin = await new Client().login("admin");
+  const person = await db.user.create({
+    data: {
+      email: `master-scope-${randomUUID()}@anumitra.test`,
+      name: "Fictional institution-bound bureau",
+      passwordHash: actor("bureau").passwordHash,
+      grants: { create: { role: "BUREAU", institutionId: "I01" } },
+    },
+  });
+  const bounded = await new Client().login(person.email);
+  const id = "MASTER-REG-" + randomUUID().slice(0, 8);
+  const records = [
+    { id, name: "Fictional reviewed institution", regionId: "R1" },
+  ];
+  const payload = {
+    entity: "institutions",
+    format: "json",
+    content: JSON.stringify(records),
+    preview: true,
+    provenance: {
+      classification: "FICTIONAL_SIMULATION",
+      sourceId: "test-contract-fixture",
+      sourceVersion: "1",
+      retrievedAt: "2026-10-26T00:00:00.000Z",
+    },
+  };
+  assert.equal(
+    (await bounded.request("/integrations/master", "POST", payload)).status,
+    403,
+  );
+  assert.equal(
+    (await institution.request("/integrations/master", "POST", payload)).status,
+    403,
+  );
+  assert.equal(
+    (
+      await admin.request("/integrations/master", "POST", {
+        ...payload,
+        content: JSON.stringify([...records, ...records]),
+      })
+    ).status,
+    400,
+  );
+  assert.equal(
+    (
+      await admin.request("/integrations/master", "POST", {
+        ...payload,
+        preview: false,
+      })
+    ).status,
+    409,
+  );
+  const plan = await admin.ok("/integrations/master", "POST", payload);
+  assert.equal(plan.provenance.classification, "FICTIONAL_SIMULATION");
+  assert.match(plan.provenance.contentChecksum, /^[a-f0-9]{64}$/);
+  assert.equal(await db.institution.count({ where: { id } }), 0);
+  assert.equal(
+    (
+      await bureau.request("/integrations/master", "POST", {
+        ...payload,
+        preview: false,
+        reviewId: plan.reviewId,
+      })
+    ).status,
+    403,
+  );
+  assert.equal(
+    (
+      await admin.request("/integrations/master", "POST", {
+        ...payload,
+        preview: false,
+        reviewId: plan.reviewId,
+        content: JSON.stringify([
+          { ...records[0], name: "Changed after preview" },
+        ]),
+      })
+    ).status,
+    409,
+  );
+  await admin.ok("/integrations/master", "POST", {
+    ...payload,
+    preview: false,
+    reviewId: plan.reviewId,
+  });
+  const replay = await admin.ok("/integrations/master", "POST", {
+    ...payload,
+    preview: false,
+    reviewId: plan.reviewId,
+  });
+  assert.equal(replay.results[0].state, "UNCHANGED");
+  assert.equal(await db.institution.count({ where: { id } }), 1);
+  const stored = await db.syncRun.findFirstOrThrow({
+    where: {
+      preview: false,
+      result: { path: ["reviewId"], equals: plan.reviewId },
+    },
+  });
+  assert.deepEqual((stored.result as any).provenance, plan.provenance);
+  const otherId = "MASTER-ATOMIC-" + randomUUID().slice(0, 8);
+  const conflict = {
+    ...payload,
+    content: JSON.stringify([
+      { id: otherId, name: "Fictional atomic batch", regionId: "R1" },
+      { ...records[0], name: "Conflicting existing master" },
+    ]),
+  };
+  const conflictPlan = await admin.ok("/integrations/master", "POST", conflict);
+  assert.ok(
+    conflictPlan.results.some(
+      (r: any) => r.state === "CONFLICT_REVIEW_REQUIRED",
+    ),
+  );
+  assert.equal(
+    (
+      await admin.request("/integrations/master", "POST", {
+        ...conflict,
+        preview: false,
+        reviewId: conflictPlan.reviewId,
+      })
+    ).status,
+    409,
+  );
+  assert.equal(await db.institution.count({ where: { id: otherId } }), 0);
+  assert.equal(
+    (await db.institution.findUniqueOrThrow({ where: { id } })).name,
+    records[0].name,
+  );
+  assert.equal(
+    (
+      await admin.request("/integrations/master", "POST", {
+        ...payload,
+        provenance: { ...payload.provenance, classification: "PUBLIC_AICTE" },
+      })
+    ).status,
+    400,
+  );
+  const page = await admin.ok("/integrations/simulator/institutions");
+  assert.equal(page.mode, "SANDBOX");
+  assert.equal(page.liveAuthorized, false);
+  const next = await admin.ok(
+    "/integrations/simulator/institutions?cursor=" + page.nextCursor,
+  );
+  assert.notEqual(page.records[0].id, next.records[0].id);
+  assert.equal(next.nextCursor, null);
+  assert.equal(
+    (await admin.request("/integrations/simulator/institutions?cursor=invalid"))
+      .status,
+    400,
+  );
+  assert.equal(
+    (await institution.request("/integrations/simulator/institutions")).status,
+    403,
+  );
+});
+
+test("next-step guidance follows institution response and post-decision undertaking actors, not stale owners", async () => {
+  await time(original);
+  const { app, version } = await prepared();
+  await reviewer.command(app.id, "raise-deficiency", {
+    items: ["LEASE", "CONTACT"],
+    reason: "Two fictional checklist corrections required",
+  });
+  let record = await supervisor.ok("/applications/" + app.id);
+  assert.equal(record.state, "AWAITING_RESPONSE");
+  assert.equal(record.brief.next.role, "Institution representative");
+  assert.equal(record.brief.next.assignee, null);
+  const decided = await prepared();
+  await reviewer.command(decided.app.id, "review-document", {
+    documentVersionId: decided.version.id,
+    outcome: "ACCEPTED",
+  });
+  await reviewer.command(decided.app.id, "complete-stage");
+  await authority.command(decided.app.id, "record-authorized-decision", {
+    outcome: "CONDITIONAL",
+    condition: "Fictional follow-up condition",
+    dueAt: new Date(+original + 7 * 86400000).toISOString(),
+  });
+  record = await supervisor.ok("/applications/" + decided.app.id);
+  assert.equal(record.brief.next.role, "Institution representative");
+  assert.equal(record.brief.next.assignee, null);
+  let obligation = record.obligations[0];
+  await institution.ok(`/obligations/${obligation.id}/commands`, "POST", {
+    command: "submit",
+    expectedRevision: obligation.revision,
+    documentVersionId: decided.version.id,
+    reason: "Fictional undertaking submission for next-actor regression",
+  });
+  record = await supervisor.ok("/applications/" + decided.app.id);
+  obligation = record.obligations[0];
+  assert.equal(
+    record.brief.next.role,
+    "Authorized reviewer / supervisor / bureau",
+  );
+  assert.equal(
+    (
+      await authority.request(
+        `/obligations/${obligation.id}/commands`,
+        "POST",
+        {
+          command: "accept",
+          expectedRevision: obligation.revision,
+          reason: "Authority alone cannot act as the assigned verifier",
+        },
+      )
+    ).status,
+    403,
+  );
+  await supervisor.ok(`/obligations/${obligation.id}/commands`, "POST", {
+    command: "accept",
+    expectedRevision: obligation.revision,
+    reason: "Fictional evidence verified by scoped supervisor",
+  });
+  record = await supervisor.ok("/applications/" + decided.app.id);
+  assert.equal(record.brief.next.role, "No application transition pending");
+  assert.equal(record.brief.next.due, null);
+  const outside = await db.application.findFirstOrThrow({
+    where: { institutionId: "I02", runId: await runId() },
+  });
+  assert.equal(
+    (await institution.request("/applications/" + outside.id)).status,
+    404,
+  );
+  assert.equal(reportValue("renewalPending", true), "Renewal pending");
+  assert.equal(reportValue("renewalPending", false), "No renewal pending");
+  assert.equal(
+    reportValue("validity", "NO_ACCEPTED_VERSION"),
+    "No accepted version",
+  );
+  assert.equal(reportHeading("effectiveVersion"), "Accepted effective version");
+  const csv = await supervisor.request("/reports/validity?format=csv");
+  assert.equal(csv.status, 200);
+  assert.ok(String(csv.data).includes("Accepted effective version"));
+  assert.ok(!String(csv.data).includes("NO_ACCEPTED_VERSION"));
+  assert.ok(!String(csv.data).includes(',"true"'));
+});
+
+test("separate resolved escalations retain subject-level history and hide recipient identities from institutional views", async () => {
+  await time(original);
+  const { app, version } = await prepared();
+  await time(new Date(+original + 30 * 86400000));
+  await scan();
+  const events = await db.escalation.findMany({
+    where: { applicationId: app.id, subjectType: "APPLICATION" },
+  });
+  assert.ok(events.length >= 2);
+  await reviewer.command(app.id, "review-document", {
+    documentVersionId: version.id,
+    outcome: "ACCEPTED",
+  });
+  await reviewer.command(app.id, "raise-deficiency", {
+    item: "LEASE",
+    reason: "Fictional follow-up resets only the corresponding stage deadline",
+  });
+  const official = await supervisor.ok("/applications/" + app.id);
+  const resolved = official.history.filter(
+    (h: any) =>
+      h.action === "escalation-resolved" &&
+      h.escalation?.subjectType === "APPLICATION",
+  );
+  assert.equal(resolved.length, events.length);
+  assert.deepEqual(
+    resolved.map((h: any) => h.escalation.level).sort(),
+    events.map((e) => e.level).sort(),
+  );
+  assert.ok(
+    resolved.every(
+      (h: any) =>
+        h.escalation.currentStatus === "RESOLVED" &&
+        h.escalation.subjectId === app.id &&
+        h.escalation.recipientRole,
+    ),
+  );
+  const publicView = await institution.ok("/applications/" + app.id);
+  for (const h of publicView.history.filter((h: any) => h.escalation)) {
+    assert.deepEqual(h.escalation.recipients, []);
+    assert.equal(h.evidence?.recipientIds, undefined);
+  }
+  await time(original);
+});
+
+test("overdue VISIT escalation reaches the designated supervisor in real local SMTP and resolves on cancellation", async () => {
+  await time(original);
+  const app = await institution.create("Only EVC");
+  await institution.upload(app.id);
+  await institution.command(app.id, "submit");
+  const latest = await db.reservation.findFirst({
+    where: { active: true },
+    orderBy: { endAt: "desc" },
+  });
+  const start = new Date(
+    Math.max(+original + 5 * 86400000, +(latest?.endAt ?? original) + 86400000),
+  );
+  const end = new Date(+start + 3600000);
+  const visit = await supervisor.ok(`/applications/${app.id}/visits`, "POST", {
+    mode: "ONLINE",
+    startAt: start.toISOString(),
+    endAt: end.toISOString(),
+    participants: [actor("committee.evc").id],
+    metadata: "Fictional overdue visit SMTP regression",
+    reason: "Dedicated designated-recipient delivery proof",
+  });
+  await time(new Date(+start + 86400000));
+  await scan();
+  const event = await db.escalation.findFirstOrThrow({
+    where: {
+      subjectType: "VISIT",
+      subjectId: visit.id,
+      recipientRole: "SUPERVISOR",
+      level: 1,
+    },
+  });
+  assert.ok(
+    (event.recipientIds as string[]).includes(actor("supervisor.north").id),
+  );
+  assert.ok(!(event.recipientIds as string[]).includes(actor("auditor").id));
+  const intent = await db.outbox.findFirstOrThrow({
+    where: {
+      subjectType: "VISIT",
+      subjectId: visit.id,
+      recipientId: actor("supervisor.north").id,
+      title: { contains: "ESCALATION L1" },
+    },
+  });
+  await deliver(intent.id, intent.generation);
+  assert.equal(
+    (await db.outbox.findUniqueOrThrow({ where: { id: intent.id } })).state,
+    "SMTP_ACCEPTED",
+  );
+  assert.equal(
+    await db.notification.count({
+      where: {
+        logicalKey: intent.logicalKey,
+        userId: actor("supervisor.north").id,
+      },
+    }),
+    1,
+  );
+  const messages = await (
+    await fetch(
+      (process.env.TEST_MAILPIT_ORIGIN ?? "http://127.0.0.1:8125") +
+        "/api/v1/search?query=" +
+        encodeURIComponent('subject:"' + intent.title + '"'),
+    )
+  ).json();
+  assert.ok(
+    messages.messages.some(
+      (m: any) =>
+        m.Subject === intent.title &&
+        m.To.some((t: any) => t.Address === actor("supervisor.north").email),
+    ),
+  );
+  const report = await supervisor.ok("/reports/overdue");
+  assert.ok(
+    report.rows.some(
+      (r: any) => r.subjectType === "VISIT" && r.subjectId === visit.id,
+    ),
+  );
+  await supervisor.ok(`/visits/${visit.id}/cancel`, "POST", {
+    reason: "Fictional cancellation after verified SMTP follow-up",
+  });
+  assert.equal(
+    (await db.escalation.findUniqueOrThrow({ where: { id: event.id } })).state,
+    "RESOLVED",
   );
   await time(original);
 });

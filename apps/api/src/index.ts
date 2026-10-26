@@ -63,6 +63,21 @@ import {
   officialScope,
 } from "../../../packages/domain/permissions.ts";
 import { documentCompliance } from "../../../packages/domain/documents.ts";
+import { nextStep } from "../../../packages/domain/next-step.ts";
+import {
+  historyContext,
+  escalationEvidence,
+} from "../../../packages/domain/history.ts";
+import {
+  reportHeading,
+  reportValue,
+} from "../../../packages/contracts/presentation.ts";
+import {
+  importInstitutions,
+  masterSourceSchema,
+  simulatorRecords,
+  simulatorSource,
+} from "../../../packages/domain/institution-import.ts";
 import { deadlineSubjects } from "../../../packages/domain/deadlines.ts";
 import { ageing } from "../../../packages/domain/ageing.ts";
 declare module "express-session" {
@@ -619,8 +634,12 @@ app.get("/api/applications/:id", async (req, res) => {
           .filter((user) => eligible(user, record))
           .map((user) => ({ id: user.id, name: user.name }))
       : [],
-    history,
+    history: await historyContext(
+      history,
+      record.institutionView ? [record.id] : [],
+    ),
     brief: {
+      next: await nextStep(record),
       whyBlocked: actions(a, record).blockingReasons,
       whoNext: record.ownerId ?? "Scoped coordinator to assign",
       ownerName: record.ownerId
@@ -1425,6 +1444,7 @@ app.post("/api/escalations/:id/acknowledge", async (req, res) => {
       `Level ${event.level}: ${c.reason}`,
       record.state,
       "PUBLIC",
+      escalationEvidence(updated),
     );
     return updated;
   });
@@ -1449,34 +1469,38 @@ app.get("/api/audits", async (req, res) => {
     })
   ).map((x) => x.id);
   res.json(
-    await db.audit.findMany({
-      where: {
-        OR: [
-          { applicationId: { in: ids } },
-          ...(a.grants.some(
-            (g) => g.global && ["ADMIN", "BUREAU", "AUDITOR"].includes(g.role),
-          )
-            ? [{ applicationId: null }]
-            : []),
-        ],
-        AND: [
-          {
-            OR: [
-              { visibility: "PUBLIC" },
-              { applicationId: { in: officialIds } },
-              ...(a.grants.some(
-                (g) =>
-                  g.global && ["ADMIN", "BUREAU", "AUDITOR"].includes(g.role),
-              )
-                ? [{ applicationId: null }]
-                : []),
-            ],
-          },
-        ],
-      },
-      orderBy: { createdAt: "desc" },
-      take: 250,
-    }),
+    await historyContext(
+      await db.audit.findMany({
+        where: {
+          OR: [
+            { applicationId: { in: ids } },
+            ...(a.grants.some(
+              (g) =>
+                g.global && ["ADMIN", "BUREAU", "AUDITOR"].includes(g.role),
+            )
+              ? [{ applicationId: null }]
+              : []),
+          ],
+          AND: [
+            {
+              OR: [
+                { visibility: "PUBLIC" },
+                { applicationId: { in: officialIds } },
+                ...(a.grants.some(
+                  (g) =>
+                    g.global && ["ADMIN", "BUREAU", "AUDITOR"].includes(g.role),
+                )
+                  ? [{ applicationId: null }]
+                  : []),
+              ],
+            },
+          ],
+        },
+        orderBy: { createdAt: "desc" },
+        take: 250,
+      }),
+      ids.filter((id) => !officialIds.includes(id)),
+    ),
   );
 });
 app.get("/api/events", async (req, res) => {
@@ -1689,8 +1713,10 @@ app.get("/api/reports/:kind", async (req, res) => {
       .attachment(`Anumitra-${kind}.csv`)
       .send(
         [
-          keys.map(csvCell).join(","),
-          ...rows.map((r) => keys.map((k) => csvCell(r[k])).join(",")),
+          keys.map((k) => csvCell(reportHeading(k))).join(","),
+          ...rows.map((r) =>
+            keys.map((k) => csvCell(reportValue(k, r[k]))).join(","),
+          ),
         ].join("\r\n"),
       );
     return;
@@ -1712,7 +1738,7 @@ app.get("/api/reports/:kind", async (req, res) => {
     for (const r of rows)
       pdf.moveDown().text(
         Object.entries(r)
-          .map(([k, v]) => `${k}: ${v ?? "—"}`)
+          .map(([k, v]) => `${reportHeading(k)}: ${reportValue(k, v)}`)
           .join("\n"),
       );
     pdf.end();
@@ -2040,6 +2066,32 @@ app.get("/api/integrations/export", async (req, res) => {
     }),
   });
 });
+app.get("/api/integrations/simulator/institutions", async (req, res) => {
+  const a = await actor(req);
+  ensure(
+    integrationMode === "LOCAL_ADAPTER",
+    "Local simulator is disconnected",
+    503,
+  );
+  ensure(
+    a.grants.some((g) => g.global && ["ADMIN", "BUREAU"].includes(g.role)),
+    "Global local-adapter permission required for simulator catalogue",
+    403,
+  );
+  const cursor = z.enum(["0", "1"]).default("0").parse(req.query.cursor);
+  const offset = Number(cursor);
+  const records = simulatorRecords.slice(offset, offset + 1);
+  res.json({
+    mode: "SANDBOX",
+    transport: "LOCAL_CONTRACT_SIMULATOR",
+    contract: "anumitra.institution-master.v1",
+    liveAuthorized: false,
+    source: simulatorSource,
+    records,
+    pageChecksum: hash(records),
+    nextCursor: offset === 0 ? "1" : null,
+  });
+});
 app.post("/api/integrations/master", async (req, res) => {
   ensure(
     integrationMode === "LOCAL_ADAPTER",
@@ -2050,6 +2102,8 @@ app.post("/api/integrations/master", async (req, res) => {
   const c = z
     .object({
       entity: z.enum(["institutions", "documentMetadata"]),
+      provenance: masterSourceSchema.optional(),
+      reviewId: z.uuid().optional(),
       format: z.enum(["json", "csv"]),
       content: z.string().max(500000),
       preview: z.boolean(),
@@ -2061,54 +2115,14 @@ app.post("/api/integrations/master", async (req, res) => {
       : parse(c.content, { columns: true, skip_empty_lines: true });
   const results: any[] = [];
   if (c.entity === "institutions") {
-    ensure(
-      hasRole(a, "ADMIN", "BUREAU"),
-      "Master-data import permission required",
-      403,
+    return res.json(
+      await importInstitutions(a, {
+        records: rows,
+        source: c.provenance,
+        preview: c.preview,
+        reviewId: c.reviewId,
+      }),
     );
-    const records = z
-      .array(
-        z
-          .object({
-            id: z.string().min(2).max(100),
-            name: z.string().min(3).max(200),
-            regionId: z.string(),
-          })
-          .strict(),
-      )
-      .max(200)
-      .parse(rows);
-    for (const r of records) {
-      ensure(
-        await db.region.count({ where: { id: r.regionId } }),
-        "Unknown region",
-        400,
-      );
-      const old = await db.institution.findUnique({ where: { id: r.id } });
-      ensure(
-        !old || (old.name === r.name && old.regionId === r.regionId),
-        "Existing master scope cannot be silently overwritten",
-      );
-      if (!c.preview && !old)
-        await db.$transaction(async (tx) => {
-          await tx.institution.create({ data: r });
-          await audit(
-            tx,
-            a,
-            null,
-            "local-institution-import",
-            `External institution ID ${r.id}`,
-          );
-        });
-      results.push({
-        externalId: r.id,
-        state: old
-          ? "UNCHANGED"
-          : c.preview
-            ? "VALID_MASTER"
-            : "IMPORTED_MASTER",
-      });
-    }
   } else {
     const records = z
       .array(

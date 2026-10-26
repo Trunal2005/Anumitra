@@ -1125,6 +1125,22 @@ nav a.active > svg:last-child {
   width: 100%;
   overflow: auto;
 }
+.table-scroll:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 4px;
+}
+.report-table td {
+  white-space: normal;
+  min-width: 145px;
+  max-width: 340px;
+  overflow-wrap: anywhere;
+}
+.escalation-context {
+  border-left: 2px solid var(--primary);
+  padding: 8px 12px;
+  margin: 10px 0;
+  overflow-wrap: anywhere;
+}
 table {
   width: 100%;
   border-collapse: collapse;

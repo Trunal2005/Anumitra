@@ -65,6 +65,11 @@ import "@fontsource/space-grotesk/700.css";
 import "@fontsource/jetbrains-mono/400.css";
 import "@fontsource/jetbrains-mono/500.css";
 import "./styles.css";
+import {
+  readable,
+  reportHeading,
+  reportValue,
+} from "../../../packages/contracts/presentation.ts";
 const PdfPreview = React.lazy(() => import("./PdfPreview.tsx"));
 let csrf = "";
 async function api(url: string, options: RequestInit = {}) {
@@ -1606,13 +1611,22 @@ function ApplicationWorkspace({ user }: { user: any }) {
         expectedVersion: r.version,
         reason,
         ...(["raise-deficiency", "return-with-reason"].includes(effectiveCmd)
-          ? { item }
+          ? {
+              items: item
+                .split(/\r?\n/)
+                .map((x) => x.trim())
+                .filter(Boolean),
+            }
           : {}),
         ...(["submit-response", "verify-response"].includes(effectiveCmd)
           ? {
               deficiencyId:
                 deficiencyId ||
-                r.deficiencies.find((x: any) => x.state !== "ACCEPTED")?.id,
+                r.deficiencies.find(
+                  (x: any) =>
+                    x.state ===
+                    (effectiveCmd === "submit-response" ? "OPEN" : "RESPONDED"),
+                )?.id,
             }
           : {}),
         ...(["review-document", "submit-response"].includes(effectiveCmd)
@@ -1898,23 +1912,7 @@ function ApplicationWorkspace({ user }: { user: any }) {
               <Empty>No deficiencies have been raised.</Empty>
             )
           ) : (
-            <div className="audit-list">
-              {r.history.map((h: any) => (
-                <article key={h.id}>
-                  <span className="audit-dot" />
-                  <div>
-                    <strong>{label(h.action)}</strong>
-                    <p>{h.reason}</p>
-                    <small>
-                      {date(h.createdAt)} IST · {h.visibility}
-                    </small>
-                    <code>
-                      {h.fromState ?? "—"} → {h.toState}
-                    </code>
-                  </div>
-                </article>
-              ))}
-            </div>
+            <HistoryRows rows={r.history} />
           )}
         </Panel>
         <div className="action-column">
@@ -1927,36 +1925,43 @@ function ApplicationWorkspace({ user }: { user: any }) {
               <Workflow size={23} className="orange" />
             </div>
             <div className="case-brief">
-              <strong>Why blocked?</strong>
-              {(
-                r.commandBlockingReasons?.[effectiveCmd]?.[outcome] ??
-                r.blockingReasons
-              ).length ? (
-                <ul>
+              <strong>Next step</strong>
+              <p>{r.brief.next.task}</p>
+              <strong>Who acts next?</strong>
+              <p>
+                {r.brief.next.assignee
+                  ? `${r.brief.next.assignee} · ${r.brief.next.role}`
+                  : r.brief.next.role}
+              </p>
+              <strong>What is due?</strong>
+              <p>
+                {r.brief.next.due
+                  ? `${date(r.brief.next.due)} IST`
+                  : "No application deadline pending; consult the undertaking and document ledgers for follow-up."}
+              </p>
+              {!["APPROVED", "REJECTED", "CONDITIONAL"].includes(r.state) && (
+                <>
+                  <strong>Selected action checks</strong>
                   {(
                     r.commandBlockingReasons?.[effectiveCmd]?.[outcome] ??
                     r.blockingReasons
-                  ).map((b: string) => (
-                    <li key={b}>{b}</li>
-                  ))}
-                </ul>
-              ) : (
-                <p>
-                  Evidence guards are satisfied. The authorized next actor may
-                  proceed.
-                </p>
+                  ).length ? (
+                    <ul>
+                      {(
+                        r.commandBlockingReasons?.[effectiveCmd]?.[outcome] ??
+                        r.blockingReasons
+                      ).map((b: string) => (
+                        <li key={b}>{b}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p>
+                      No additional evidence blockers reported. Server
+                      authorisation and stage checks still apply.
+                    </p>
+                  )}
+                </>
               )}
-              <strong>Who acts next?</strong>
-              <p>
-                {r.brief.whoNext === user.id
-                  ? "You are assigned."
-                  : r.state === "AWAITING_RESPONSE"
-                    ? "Institution representative"
-                    : (r.brief.ownerName ??
-                      "Unassigned — scoped coordinator must assign an eligible official")}
-              </p>
-              <strong>What is due?</strong>
-              <p>{date(r.dueAt)} IST</p>
             </div>
             <span className="corner" />
           </Panel>
@@ -2010,11 +2015,16 @@ function ApplicationWorkspace({ user }: { user: any }) {
                   effectiveCmd,
                 ) && (
                   <Field title="Checklist item">
-                    <input
+                    <textarea
                       value={item}
                       onChange={(e) => setItem(e.target.value)}
                       required
+                      placeholder="One distinct checklist item per line (up to 20)"
                     />
+                    <small>
+                      One distinct item per line; every item receives its own
+                      evidence response and review.
+                    </small>
                   </Field>
                 )}
                 {["submit-response", "verify-response"].includes(
@@ -2027,7 +2037,13 @@ function ApplicationWorkspace({ user }: { user: any }) {
                     >
                       <option value="">First unresolved deficiency</option>
                       {r.deficiencies
-                        .filter((d: any) => d.state !== "ACCEPTED")
+                        .filter(
+                          (d: any) =>
+                            d.state ===
+                            (effectiveCmd === "submit-response"
+                              ? "OPEN"
+                              : "RESPONDED"),
+                        )
                         .map((d: any) => (
                           <option key={d.id} value={d.id}>
                             Round {d.round} · {d.item} ({d.state})
@@ -2897,8 +2913,14 @@ function Documents({ user }: { user: any }) {
                     <FileText className="orange" />
                   </div>
                   <div className="button-row">
-                    <Badge active={validity !== "CURRENT"}>{validity}</Badge>
-                    <Badge>{v?.reviewState ?? "No file"}</Badge>
+                    <Badge active={validity !== "CURRENT"}>
+                      {readable(validity)}
+                    </Badge>
+                    <Badge>
+                      {v?.reviewState
+                        ? `Latest submission: ${readable(v.reviewState)}`
+                        : "No submitted file"}
+                    </Badge>
                     <Badge>{v?.scanState}</Badge>
                     <span className="mono">
                       Effective v{d.compliance?.effective?.number ?? "—"} ·
@@ -2906,6 +2928,10 @@ function Documents({ user }: { user: any }) {
                       IST
                     </span>
                   </div>
+                  <p className="muted">
+                    Effective evidence is the highest accepted version. A
+                    pending or rejected replacement does not change its expiry.
+                  </p>
                   <div className="lineage-row">
                     <span>
                       Newest submission v{v?.number} · {v?.mime}
@@ -3223,24 +3249,7 @@ function Reports() {
           audits.isPending ? (
             <Loading />
           ) : (
-            <div className="audit-list">
-              {audits.data?.map((h: any) => (
-                <article key={h.id}>
-                  <span className="audit-dot" />
-                  <div>
-                    <strong>{label(h.action)}</strong>
-                    <p>{h.reason}</p>
-                    <small>
-                      {date(h.createdAt)} · actor {h.actorId} · {h.visibility}
-                    </small>
-                    <code>
-                      Policy {h.policyId ?? "System"} · correlation{" "}
-                      {h.correlationId}
-                    </code>
-                  </div>
-                </article>
-              ))}
-            </div>
+            <HistoryRows rows={audits.data ?? []} />
           )
         ) : (
           <>
@@ -3321,19 +3330,24 @@ function Reports() {
             ) : data.error ? (
               <ErrorBox error={data.error} />
             ) : data.data?.rows.length ? (
-              <div className="table-scroll">
-                <table>
+              <div
+                className="table-scroll"
+                role="region"
+                aria-label="Scrollable report table"
+                tabIndex={0}
+              >
+                <table className="report-table">
                   <thead>
                     <tr>
                       {Object.keys(data.data.rows[0]).map((k) => (
-                        <th key={k}>{label(k)}</th>
+                        <th key={k}>{reportHeading(k)}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {data.data.rows.map((r: any, i: number) => (
                       <tr key={i}>
-                        {Object.values(r).map((v: any, j: number) => (
+                        {Object.entries(r).map(([key, v], j: number) => (
                           <td key={j}>{String(v ?? "—")}</td>
                         ))}
                       </tr>
@@ -3345,12 +3359,67 @@ function Reports() {
               <Empty />
             )}
             <p className="freshness">
-              {data.data?.total ?? 0} report rows within authorized scope
+              {data.data?.total ?? 0} {data.data?.countUnit ?? "report rows"}{" "}
+              within authorized scope
             </p>
           </>
         )}
       </Panel>
     </>
+  );
+}
+function HistoryRows({ rows }: { rows: any[] }) {
+  return (
+    <div className="audit-list">
+      {rows.map((h) => (
+        <article key={h.id}>
+          <span className="audit-dot" />
+          <div>
+            <strong>{label(h.action)}</strong>
+            <p>{h.reason}</p>
+            <small>
+              {date(h.createdAt)} IST · {label(h.visibility)}
+            </small>
+            {h.escalation ? (
+              <div className="escalation-context">
+                <p>
+                  <strong>{readable(h.escalation.subjectType)}</strong> ·{" "}
+                  {h.escalation.subjectId} · Level {h.escalation.level}
+                </p>
+                <p>
+                  Designated role: {readable(h.escalation.recipientRole)}.
+                  Current recipients:{" "}
+                  {h.escalation.recipients.length
+                    ? h.escalation.recipients.join(", ")
+                    : `${h.escalation.recipientCount} designated recipient(s)`}
+                  .
+                </p>
+                <p>
+                  Current event status: {readable(h.escalation.currentStatus)} ·
+                  due {date(h.escalation.due)} IST
+                </p>
+                <p>{h.escalation.resolutionReason}</p>
+                <small>
+                  Separate rows retain distinct deadline subjects, revisions and
+                  escalation levels.
+                </small>
+              </div>
+            ) : h.action.startsWith("escalation-") ? (
+              <p className="muted">
+                Legacy entry: subject context was not captured in this row.
+                Separate subjects or escalation levels can resolve together.
+              </p>
+            ) : null}
+            {h.fromState || h.toState ? (
+              <code>
+                {h.fromState ? readable(h.fromState) : "Initial state"} →{" "}
+                {h.toState ? readable(h.toState) : "No stage change"}
+              </code>
+            ) : null}
+          </div>
+        </article>
+      ))}
+    </div>
   );
 }
 function Rules({ user }: { user: any }) {
@@ -3759,6 +3828,7 @@ function Admin({ user }: { user: any }) {
   const [format, setFormat] = useState("json");
   const [entity, setEntity] = useState("applications");
   const [preview, setPreview] = useState<any>();
+  const [masterSource, setMasterSource] = useState<any>();
   const [error, setError] = useState<unknown>();
   const [message, setMessage] = useState("");
   const isAdmin = user.grants.some((g: any) => g.role === "ADMIN");
@@ -3829,6 +3899,48 @@ function Admin({ user }: { user: any }) {
           >
             Export authorized JSON <ArrowDownToLine size={16} />
           </a>
+          <p className="scope-note">
+            Institution imports record source, version, retrieval date and a
+            checksum of normalized rows. Review the preview before commit.
+            Existing and missing masters are never overwritten or deleted by
+            this adapter.
+          </p>
+          <button
+            className="secondary"
+            type="button"
+            onClick={async () => {
+              try {
+                const first = await api("/integrations/simulator/institutions");
+                const second = first.nextCursor
+                  ? await api(
+                      "/integrations/simulator/institutions?cursor=" +
+                        first.nextCursor,
+                    )
+                  : { records: [] };
+                setEntity("institutions");
+                setFormat("json");
+                setContent(
+                  JSON.stringify(
+                    [...first.records, ...second.records],
+                    null,
+                    2,
+                  ),
+                );
+                setMasterSource(first.source);
+                setPreview(null);
+                setError(null);
+              } catch (e) {
+                setError(e);
+              }
+            }}
+          >
+            Load fictional simulator sample
+          </button>
+          <p className="muted">
+            {masterSource
+              ? "FICTIONAL SIMULATION: local contract fixture, not an AICTE master list"
+              : "UNVERIFIED LOCAL: no official source or approval provenance asserted"}
+          </p>
           <form
             onSubmit={async (e) => {
               e.preventDefault();
@@ -3841,6 +3953,9 @@ function Admin({ user }: { user: any }) {
                     format,
                     content,
                     preview: true,
+                    ...(entity === "institutions"
+                      ? { provenance: masterSource }
+                      : {}),
                     ...(entity === "applications" ? {} : { entity }),
                   },
                 ),
@@ -3850,7 +3965,11 @@ function Admin({ user }: { user: any }) {
             <Field title="Import format">
               <select
                 value={format}
-                onChange={(e) => setFormat(e.target.value)}
+                onChange={(e) => {
+                  setFormat(e.target.value);
+                  setPreview(null);
+                  setMasterSource(undefined);
+                }}
               >
                 <option value="json">JSON</option>
                 <option value="csv">CSV</option>
@@ -3861,6 +3980,7 @@ function Admin({ user }: { user: any }) {
                 value={entity}
                 onChange={(e) => {
                   setEntity(e.target.value);
+                  setMasterSource(undefined);
                   setPreview(null);
                 }}
               >
@@ -3877,6 +3997,7 @@ function Admin({ user }: { user: any }) {
                 value={content}
                 onChange={(e) => {
                   setContent(e.target.value);
+                  setMasterSource(undefined);
                   setPreview(null);
                 }}
               />
@@ -3892,6 +4013,13 @@ function Admin({ user }: { user: any }) {
                 <button
                   type="button"
                   className="primary stable"
+                  disabled={
+                    entity === "institutions" &&
+                    (!preview.reviewId ||
+                      preview.results.some(
+                        (r: any) => r.state === "CONFLICT_REVIEW_REQUIRED",
+                      ))
+                  }
                   onClick={async () => {
                     const r = await action(
                       entity === "applications"
@@ -3901,6 +4029,12 @@ function Admin({ user }: { user: any }) {
                         format,
                         content,
                         preview: false,
+                        ...(entity === "institutions"
+                          ? {
+                              provenance: masterSource,
+                              reviewId: preview.reviewId,
+                            }
+                          : {}),
                         ...(entity === "applications" ? {} : { entity }),
                       },
                     );

@@ -189,15 +189,17 @@ test("master and document metadata imports are previewed and preserve evidence g
     ]),
     preview: true,
   };
-  await admin.ok("/integrations/master", "POST", payload);
+  const masterPreview = await admin.ok("/integrations/master", "POST", payload);
   assert.equal(await db.institution.count({ where: { id } }), 0);
   await admin.ok("/integrations/master", "POST", {
     ...payload,
     preview: false,
+    reviewId: masterPreview.reviewId,
   });
   const replay = await admin.ok("/integrations/master", "POST", {
     ...payload,
     preview: false,
+    reviewId: masterPreview.reviewId,
   });
   assert.equal(replay.results[0].state, "UNCHANGED");
   const app = await newApp();

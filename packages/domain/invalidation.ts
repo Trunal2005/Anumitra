@@ -1,4 +1,5 @@
 import type { Tx } from "../db/index.ts";
+import { escalationEvidence } from "./history.ts";
 // Called while holding the case lock, in the same transaction as the lifecycle change.
 export async function invalidateDeadline(
   tx: Tx,
@@ -40,7 +41,7 @@ export async function invalidateDeadline(
         policyId: event.policyId,
         visibility: "PUBLIC",
         correlationId: event.id,
-        evidence: [],
+        evidence: escalationEvidence(event, "RESOLVED"),
       },
     });
   }
