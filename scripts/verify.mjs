@@ -19,6 +19,9 @@ if (
     "Evidence directory must be a safe repository docs/evidence subdirectory",
   );
 const existing = process.argv.includes("--existing");
+const browserPattern = process.argv
+  .find((argument) => argument.startsWith("--browser-grep="))
+  ?.slice("--browser-grep=".length);
 let state;
 if (existing) {
   const directory = readFileSync(".local/current-test-target", "utf8").trim();
@@ -213,9 +216,11 @@ try {
         [
           "node_modules/@playwright/test/cli.js",
           "test",
-          ...(process.argv.includes("--journey-only")
-            ? ["--grep", "cross-role"]
-            : []),
+          ...(browserPattern
+            ? ["--grep", browserPattern]
+            : process.argv.includes("--journey-only")
+              ? ["--grep", "cross-role"]
+              : []),
         ],
         runtime,
         path.join(evidenceDirectory, "browser.txt"),

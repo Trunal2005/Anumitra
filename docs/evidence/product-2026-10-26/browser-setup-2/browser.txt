@@ -1,0 +1,68 @@
+
+Running 2 tests using 1 worker
+
+  x  1 tests\browser\ui.spec.ts:225:1 › cross-role repair journey: repeated response, EVC, conditional undertaking, effective renewal and escalation retry (2.4m)
+  x  2 tests\browser\ui.spec.ts:743:1 › readable reports, contextual history, scoped next actors and reviewed simulator provenance use the real API (14.0s)
+
+
+  1) tests\browser\ui.spec.ts:225:1 › cross-role repair journey: repeated response, EVC, conditional undertaking, effective renewal and escalation retry 
+
+    TimeoutError: page.screenshot: Timeout 10000ms exceeded.
+    Call log:
+    [2m  - taking page screenshot[22m
+    [2m  - waiting for fonts to load...[22m
+    [2m  - fonts loaded[22m
+
+
+      578 |       )
+      579 |       .toBe("SMTP_ACCEPTED");
+    > 580 |     await supervisor.screenshot({
+          |                      ^
+      581 |       path:
+      582 |         (process.env.TEST_EVIDENCE_DIR ?? "docs/evidence/repair") +
+      583 |         "/escalation-retry.png",
+        at C:\projects\sih\Anumitra(SIH26262)\tests\browser\ui.spec.ts:580:22
+
+    attachment #1: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\browser\ui-cross-role-repair-journ-aa5ef-enewal-and-escalation-retry\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\browser\ui-cross-role-repair-journ-aa5ef-enewal-and-escalation-retry\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) tests\browser\ui.spec.ts:743:1 › readable reports, contextual history, scoped next actors and reviewed simulator provenance use the real API 
+
+    Error: locator.selectOption: Error: strict mode violation: getByLabel('Report') resolved to 2 elements:
+        1) <select>…</select> aka getByLabel('ReportPendencyEvcComplianceValidityOverdueRegions')
+        2) <div tabindex="0" role="region" class="table-scroll" aria-label="Scrollable report table">…</div> aka getByRole('region', { name: 'Scrollable report table' })
+
+    Call log:
+    [2m  - waiting for getByLabel('Report')[22m
+
+
+      857 |     const page = await signIn("supervisor.north");
+      858 |     await page.goto("/reports");
+    > 859 |     await page.getByLabel("Report").selectOption("validity");
+          |                                     ^
+      860 |     await expect(
+      861 |       page.getByRole("columnheader", {
+      862 |         name: "Accepted effective version",
+        at C:\projects\sih\Anumitra(SIH26262)\tests\browser\ui.spec.ts:859:37
+
+    attachment #1: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\browser\ui-readable-reports-contex-c192d-provenance-use-the-real-API\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\browser\ui-readable-reports-contex-c192d-provenance-use-the-real-API\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2 failed
+    tests\browser\ui.spec.ts:225:1 › cross-role repair journey: repeated response, EVC, conditional undertaking, effective renewal and escalation retry 
+    tests\browser\ui.spec.ts:743:1 › readable reports, contextual history, scoped next actors and reviewed simulator provenance use the real API 
+
+To open last HTML report run:
+[36m[39m
+[36m  npx playwright show-report[39m
+[36m[39m

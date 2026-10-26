@@ -1,0 +1,75 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - link "Anumitra." [ref=e5] [cursor=pointer]:
+      - /url: /
+      - generic [ref=e6]: Anumitra.
+    - generic [ref=e7]: APPROVAL & COMPLIANCE ORCHESTRATION
+    - button "Pause motion" [ref=e8] [cursor=pointer]:
+      - img [ref=e9]
+  - main [ref=e12]:
+    - generic [ref=e13]:
+      - generic [ref=e14]: INDEPENDENT STUDENT PROTOTYPE · SIH26262
+      - heading "Every approval. Every obligation. Accounted for." [level=1] [ref=e16]:
+        - text: Every approval.
+        - text: Every obligation.
+        - text: Accounted for.
+      - paragraph [ref=e17]: A clearer path from application to accountability. Bring your approval workflows, evidence and deadlines into one connected workspace.
+      - generic [ref=e18]:
+        - generic [ref=e19]:
+          - img [ref=e20]
+          - text: Guided workflows
+        - generic [ref=e24]:
+          - img [ref=e25]
+          - text: Traceable decisions
+        - generic [ref=e28]:
+          - img [ref=e29]
+          - text: Timely follow-up
+      - generic [ref=e32]:
+        - generic [ref=e33]:
+          - generic [ref=e34]:
+            - paragraph [ref=e35]: YOUR WORK STARTS HERE
+            - heading "Welcome back" [level=2] [ref=e36]
+          - img [ref=e37]
+        - generic [ref=e40]:
+          - generic [ref=e41]:
+            - generic [ref=e42]: Email address
+            - textbox "Email address" [ref=e43]: institution.a@anumitra.test
+          - generic [ref=e44]:
+            - generic [ref=e45]: Password
+            - textbox "Password" [ref=e46]
+          - button "Enter your workspace" [ref=e47] [cursor=pointer]:
+            - text: Enter your workspace
+            - img [ref=e48]
+          - button "Forgot your password?" [ref=e50] [cursor=pointer]
+        - paragraph [ref=e51]:
+          - text: Local demo credentials are in
+          - code [ref=e52]: .local/demo-credentials.json
+          - text: . No external email delivery.
+    - generic "Illustration of connected approval stages" [ref=e53]:
+      - generic [ref=e56]: CONNECTED BY DESIGN
+      - generic [ref=e57]:
+        - img [ref=e59]
+        - generic [ref=e62]:
+          - strong [ref=e63]: Evidence, accounted for.
+          - generic [ref=e64]: Private versions. Human verification.
+        - img [ref=e65]
+      - generic [ref=e67]:
+        - img [ref=e68]
+        - generic [ref=e72]:
+          - strong [ref=e73]: One connected journey
+          - generic [ref=e74]: Scrutiny → EVC → Decision
+      - generic [ref=e75]:
+        - img [ref=e76]
+        - generic [ref=e79]:
+          - strong [ref=e80]: Nothing falls through.
+          - generic [ref=e81]: Obligations stay in view.
+      - generic [ref=e82]: WORKFLOW ILLUSTRATION · NO LIVE DATA
+  - contentinfo [ref=e83]:
+    - generic [ref=e84]:
+      - img [ref=e85]
+      - text: Human oversight. Clear accountability.
+    - generic [ref=e87]: Built for SIH26262 · No official AICTE endorsement or integration
+```

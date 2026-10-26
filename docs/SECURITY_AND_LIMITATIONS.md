@@ -28,3 +28,11 @@ Verification covers synthetic scenarios and selected real browser journeys. Miss
 
 
 Each immutable document version receives one official review decision. Review corrections require a new version; API runtime grants also prohibit rewriting/deleting DocumentReview rows. Rejecting a replacement does not resolve prior effective-expiry reminders. Appointment cancellation is a reasoned administrative coordinator action; it does not cancel a regulatory application or decide its outcome. Hosted CI is restricted to public repositories, preventing implicit billed private-repository runner usage; local verification requires no cloud account.
+
+## Product review — 26 October 2026
+
+A reproduced institution-master preview scope gap is repaired: each imported master now intersects the caller's institution, region and bureau constraints, and the entire batch commits atomically only after an actor/grant/input/snapshot-bound persisted preview. Conflicting existing records are not overwritten, duplicate IDs and unknown regions are rejected, and source provenance remains FICTIONAL_SIMULATION or UNVERIFIED_LOCAL. The local simulator is not an official sandbox. No public-directory reuse terms, approval-workflow API contract or government credentials were verified in the current source recheck.
+
+Zod 4.1.12 was affected by high-severity advisory GHSA-mrhx-c7xc-m3w5 in the reproduced dependency audit. The dependency and lockfile now pin patched 4.6.7. The public CI job on 679b12b passed its workflow tests but failed the audit step; it must not be described as a wholly successful job. Current execution and any later CI result are recorded separately in [the dated product report](TEST_REPORT_2026-10-26.md). Earlier zero-advisory results remain dated historical evidence, not a guarantee about newly disclosed advisories.
+
+Human-readable reports and richer scoped history do not create authenticity verification, statutory authority, cryptographic immutability or production certification. Normal data and secrets are preserved; all new regression mutations use isolated test state.

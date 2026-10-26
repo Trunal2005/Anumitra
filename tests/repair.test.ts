@@ -1533,6 +1533,29 @@ test("next-step guidance follows institution response and post-decision undertak
   record = await supervisor.ok("/applications/" + decided.app.id);
   assert.equal(record.brief.next.role, "No application transition pending");
   assert.equal(record.brief.next.due, null);
+  const renewal = await institution.upload(
+    decided.app.id,
+    decided.version.documentId,
+    "2029-12-31",
+  );
+  record = await supervisor.ok("/applications/" + decided.app.id);
+  assert.equal(
+    record.brief.next.role,
+    "Authorized reviewer / supervisor / bureau",
+  );
+  assert.equal(record.brief.next.assignee, null);
+  assert.match(record.brief.next.task, /latest submission/);
+  assert.equal(record.brief.next.due, decided.version.validUntil);
+  await supervisor.ok(`/documents/${renewal.id}/review`, "POST", {
+    outcome: "REJECTED",
+    reason: "Fictional renewal requires corrected evidence",
+  });
+  await time(new Date(+new Date(decided.version.validUntil) + 86400000));
+  record = await supervisor.ok("/applications/" + decided.app.id);
+  assert.equal(record.brief.next.role, "Institution representative");
+  assert.match(record.brief.next.task, /corrected renewal/);
+  assert.equal(record.brief.next.due, decided.version.validUntil);
+  await time(original);
   const outside = await db.application.findFirstOrThrow({
     where: { institutionId: "I02", runId: await runId() },
   });

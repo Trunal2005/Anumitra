@@ -1,7 +1,8 @@
 import type { Actor } from "./permissions.ts";
 import { eligible } from "./permissions.ts";
 import { db } from "../db/index.ts";
-import type { getApp } from "./engine.ts";
+import { clock, type getApp } from "./engine.ts";
+import { deadlineSubjects } from "./deadlines.ts";
 
 export async function nextStep(record: Awaited<ReturnType<typeof getApp>>) {
   const owner = record.ownerId
@@ -42,6 +43,33 @@ export async function nextStep(record: Awaited<ReturnType<typeof getApp>>) {
           ? "Review the submitted undertaking evidence; submission alone does not close the condition."
           : "Submit evidence for the outstanding decision condition.",
         pending.dueAt,
+      );
+    const subjects = await deadlineSubjects({ id: record.id }, await clock());
+    const review = record.documents.find(
+      (d) => d.compliance.submitted?.reviewState === "PENDING",
+    );
+    if (review) {
+      const deadline = subjects.find(
+        (s) => s.type === "DOCUMENT_REVIEW" && s.id === review.id,
+      );
+      return result(
+        "Authorized reviewer / supervisor / bureau",
+        `Review the latest submission for ${review.title}. ${review.compliance.effective ? "The accepted version remains effective; the date shown is its existing expiry, not a new review deadline." : "No accepted version exists; the date shown is the configured DEMO review deadline."}`,
+        review.compliance.effective?.validUntil ?? deadline?.due ?? null,
+      );
+    }
+    const renewal = record.documents
+      .filter((d) => ["EXPIRED", "EXPIRING"].includes(d.compliance.status))
+      .sort(
+        (a, b) =>
+          +a.compliance.effective!.validUntil! -
+          +b.compliance.effective!.validUntil!,
+      )[0];
+    if (renewal)
+      return result(
+        "Institution representative",
+        `Submit corrected renewal evidence for ${renewal.title}; the accepted version's expiry remains in force until a replacement is accepted.`,
+        renewal.compliance.effective!.validUntil,
       );
     return result(
       "No application transition pending",

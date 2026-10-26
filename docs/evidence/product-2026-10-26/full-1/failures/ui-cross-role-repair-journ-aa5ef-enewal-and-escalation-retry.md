@@ -1,0 +1,240 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - link "Skip to workspace" [ref=e4] [cursor=pointer]:
+    - /url: "#main"
+  - complementary [ref=e5]:
+    - link "Anumitra." [ref=e6] [cursor=pointer]:
+      - /url: /
+      - generic [ref=e7]: Anumitra.
+    - paragraph [ref=e8]: WORKSPACE
+    - navigation "Main navigation" [ref=e9]:
+      - link "Overview" [ref=e10] [cursor=pointer]:
+        - /url: /overview
+        - img [ref=e11]
+        - text: Overview
+        - img [ref=e16]
+      - link "Applications" [ref=e18] [cursor=pointer]:
+        - /url: /applications
+        - img [ref=e19]
+        - text: Applications
+        - img [ref=e21]
+      - link "EVC scheduling" [ref=e23] [cursor=pointer]:
+        - /url: /evc
+        - img [ref=e24]
+        - text: EVC scheduling
+        - img [ref=e26]
+      - link "Committee work" [ref=e28] [cursor=pointer]:
+        - /url: /committees
+        - img [ref=e29]
+        - text: Committee work
+        - img [ref=e34]
+      - link "Undertakings" [ref=e36] [cursor=pointer]:
+        - /url: /compliance
+        - img [ref=e37]
+        - text: Undertakings
+        - img [ref=e41]
+      - link "Document registry" [ref=e43] [cursor=pointer]:
+        - /url: /documents
+        - img [ref=e44]
+        - text: Document registry
+        - img [ref=e47]
+      - link "Alerts & delivery" [ref=e49] [cursor=pointer]:
+        - /url: /alerts
+        - img [ref=e50]
+        - text: Alerts & delivery
+        - img [ref=e53]
+      - link "Reports & audit" [ref=e55] [cursor=pointer]:
+        - /url: /reports
+        - img [ref=e56]
+        - text: Reports & audit
+        - img [ref=e58]
+      - link "Rules & policy" [ref=e60] [cursor=pointer]:
+        - /url: /rules
+        - img [ref=e61]
+        - text: Rules & policy
+        - img [ref=e65]
+    - generic [ref=e67]:
+      - generic [ref=e68]:
+        - img [ref=e69]
+        - generic [ref=e71]:
+          - strong [ref=e72]: Prototype environment
+          - generic [ref=e73]: Local adapter · Demo policies
+      - link "IA Institution A Institution" [ref=e74] [cursor=pointer]:
+        - /url: /profile
+        - generic [ref=e75]: IA
+        - generic [ref=e76]:
+          - strong [ref=e77]: Institution A
+          - generic [ref=e78]: Institution
+      - button "Sign out" [ref=e79] [cursor=pointer]:
+        - img [ref=e80]
+        - text: Sign out
+  - generic [ref=e83]:
+    - banner [ref=e84]:
+      - generic [ref=e85]:
+        - text: Workspace
+        - img [ref=e86]
+        - generic [ref=e88]: Applications
+      - generic [ref=e89]:
+        - generic [ref=e90]: Live
+        - button "Pause live refresh" [ref=e92] [cursor=pointer]:
+          - img [ref=e93]
+        - button "Refresh records" [ref=e96] [cursor=pointer]:
+          - img [ref=e97]
+        - button "Pause decorative motion" [ref=e102] [cursor=pointer]:
+          - img [ref=e103]
+        - link "Notification inbox" [ref=e106] [cursor=pointer]:
+          - /url: /alerts
+          - img [ref=e107]
+        - generic [ref=e110]: I
+    - main [ref=e111]:
+      - generic [ref=e112]:
+        - link "Applications" [ref=e113] [cursor=pointer]:
+          - /url: /applications
+        - img [ref=e114]
+        - generic [ref=e116]: AN-691E2B00
+      - generic [ref=e117]:
+        - generic [ref=e118]:
+          - paragraph [ref=e119]: AN-691E2B00
+          - heading "Demo Sahyadri Institute 1" [level=1] [ref=e120]: Demo Sahyadri Institute 1
+        - link "Case summary" [ref=e121] [cursor=pointer]:
+          - /url: /api/applications/9a1b1c15-c616-452d-9a8b-a69a480d53b4/notice
+          - img [ref=e122]
+          - text: Case summary
+      - generic [ref=e124]:
+        - generic [ref=e125]:
+          - generic [ref=e126]: CURRENT STAGE
+          - generic [ref=e127]: Conditional
+        - generic [ref=e128]:
+          - generic [ref=e129]: RESPONSIBLE OWNER
+          - strong [ref=e130]: Assigned official
+        - generic [ref=e131]:
+          - generic [ref=e132]: DEADLINE · IST
+          - strong [ref=e133]: 31 Dec 2026, 4:39 am
+        - generic [ref=e134]:
+          - generic [ref=e135]: GOVERNING POLICY
+          - strong [ref=e136]: Scrutiny + EVC · v1
+        - generic [ref=e137]:
+          - generic [ref=e138]: RECORD REVISION
+          - strong [ref=e139]: "024"
+      - generic [ref=e140]:
+        - generic [ref=e141]:
+          - paragraph [ref=e142]: THE APPROVAL JOURNEY
+          - heading "Every step, visible." [level=2] [ref=e143]
+          - generic [ref=e144]:
+            - generic [ref=e145]:
+              - generic [ref=e146]: "01"
+              - generic [ref=e147]:
+                - strong [ref=e148]: Draft
+                - generic [ref=e149]: Institution prepares evidence
+            - generic [ref=e150]:
+              - generic [ref=e151]: "02"
+              - generic [ref=e152]:
+                - strong [ref=e153]: Scrutiny
+                - generic [ref=e154]: Human verification
+            - generic [ref=e155]:
+              - generic [ref=e156]: "03"
+              - generic [ref=e157]:
+                - strong [ref=e158]: Evc
+                - generic [ref=e159]: Human verification
+            - generic [ref=e160]:
+              - generic [ref=e161]: "04"
+              - generic [ref=e162]:
+                - strong [ref=e163]: Authority
+                - generic [ref=e164]: Explicit authorized decision
+          - generic [ref=e165]:
+            - img [ref=e166]
+            - paragraph [ref=e169]: Submission and decision snapshots retain exact evidence versions.
+          - group [ref=e170]:
+            - generic "Stage attempts (9)" [ref=e171] [cursor=pointer]
+        - generic [ref=e172]:
+          - generic [ref=e173]:
+            - button "Evidence (1)" [ref=e174] [cursor=pointer]
+            - button "Deficiencies (2)" [ref=e175] [cursor=pointer]
+            - button "History" [ref=e176] [cursor=pointer]
+          - generic [ref=e177]:
+            - heading "Document workspace" [level=2] [ref=e178]
+            - img [ref=e179]
+          - generic [ref=e182]:
+            - generic [ref=e183]: Current document version
+            - combobox "Current document version" [ref=e184]:
+              - option "Journey lease · v2 · PENDING" [selected]
+          - generic [ref=e185]:
+            - generic [ref=e186]: PENDING
+            - generic [ref=e187]: v2 · 1.3 KB
+            - link "Download selected evidence" [ref=e188] [cursor=pointer]:
+              - /url: /api/documents/0146b115-edef-49c9-96a6-94d302348ad0/content?download=true
+              - img [ref=e189]
+          - generic [ref=e191]:
+            - img "Private evidence PDF page 1 of 1" [ref=e193]
+            - generic [ref=e194]:
+              - button "Previous page" [disabled] [ref=e195]
+              - generic [ref=e196]: 1 / 1
+              - button "Next page" [disabled] [ref=e197]
+            - group [ref=e198]:
+              - generic "Extracted page text (accessible)" [ref=e199] [cursor=pointer]
+          - paragraph [ref=e200]: NOT_SCANNED · Hash establishes byte correspondence, not authenticity.
+          - group [ref=e201]:
+            - generic "Document version lineage" [ref=e202] [cursor=pointer]
+          - generic [ref=e203]:
+            - heading "Add private evidence" [level=3] [ref=e204]
+            - generic [ref=e205]:
+              - generic [ref=e206]: Document title
+              - textbox "Document title" [ref=e207]:
+                - /placeholder: Campus lease renewal
+            - generic [ref=e208]:
+              - generic [ref=e209]:
+                - generic [ref=e210]: Type
+                - combobox "Type" [ref=e211]:
+                  - option "LEASE" [selected]
+                  - option "AFFIDAVIT"
+                  - option "COMPLIANCE"
+                  - option "OTHER"
+              - generic [ref=e212]:
+                - generic [ref=e213]: Renew existing document
+                - combobox "Renew existing document" [ref=e214]:
+                  - option "Create a document" [selected]
+                  - option "Journey lease"
+              - generic [ref=e215]:
+                - generic [ref=e216]: Valid through (IST)
+                - textbox "Valid through (IST)" [ref=e217]
+              - generic [ref=e218]:
+                - generic [ref=e219]: Issuer (if supplied)
+                - textbox "Issuer (if supplied)" [ref=e220]
+            - generic [ref=e221]:
+              - generic [ref=e222]: File · PDF / PNG / JPEG · up to 10 MB
+              - button "File · PDF / PNG / JPEG · up to 10 MB" [ref=e223]
+            - button "Upload new immutable version" [ref=e224] [cursor=pointer]:
+              - text: Upload new immutable version
+              - img [ref=e225]
+            - paragraph [ref=e226]: "Private authenticated storage. NOT_SCANNED: no malware scanner is configured. Upload does not mean accepted evidence."
+          - generic [ref=e227]:
+            - heading "Evidence checklist" [level=3] [ref=e228]
+            - generic [ref=e229]:
+              - img [ref=e230]
+              - generic [ref=e233]: Journey lease
+              - strong [ref=e234]: Pending
+        - generic [ref=e235]:
+          - generic [ref=e236]:
+            - generic [ref=e237]:
+              - generic [ref=e238]:
+                - paragraph [ref=e239]: CLEAR CONTEXT. CONFIDENT ACTION.
+                - heading "What happens next?" [level=2] [ref=e240]
+              - img [ref=e241]
+            - generic [ref=e245]:
+              - strong [ref=e246]: Next step
+              - paragraph [ref=e247]: The human decision is recorded. Accepted document validity remains monitored in the document registry.
+              - strong [ref=e248]: Who acts next?
+              - paragraph [ref=e249]: No application transition pending
+              - strong [ref=e250]: What is due?
+              - paragraph [ref=e251]: No application deadline pending; consult the undertaking and document ledgers for follow-up.
+          - generic [ref=e253]:
+            - heading "Authorized action" [level=2] [ref=e254]
+            - generic [ref=e255]:
+              - img [ref=e256]
+              - paragraph [ref=e258]: No transition actions are available to your current grants.
+    - contentinfo [ref=e259]:
+      - generic [ref=e260]: ANUMITRA · SIH26262
+      - generic [ref=e261]: Independent prototype. Demonstration rules. Asia/Kolkata.
+```

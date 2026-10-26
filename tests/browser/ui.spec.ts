@@ -232,6 +232,10 @@ test("cross-role repair journey: repeated response, EVC, conditional undertaking
   const original = await db.demoClock.findUniqueOrThrow({
     where: { id: "current" },
   });
+  await db.demoClock.update({
+    where: { id: "current" },
+    data: { runId: randomUUID(), now: original.now },
+  });
   const contexts: BrowserContext[] = [];
   const pages: Record<string, Page> = {};
   async function login(role: string) {
@@ -501,6 +505,12 @@ test("cross-role repair journey: repeated response, EVC, conditional undertaking
     await expect(review.getByText("ACCEPTED", { exact: true })).toBeVisible();
     await institution.goto("/applications/" + id);
     await upload(institution, "Journey lease", "2029-12-31", true);
+    await expect(institution.locator(".case-brief")).toContainText(
+      "Authorized reviewer / supervisor / bureau",
+    );
+    await expect(institution.locator(".case-brief")).toContainText(
+      "Review the latest submission",
+    );
     await supervisor.goto("/documents");
     await supervisor
       .getByPlaceholder("Search authorized documents…")
@@ -573,11 +583,14 @@ test("cross-role repair journey: repeated response, EVC, conditional undertaking
         { timeout: 60000 },
       )
       .toBe("SMTP_ACCEPTED");
+    // Capture the exercised delivery, not an unbounded live notification page.
+    await delivery.scrollIntoViewIfNeeded();
     await supervisor.screenshot({
       path:
         (process.env.TEST_EVIDENCE_DIR ?? "docs/evidence/repair") +
         "/escalation-retry.png",
-      fullPage: true,
+      fullPage: false,
+      animations: "disabled",
     });
     await supervisor.goto("/documents");
     await supervisor
@@ -605,7 +618,9 @@ test("cross-role repair journey: repeated response, EVC, conditional undertaking
     await expect(renewed.getByText(/Effective v3/)).toBeVisible();
     await expect(renewed.getByText("Current", { exact: true })).toBeVisible();
     await supervisor.goto("/reports");
-    await supervisor.getByLabel("Report").selectOption("overdue");
+    await supervisor
+      .getByLabel("Report", { exact: true })
+      .selectOption("overdue");
     await supervisor.screenshot({
       path:
         (process.env.TEST_EVIDENCE_DIR ?? "docs/evidence/repair") +
@@ -615,9 +630,9 @@ test("cross-role repair journey: repeated response, EVC, conditional undertaking
   } finally {
     await db.demoClock.update({
       where: { id: "current" },
-      data: { now: original.now },
+      data: { now: original.now, runId: original.runId },
     });
-    for (const context of contexts) await context.close();
+    for (const context of contexts) await context.close().catch(() => {});
     await db.$disconnect();
   }
 });
@@ -740,6 +755,16 @@ test("readable reports, contextual history, scoped next actors and reviewed simu
   browser,
 }) => {
   const { db } = await import("../../packages/db/index.ts");
+  const { Client } = await import("../helpers.ts");
+  const { randomUUID } = await import("node:crypto");
+  const { scan } = await import("../../packages/domain/alerts.ts");
+  const originalClock = await db.demoClock.findUniqueOrThrow({
+    where: { id: "current" },
+  });
+  await db.demoClock.update({
+    where: { id: "current" },
+    data: { runId: randomUUID(), now: originalClock.now },
+  });
   const contexts: BrowserContext[] = [];
   async function signIn(role: string) {
     const context = await browser.newContext({
@@ -753,15 +778,96 @@ test("readable reports, contextual history, scoped next actors and reviewed simu
     await page
       .getByLabel("Password", { exact: true })
       .fill(credentials.password);
+    const loggedIn = page.waitForResponse(
+      (r) => r.url().endsWith("/api/login") && r.request().method() === "POST",
+    );
     await page.getByRole("button", { name: "Enter your workspace" }).click();
-    await expect(page.getByRole("heading", { name: /Welcome/ })).toBeVisible();
+    expect((await loggedIn).status()).toBe(200);
+    await expect(
+      page.getByRole("heading", { name: /^Welcome,/ }),
+    ).toBeVisible();
     return page;
   }
   const evidence = process.env.TEST_EVIDENCE_DIR ?? "docs/evidence/repair";
   try {
+    const institutionApi = await new Client().login("institution.a");
+    const reviewerApi = await new Client().login("reviewer.north");
+    const supervisorApi = await new Client().login("supervisor.north");
+    const authorityApi = await new Client().login("authority");
+    const fixture = await institutionApi.create();
+    async function fixtureUpload(
+      appId: string,
+      documentId?: string,
+      expiry = "2026-10-22",
+    ) {
+      const form = new FormData();
+      form.set("kind", "LEASE");
+      form.set("title", "Fictional presentation evidence");
+      form.set("validUntil", expiry);
+      if (documentId) form.set("documentId", documentId);
+      form.set(
+        "file",
+        new Blob([new Uint8Array(await evidencePdf())], {
+          type: "application/pdf",
+        }),
+        "fictional-presentation.pdf",
+      );
+      return institutionApi.ok(
+        `/applications/${appId}/documents`,
+        "POST",
+        form,
+      );
+    }
+    const first = await fixtureUpload(fixture.id);
+    await institutionApi.command(fixture.id, "submit");
+    await reviewerApi.command(fixture.id, "review-document", {
+      documentVersionId: first.id,
+      outcome: "ACCEPTED",
+    });
+    await reviewerApi.command(fixture.id, "complete-stage");
+    await authorityApi.command(fixture.id, "record-authorized-decision", {
+      outcome: "CONDITIONAL",
+      condition: "Fictional presentation condition",
+      dueAt: new Date(+originalClock.now + 7 * 86400000).toISOString(),
+    });
+    let conditionRecord = await supervisorApi.ok("/applications/" + fixture.id);
+    let conditionRow = conditionRecord.obligations[0];
+    await institutionApi.ok(
+      `/obligations/${conditionRow.id}/commands`,
+      "POST",
+      {
+        command: "submit",
+        expectedRevision: conditionRow.revision,
+        documentVersionId: first.id,
+        reason: "Fictional presentation condition evidence",
+      },
+    );
+    conditionRecord = await supervisorApi.ok("/applications/" + fixture.id);
+    conditionRow = conditionRecord.obligations[0];
+    await supervisorApi.ok(`/obligations/${conditionRow.id}/commands`, "POST", {
+      command: "accept",
+      expectedRevision: conditionRow.revision,
+      reason: "Fictional presentation evidence verified",
+    });
+    await db.demoClock.update({
+      where: { id: "current" },
+      data: { now: new Date(+originalClock.now + 30 * 86400000) },
+    });
+    await scan();
+    const latest = await fixtureUpload(
+      fixture.id,
+      first.documentId,
+      "2029-12-31",
+    );
+    await supervisorApi.ok(`/documents/${latest.id}/review`, "POST", {
+      outcome: "ACCEPTED",
+      reason: "Fictional presentation renewal accepted",
+    });
+    const unreviewed = await institutionApi.create();
+    await fixtureUpload(unreviewed.id);
     const page = await signIn("supervisor.north");
     await page.goto("/reports");
-    await page.getByLabel("Report").selectOption("validity");
+    await page.getByLabel("Report", { exact: true }).selectOption("validity");
     await expect(
       page.getByRole("columnheader", {
         name: "Accepted effective version",
@@ -809,14 +915,7 @@ test("readable reports, contextual history, scoped next actors and reviewed simu
     const run = await db.demoClock.findUniqueOrThrow({
       where: { id: "current" },
     });
-    const condition = await db.application.findFirstOrThrow({
-      where: {
-        runId: run.runId,
-        institutionId: "I01",
-        state: "CONDITIONAL",
-        obligations: { some: { state: "ACCEPTED" } },
-      },
-    });
+    const condition = fixture;
     await page.goto("/applications/" + condition.id);
     await expect(
       page.getByText("No application transition pending", { exact: true }),
@@ -866,20 +965,33 @@ test("readable reports, contextual history, scoped next actors and reviewed simu
     const committedResponse = await committed;
     expect(committedResponse.status()).toBe(200);
     expect((await committedResponse.json()).results).toHaveLength(2);
-    const institution = await signIn("institution.a");
-    const foreign = await db.application.findFirstOrThrow({
-      where: { runId: run.runId, institutionId: "I02" },
+    const other = await new Client().login("institution.b");
+    const options = await other.ok("/options");
+    const foreign = await other.ok("/applications", "POST", {
+      institutionId: options.institutions[0].id,
+      workflowId: options.workflows.find((w: any) => w.name === "Only Scrutiny")
+        .id,
+      category: "NEW_INSTITUTION",
+      cycle: "2026-27",
+      data: {
+        contact: "foreign@fiction.test",
+        programme: "Fictional scope check",
+        intake: 60,
+      },
     });
-    const denied = await institution.request.get(
-      "/api/applications/" + foreign.id,
-    );
-    expect(denied.status()).toBe(404);
-    const simulatorDenied = await institution.request.get(
-      "/api/integrations/simulator/institutions",
-    );
-    expect(simulatorDenied.status()).toBe(403);
+    expect(
+      (await institutionApi.request("/applications/" + foreign.id)).status,
+    ).toBe(404);
+    expect(
+      (await institutionApi.request("/integrations/simulator/institutions"))
+        .status,
+    ).toBe(403);
   } finally {
-    for (const context of contexts) await context.close();
+    await db.demoClock.update({
+      where: { id: "current" },
+      data: { runId: originalClock.runId, now: originalClock.now },
+    });
+    for (const context of contexts) await context.close().catch(() => {});
     await db.$disconnect();
   }
 });

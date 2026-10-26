@@ -1,0 +1,69 @@
+
+Running 5 tests using 1 worker
+
+  ok 1 tests\browser\ui.spec.ts:22:1 › welcome and authenticated workspaces use real API and retain responsive design (38.3s)
+  ok 2 tests\browser\ui.spec.ts:147:1 › institution can save and submit a draft through browser forms (7.6s)
+  x  3 tests\browser\ui.spec.ts:225:1 › cross-role repair journey: repeated response, EVC, conditional undertaking, effective renewal and escalation retry (3.0m)
+  ok 4 tests\browser\ui.spec.ts:625:1 › the first live revision refreshes a stale initial compliance snapshot (19.8s)
+  x  5 tests\browser\ui.spec.ts:739:1 › readable reports, contextual history, scoped next actors and reviewed simulator provenance use the real API (45.0s)
+
+
+  1) tests\browser\ui.spec.ts:225:1 › cross-role repair journey: repeated response, EVC, conditional undertaking, effective renewal and escalation retry 
+
+    [31mTest timeout of 180000ms exceeded.[39m
+
+    Error: browserContext.close: Target page, context or browser has been closed
+
+      618 |       data: { now: original.now },
+      619 |     });
+    > 620 |     for (const context of contexts) await context.close();
+          |                                     ^
+      621 |     await db.$disconnect();
+      622 |   }
+      623 | });
+        at C:\projects\sih\Anumitra(SIH26262)\tests\browser\ui.spec.ts:620:37
+
+    Error Context: test-results\browser\ui-cross-role-repair-journ-aa5ef-enewal-and-escalation-retry\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\browser\ui-cross-role-repair-journ-aa5ef-enewal-and-escalation-retry\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\browser\ui-cross-role-repair-journ-aa5ef-enewal-and-escalation-retry\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) tests\browser\ui.spec.ts:739:1 › readable reports, contextual history, scoped next actors and reviewed simulator provenance use the real API 
+
+    [31mTest timeout of 45000ms exceeded.[39m
+
+    Error: browserContext.close: Target page, context or browser has been closed
+
+      880 |     expect(simulatorDenied.status()).toBe(403);
+      881 |   } finally {
+    > 882 |     for (const context of contexts) await context.close();
+          |                                     ^
+      883 |     await db.$disconnect();
+      884 |   }
+      885 | });
+        at C:\projects\sih\Anumitra(SIH26262)\tests\browser\ui.spec.ts:882:37
+
+    Error Context: test-results\browser\ui-readable-reports-contex-c192d-provenance-use-the-real-API\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\browser\ui-readable-reports-contex-c192d-provenance-use-the-real-API\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\browser\ui-readable-reports-contex-c192d-provenance-use-the-real-API\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2 failed
+    tests\browser\ui.spec.ts:225:1 › cross-role repair journey: repeated response, EVC, conditional undertaking, effective renewal and escalation retry 
+    tests\browser\ui.spec.ts:739:1 › readable reports, contextual history, scoped next actors and reviewed simulator provenance use the real API 
+  3 passed (5.6m)
+
+To open last HTML report run:
+[36m[39m
+[36m  npx playwright show-report[39m
+[36m[39m

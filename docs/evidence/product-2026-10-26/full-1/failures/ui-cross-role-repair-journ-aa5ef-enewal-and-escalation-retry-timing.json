@@ -1,0 +1,812 @@
+[
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 1.96,
+    "failed": false
+  },
+  {
+    "method": "pw:api",
+    "selector": "internal:label=\"Action\"i",
+    "durationSeconds": 1.104,
+    "failed": false
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 1.956,
+    "failed": false
+  },
+  {
+    "method": "pw:api",
+    "selector": "internal:role=button[name=/^Commit /]",
+    "durationSeconds": 1.104,
+    "failed": false
+  },
+  {
+    "method": "pw:api",
+    "selector": "",
+    "durationSeconds": 1.176,
+    "failed": false
+  },
+  {
+    "method": "pw:api",
+    "selector": "internal:role=button[name=/^Commit /]",
+    "durationSeconds": 1.021,
+    "failed": false
+  },
+  {
+    "method": "pw:api",
+    "selector": "internal:role=button[name=/^Commit /]",
+    "durationSeconds": 1.196,
+    "failed": false
+  },
+  {
+    "method": "pw:api",
+    "selector": "",
+    "durationSeconds": 1.338,
+    "failed": false
+  },
+  {
+    "method": "pw:api",
+    "selector": "internal:role=button[name=/^Commit /]",
+    "durationSeconds": 1.011,
+    "failed": false
+  },
+  {
+    "method": "pw:api",
+    "selector": "",
+    "durationSeconds": 1.19,
+    "failed": false
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 2.18,
+    "failed": false
+  },
+  {
+    "method": "pw:api",
+    "selector": "internal:label=\"Eligible application\"i",
+    "durationSeconds": 1.278,
+    "failed": false
+  },
+  {
+    "method": "pw:api",
+    "selector": "internal:role=button[name=\"Propose visit\"i]",
+    "durationSeconds": 1.529,
+    "failed": false
+  },
+  {
+    "method": "pw:api",
+    "selector": "",
+    "durationSeconds": 1.219,
+    "failed": false
+  },
+  {
+    "method": "pw:api",
+    "selector": ".visit-card >> internal:has-text=\"Fictional on-campus inspection 9a1b1c15\"i >> internal:role=button[name=\"Confirm visit\"i]",
+    "durationSeconds": 1.41,
+    "failed": false
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 3.088,
+    "failed": false
+  },
+  {
+    "method": "pw:api",
+    "selector": ".visit-card >> internal:has-text=\"Fictional on-campus inspection 9a1b1c15\"i >> internal:label=\"Report / reason\"i",
+    "durationSeconds": 1.104,
+    "failed": false
+  },
+  {
+    "method": "pw:api",
+    "selector": ".visit-card >> internal:has-text=\"Fictional on-campus inspection 9a1b1c15\"i >> internal:label=\"Recorded reason\"i",
+    "durationSeconds": 1.264,
+    "failed": false
+  },
+  {
+    "method": "pw:api",
+    "selector": ".visit-card >> internal:has-text=\"Fictional on-campus inspection 9a1b1c15\"i >> internal:role=button[name=\"Accept completion report\"i]",
+    "durationSeconds": 1.084,
+    "failed": false
+  },
+  {
+    "method": "pw:api",
+    "selector": "",
+    "durationSeconds": 1.167,
+    "failed": false
+  },
+  {
+    "method": "pw:api",
+    "selector": "internal:role=button[name=/^Commit /]",
+    "durationSeconds": 1.071,
+    "failed": false
+  },
+  {
+    "method": "pw:api",
+    "selector": "",
+    "durationSeconds": 1.183,
+    "failed": false
+  },
+  {
+    "method": "pw:api",
+    "selector": "internal:role=button[name=/^Commit /]",
+    "durationSeconds": 1.213,
+    "failed": false
+  },
+  {
+    "method": "pw:api",
+    "selector": "",
+    "durationSeconds": 1.467,
+    "failed": false
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 2.203,
+    "failed": false
+  },
+  {
+    "method": "pw:api",
+    "selector": "internal:role=button[name=/^Commit /]",
+    "durationSeconds": 1.168,
+    "failed": false
+  },
+  {
+    "method": "pw:api",
+    "selector": "",
+    "durationSeconds": 1.359,
+    "failed": false
+  },
+  {
+    "method": "pw:api",
+    "selector": "",
+    "durationSeconds": 1.064,
+    "failed": false
+  },
+  {
+    "method": "pw:api",
+    "selector": "",
+    "durationSeconds": 1.202,
+    "failed": false
+  },
+  {
+    "method": "pw:api",
+    "selector": "internal:attr=[placeholder=\"Search authorized documents\u2026\"i]",
+    "durationSeconds": 1.907,
+    "failed": false
+  },
+  {
+    "method": "pw:api",
+    "selector": "",
+    "durationSeconds": 4.665,
+    "failed": false
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.007,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.002,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.002,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.001,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.002,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.002,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.003,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.002,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.003,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.002,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.004,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.001,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.004,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.001,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.001,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.002,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.001,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.003,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.002,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.001,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.001,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.001,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.002,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.002,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 26.598,
+    "failed": false
+  },
+  {
+    "method": "pw:api",
+    "selector": "internal:text=/Designated escalation events/",
+    "durationSeconds": 2.496,
+    "failed": false
+  },
+  {
+    "method": "pw:api",
+    "selector": "internal:role=button[name=\"SMTP & attempt history\"i]",
+    "durationSeconds": 3.682,
+    "failed": false
+  },
+  {
+    "method": "pw:api",
+    "selector": ".delivery >> internal:has-text=\"Browser deliberate retry disclosure fixture\"i >> summary",
+    "durationSeconds": 2.358,
+    "failed": false
+  },
+  {
+    "method": "pw:api",
+    "selector": ".delivery >> internal:has-text=\"Browser deliberate retry disclosure fixture\"i >> internal:role=checkbox",
+    "durationSeconds": 2.161,
+    "failed": false
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.024,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.006,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.004,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.009,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.002,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.008,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.002,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.008,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.001,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.003,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.002,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.002,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.002,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.002,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.002,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.002,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.001,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.001,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.001,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.002,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.001,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.001,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.006,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.001,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.001,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.001,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.001,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.001,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.001,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.003,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.001,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.001,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.001,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.002,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.001,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.001,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.002,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 0.001,
+    "failed": true
+  },
+  {
+    "method": "expect",
+    "selector": "",
+    "durationSeconds": 35.731,
+    "failed": true
+  },
+  {
+    "method": "hook",
+    "selector": "",
+    "durationSeconds": 10.76,
+    "failed": false
+  },
+  {
+    "method": "fixture",
+    "selector": "",
+    "durationSeconds": 1.773,
+    "failed": false
+  },
+  {
+    "method": "hook",
+    "selector": "",
+    "durationSeconds": 1.789,
+    "failed": false
+  },
+  {
+    "method": "expect",
+    "selector": "internal:role=heading[name=/Welcome,/]",
+    "durationSeconds": 2.127,
+    "failed": false
+  },
+  {
+    "method": "click",
+    "selector": "internal:role=button[name=/^Commit /]",
+    "durationSeconds": 1.145,
+    "failed": false
+  },
+  {
+    "method": "waitForEventInfo",
+    "selector": "",
+    "durationSeconds": 1.364,
+    "failed": false
+  },
+  {
+    "method": "expect",
+    "selector": "internal:role=heading[name=/Welcome,/]",
+    "durationSeconds": 3.038,
+    "failed": false
+  },
+  {
+    "method": "fill",
+    "selector": ".visit-card >> internal:has-text=\"Fictional on-campus inspection 9a1b1c15\"i >> internal:label=\"Report / reason\"i",
+    "durationSeconds": 1.08,
+    "failed": false
+  },
+  {
+    "method": "click",
+    "selector": "internal:role=button[name=/^Commit /]",
+    "durationSeconds": 1.035,
+    "failed": false
+  },
+  {
+    "method": "waitForEventInfo",
+    "selector": "",
+    "durationSeconds": 1.193,
+    "failed": false
+  },
+  {
+    "method": "click",
+    "selector": "internal:role=button[name=/^Commit /]",
+    "durationSeconds": 1.198,
+    "failed": false
+  },
+  {
+    "method": "waitForEventInfo",
+    "selector": "",
+    "durationSeconds": 1.47,
+    "failed": false
+  },
+  {
+    "method": "expect",
+    "selector": "internal:role=heading[name=/Welcome,/]",
+    "durationSeconds": 2.068,
+    "failed": false
+  },
+  {
+    "method": "selectOption",
+    "selector": "internal:label=\"Eligible application\"i",
+    "durationSeconds": 1.029,
+    "failed": false
+  },
+  {
+    "method": "click",
+    "selector": "internal:role=button[name=\"Propose visit\"i]",
+    "durationSeconds": 1.488,
+    "failed": false
+  },
+  {
+    "method": "waitForEventInfo",
+    "selector": "",
+    "durationSeconds": 1.215,
+    "failed": false
+  },
+  {
+    "method": "click",
+    "selector": ".visit-card >> internal:has-text=\"Fictional on-campus inspection 9a1b1c15\"i >> internal:role=button[name=\"Confirm visit\"i]",
+    "durationSeconds": 1.368,
+    "failed": false
+  },
+  {
+    "method": "fill",
+    "selector": ".visit-card >> internal:has-text=\"Fictional on-campus inspection 9a1b1c15\"i >> internal:label=\"Recorded reason\"i",
+    "durationSeconds": 1.238,
+    "failed": false
+  },
+  {
+    "method": "click",
+    "selector": ".visit-card >> internal:has-text=\"Fictional on-campus inspection 9a1b1c15\"i >> internal:role=button[name=\"Accept completion report\"i]",
+    "durationSeconds": 1.059,
+    "failed": false
+  },
+  {
+    "method": "waitForEventInfo",
+    "selector": "",
+    "durationSeconds": 1.223,
+    "failed": false
+  },
+  {
+    "method": "waitForEventInfo",
+    "selector": "",
+    "durationSeconds": 1.055,
+    "failed": false
+  },
+  {
+    "method": "fill",
+    "selector": "internal:attr=[placeholder=\"Search authorized documents\u2026\"i]",
+    "durationSeconds": 1.602,
+    "failed": false
+  },
+  {
+    "method": "screenshot",
+    "selector": "",
+    "durationSeconds": 4.627,
+    "failed": false
+  },
+  {
+    "method": "click",
+    "selector": "internal:text=/Designated escalation events/",
+    "durationSeconds": 2.406,
+    "failed": false
+  },
+  {
+    "method": "click",
+    "selector": "internal:role=button[name=\"SMTP & attempt history\"i]",
+    "durationSeconds": 3.512,
+    "failed": false
+  },
+  {
+    "method": "click",
+    "selector": ".delivery >> internal:has-text=\"Browser deliberate retry disclosure fixture\"i >> summary",
+    "durationSeconds": 2.257,
+    "failed": false
+  },
+  {
+    "method": "check",
+    "selector": ".delivery >> internal:has-text=\"Browser deliberate retry disclosure fixture\"i >> internal:role=checkbox",
+    "durationSeconds": 2.051,
+    "failed": false
+  },
+  {
+    "method": "expect",
+    "selector": "internal:role=heading[name=/Welcome,/]",
+    "durationSeconds": 1.935,
+    "failed": false
+  },
+  {
+    "method": "waitForEventInfo",
+    "selector": "",
+    "durationSeconds": 1.159,
+    "failed": false
+  },
+  {
+    "method": "expect",
+    "selector": "internal:role=heading[name=/Welcome,/]",
+    "durationSeconds": 1.935,
+    "failed": false
+  },
+  {
+    "method": "selectOption",
+    "selector": "internal:label=\"Action\"i",
+    "durationSeconds": 1.014,
+    "failed": false
+  },
+  {
+    "method": "click",
+    "selector": "internal:role=button[name=/^Commit /]",
+    "durationSeconds": 1.065,
+    "failed": false
+  },
+  {
+    "method": "waitForEventInfo",
+    "selector": "",
+    "durationSeconds": 1.149,
+    "failed": false
+  },
+  {
+    "method": "click",
+    "selector": "internal:role=button[name=/^Commit /]",
+    "durationSeconds": 1.158,
+    "failed": false
+  },
+  {
+    "method": "waitForEventInfo",
+    "selector": "",
+    "durationSeconds": 1.33,
+    "failed": false
+  },
+  {
+    "method": "waitForEventInfo",
+    "selector": "",
+    "durationSeconds": 1.281,
+    "failed": false
+  }
+]

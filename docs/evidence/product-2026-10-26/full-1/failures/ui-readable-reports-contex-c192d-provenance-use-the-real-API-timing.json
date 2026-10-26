@@ -1,0 +1,20 @@
+[
+  {
+    "method": "pw:api",
+    "selector": "",
+    "durationSeconds": 1.15,
+    "failed": false
+  },
+  {
+    "method": "hook",
+    "selector": "",
+    "durationSeconds": 3.756,
+    "failed": false
+  },
+  {
+    "method": "goto",
+    "selector": "",
+    "durationSeconds": 1.12,
+    "failed": false
+  }
+]
