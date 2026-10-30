@@ -105,6 +105,63 @@ test("role-specific desks expose scoped tasks, deterministic counts and update c
       await expect(
         page.getByText("Updates connected", { exact: true }),
       ).toBeVisible();
+      if (role === "supervisor.north" && desk.totalTasks > 25) {
+        await page
+          .getByRole("button", { name: "Pause record updates", exact: true })
+          .click();
+        const refreshed = page.waitForRequest(
+          (r) =>
+            new URL(r.url()).pathname === "/api/action-desk" &&
+            r.method() === "GET",
+        );
+        await page
+          .getByRole("button", { name: "Refresh records", exact: true })
+          .click();
+        const refreshedResponse = await (await refreshed).response();
+        expect(refreshedResponse?.status()).toBe(200);
+        const stable = await refreshedResponse!.json();
+        const rows = page
+          .getByRole("region", { name: "Priority action tasks", exact: true })
+          .locator("tbody tr");
+        await expect(rows).toHaveCount(25);
+        await expect(rows.first()).toHaveAttribute(
+          "data-task-id",
+          stable.tasks[0].id,
+        );
+        await page
+          .getByRole("button", { name: "Next tasks", exact: true })
+          .click();
+        await expect(rows).toHaveCount(Math.min(25, stable.totalTasks - 25));
+        await expect(rows.first()).toHaveAttribute(
+          "data-task-id",
+          stable.tasks[25].id,
+        );
+        await page
+          .getByRole("button", { name: "Previous tasks", exact: true })
+          .click();
+        await expect(rows.first()).toHaveAttribute(
+          "data-task-id",
+          stable.tasks[0].id,
+        );
+        fs.mkdirSync(evidence() + "/operations", { recursive: true });
+        fs.writeFileSync(
+          evidence() + "/operations/task-pagination.json",
+          JSON.stringify(
+            {
+              role,
+              totalTasks: stable.totalTasks,
+              pageSize: 25,
+              previousNextVerified: true,
+              productionRecordsMocked: false,
+            },
+            null,
+            2,
+          ),
+        );
+        await page
+          .getByRole("button", { name: "Resume record updates", exact: true })
+          .click();
+      }
     }
     expect(errors).toEqual([]);
   } finally {
@@ -360,7 +417,8 @@ test("responsive workspaces preserve keyboard focus, sampled contrast and 200 pe
       ).toBe(true);
       await page.screenshot({
         path: `${process.env.TEST_EVIDENCE_DIR ?? "docs/evidence/repair"}/overview-${width}.png`,
-        fullPage: true,
+        fullPage: false,
+        animations: "disabled",
       });
       if (width <= 768) {
         await page.getByRole("button", { name: "Open navigation" }).click();

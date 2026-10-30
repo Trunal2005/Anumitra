@@ -1,0 +1,45 @@
+Browser group: tests/browser/operations.spec.ts
+
+Running 5 tests using 1 worker
+
+  ok 1 tests\browser\operations.spec.ts:73:1 › role-specific desks expose scoped tasks, deterministic counts and update connectivity (24.6s)
+  ok 2 tests\browser\operations.spec.ts:115:1 › specialised workspaces: role desks, queue drilldowns, source provenance, visual policy controls and accessible layouts (27.4s)
+  ok 3 tests\browser\operations.spec.ts:287:1 › public references retain field-level sources, historical year and missing-year disclosure (3.6s)
+  x  4 tests\browser\operations.spec.ts:330:1 › responsive workspaces preserve keyboard focus, sampled contrast and 200 percent enlargement (21.7s)
+  ok 5 tests\browser\operations.spec.ts:499:1 › continuous evaluator walkthrough uses one real browser page across the guarded institutional review and human decision workflow (1.3m)
+
+
+  1) tests\browser\operations.spec.ts:330:1 › responsive workspaces preserve keyboard focus, sampled contrast and 200 percent enlargement 
+
+    TimeoutError: page.screenshot: Timeout 10000ms exceeded.
+    Call log:
+    [2m  - taking page screenshot[22m
+    [2m  - waiting for fonts to load...[22m
+    [2m  - fonts loaded[22m
+
+
+      359 |         ),
+      360 |       ).toBe(true);
+    > 361 |       await page.screenshot({
+          |                  ^
+      362 |         path: `${process.env.TEST_EVIDENCE_DIR ?? "docs/evidence/repair"}/overview-${width}.png`,
+      363 |         fullPage: true,
+      364 |       });
+        at C:\projects\sih\Anumitra(SIH26262)\tests\browser\operations.spec.ts:361:18
+
+    attachment #1: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\browser\operations-responsive-work-38d28-and-200-percent-enlargement\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\browser\operations-responsive-work-38d28-and-200-percent-enlargement\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    tests\browser\operations.spec.ts:330:1 › responsive workspaces preserve keyboard focus, sampled contrast and 200 percent enlargement 
+  4 passed (2.7m)
+
+To open last HTML report run:
+[36m[39m
+[36m  npx playwright show-report[39m
+[36m[39m

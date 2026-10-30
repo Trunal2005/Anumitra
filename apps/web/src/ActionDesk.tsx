@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
@@ -89,6 +89,8 @@ export default function ActionDesk({ user }: { user: any }) {
   const { data, isPending, error } = useData("actionDesk", "/action-desk");
   const [kind, setKind] = useState("all");
   const [priority, setPriority] = useState("all");
+  const [page, setPage] = useState(1);
+  const section = useRef<HTMLElement>(null);
   const roles: string[] = user.grants.map((g: any) => g.role);
   const role =
     [
@@ -107,6 +109,15 @@ export default function ActionDesk({ user }: { user: any }) {
       (kind === "all" || t.kind === kind) &&
       (priority === "all" || t.urgency.key === priority),
   );
+  const pages = Math.max(1, Math.ceil(rows.length / 25));
+  const currentPage = Math.min(page, pages);
+  const visibleRows = rows.slice((currentPage - 1) * 25, currentPage * 25);
+  useEffect(() => {
+    setPage(1);
+  }, [kind, priority]);
+  useEffect(() => {
+    section.current?.querySelector(".ops-table-scroll")?.scrollTo({ top: 0 });
+  }, [currentPage, kind, priority]);
   return (
     <>
       <PageTitle
@@ -164,7 +175,7 @@ export default function ActionDesk({ user }: { user: any }) {
         </div>
       </div>
       <div className="desk-layout">
-        <section className="ops-surface desk-main">
+        <section ref={section} className="ops-surface desk-main">
           <div className="surface-heading">
             <div>
               <h2>Priority worklist</h2>
@@ -234,8 +245,8 @@ export default function ActionDesk({ user }: { user: any }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {rows.map((t: any) => (
-                    <tr key={t.id}>
+                  {visibleRows.map((t: any) => (
+                    <tr key={t.id} data-task-id={t.id}>
                       <td>
                         <Link
                           to={"/applications/" + t.applicationId}
@@ -283,6 +294,32 @@ export default function ActionDesk({ user }: { user: any }) {
               No matching tasks. You can still inspect authorized cases and
               reports.
             </Blank>
+          )}
+          {!!rows.length && (
+            <div className="desk-task-pagination" aria-label="Task pagination">
+              <span>
+                Tasks {(currentPage - 1) * 25 + 1}–
+                {Math.min(currentPage * 25, rows.length)} of {rows.length}{" "}
+                matching tasks
+              </span>
+              <button
+                className="secondary"
+                disabled={currentPage === 1}
+                onClick={() => setPage(currentPage - 1)}
+              >
+                Previous tasks
+              </button>
+              <span>
+                Page {currentPage} of {pages}
+              </span>
+              <button
+                className="secondary"
+                disabled={currentPage === pages}
+                onClick={() => setPage(currentPage + 1)}
+              >
+                Next tasks
+              </button>
+            </div>
           )}
           <details className="priority-explanation">
             <summary>How is this work prioritised?</summary>
