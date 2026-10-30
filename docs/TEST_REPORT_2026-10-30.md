@@ -20,3 +20,9 @@ Entry: clean main `22afb3a4c89c7e3ad658296632a98a1eb8880b48`. Earlier 26 October
 The full browser gate now runs the two independent test files sequentially with a persistence-checked API restart between them. Their combined role switches would otherwise consume a shared 30-attempt/15-minute in-memory login bucket. The production limiter and business/security assertions remain intact; no spoofed IP, reset endpoint, increased limit or database reset was introduced. Worker, database and private storage persist across both files. All ten journeys must pass for the overall gate to pass.
 
 The final complete isolated gate, exact source/digest, finite accessibility measurements, normal readiness/preservation checks, before/after links and remaining limits will be appended after execution. See [implementation checklist](OPERATIONS_ITERATION_2026-10-30.md) and [public source inventory](PUBLIC_REFERENCE_INVENTORY.md).
+
+## First complete gate — retained failure
+
+Source `c1eb46355145c110a9edd39cf35c38a4ee4c857a`; command `npm run verify:isolated -- --evidence-dir=docs/evidence/operations-2026-10-30/full-1`.
+
+TypeScript/build and all 41 backend tests passed without skips. All five new operational journeys passed, including 200% CSS enlargement, five contrast pairs and the continuous actual-browser recording. Four of five legacy journeys passed. The remaining journey's exact `getByText("No application transition pending")` matched both the new compact responsibility header and the existing action panel. The expected text/state was present twice; the assertion now targets `.context-strip`, retaining exact text and visibility checks. No timeout or business/security assertion was weakened. `full-1` remains FAILED with its original source manifest and raw output. A complete rerun is required for the changed test source.

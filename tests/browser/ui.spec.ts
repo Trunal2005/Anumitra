@@ -935,7 +935,9 @@ test("readable reports, contextual history, scoped next actors and reviewed simu
     const condition = fixture;
     await page.goto("/applications/" + condition.id);
     await expect(
-      page.getByText("No application transition pending", { exact: true }),
+      page
+        .locator(".context-strip")
+        .getByText("No application transition pending", { exact: true }),
     ).toBeVisible();
     await page.getByRole("button", { name: "History", exact: true }).click();
     await expect(page.locator(".escalation-context").first()).toBeVisible();

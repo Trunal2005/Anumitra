@@ -19,7 +19,10 @@ Anumitra is an independent student prototype for SIH26262. Use the repository [R
 
 | Document | Purpose |
 |---|---|
-| [Current product verification](TEST_REPORT_2026-10-26.md) | 26 October source, complete gate, retained failures, provenance and remaining limits |
+| [Current operational verification](TEST_REPORT_2026-10-30.md) | Exact 30 October source, actual gate results, retained failures and finite verification limits |
+| [Operational implementation checklist](OPERATIONS_ITERATION_2026-10-30.md) | Specialised workspaces and metadata concurrency repairs |
+| [Public reference inventory](PUBLIC_REFERENCE_INVENTORY.md) | Historical facts, field-level provenance, checksums, terms and pending human sign-off |
+| [Earlier product verification](TEST_REPORT_2026-10-26.md) | Historical 26 October source and complete gate |
 | [Local integration contract](INTEGRATION_CONTRACT.md) | Fictional simulator, reviewed master import and future authorized boundary |
 | [Earlier repair verification](TEST_REPORT_REPAIR.md) | Historical 23 October gate and repairs |
 | [Submission readiness](SUBMISSION_READINESS.md) | Bounded prototype readiness and external limitations |

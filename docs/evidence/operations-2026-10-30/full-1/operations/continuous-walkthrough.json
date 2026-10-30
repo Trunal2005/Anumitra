@@ -1,0 +1,77 @@
+{
+  "completed": true,
+  "continuity": {
+    "browserContexts": 1,
+    "pages": 1
+  },
+  "logins": [
+    "institution.a",
+    "reviewer.north",
+    "institution.a",
+    "reviewer.north",
+    "institution.a",
+    "reviewer.north",
+    "supervisor.north",
+    "committee.evc",
+    "supervisor.north",
+    "committee.evc",
+    "authority",
+    "institution.a",
+    "supervisor.north",
+    "institution.a",
+    "supervisor.north"
+  ],
+  "notes": [
+    {
+      "time": 1213,
+      "text": "This is Anumitra, an independent prototype. The institution starts from a task-focused action desk."
+    },
+    {
+      "time": 2789,
+      "text": "The institution submits a fictional application with private evidence. The selected policy keeps its own version."
+    },
+    {
+      "time": 4419,
+      "text": "The reviewer requests two reasoned corrections. Each item has its own evidence response and review."
+    },
+    {
+      "time": 8345,
+      "text": "Rejecting a response returns the case to institutional waiting. It does not erase the earlier response."
+    },
+    {
+      "time": 14333,
+      "text": "Both responses are reviewed, evidence is accepted and the guarded route advances to EVC."
+    },
+    {
+      "time": 15476,
+      "text": "The supervisor checks availability, proposes an expert visit and confirms it. The appointment is a fictional demo reservation."
+    },
+    {
+      "time": 20463,
+      "text": "The expert report, completion acceptance, recommendation and stage completion are separate recorded actions."
+    },
+    {
+      "time": 23045,
+      "text": "The competent authority reviews the decision packet and explicitly records a human conditional decision."
+    },
+    {
+      "time": 26396,
+      "text": "Submitted undertaking evidence is not yet accepted compliance. The authorized reviewer records acceptance separately."
+    },
+    {
+      "time": 30668,
+      "text": "The accepted version remains expired while a replacement is pending or rejected. The two versions can be compared side by side."
+    },
+    {
+      "time": 31217,
+      "text": "Designated escalation and subject-level overdue reports support accountable follow-up. They do not issue penalties or revoke approval."
+    },
+    {
+      "time": 31356,
+      "text": "Public reference facts are read-only and source-linked. Their historical year is explicit, and they never create fictional visits or live approvals."
+    }
+  ],
+  "fictional": true,
+  "normalDemoTouched": false,
+  "videoRecorded": true
+}

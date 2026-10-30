@@ -1,5 +1,22 @@
 # Anumitra — SIH26262 acceptance matrix
 
+## Operational change mapping — 30 October 2026
+
+Committed implementation `c1eb46355145c110a9edd39cf35c38a4ee4c857a` is under complete isolated verification. The final [dated report](TEST_REPORT_2026-10-30.md) will supply the result and source manifest. The detailed matrix below retains earlier executed paths until that gate is recorded.
+
+| PS group | Operational change | New proof / retained boundary |
+|---|---|---|
+| A + human safeguard | Visual constrained route editor, actual guard simulation, evidence-first case actions, separate Committee recommendation and explicit human decision packet | Shared `workflow-checks.ts`; simulation no-mutation regression; real continuous browser decision workflow. Published pins/revision/hash guards retained; official numerical applicability unverified. |
+| B | Distinct role desks, due/age task ordering, eligible owner/next responsibility, server-filtered/sorted/paged queue, workload and stage/region drilldowns | Scoped task/backlog/count regression and role/browser checks. Counts distinguish tasks/cases; missing historical durations remain unknown (B2 partial). |
+| C | EVC week/calendar plus accessible agenda, real availability/conflicts, eligible queue and focus-managed appointment drawer | Actual browser propose/confirm/report/complete sequence and retained locked scheduling regressions. DEMO grants/reservations are not statutory appointments/quorum. |
+| D | Dense condition ledger, original/current due dates, selected evidence/action/history panel | Continuous browser separately submits and accepts evidence; original revision/authority-only extension/waiver checks retained. |
+| E | Compact evidence register, selected effective/latest evidence, version comparison and guarded review | Two actual private PDF previews, rejected renewal preserves accepted v1 expiry; original acceptance-switch regressions retained. |
+| F | Direct escalation task links, contextual event/history, scoped overdue/report reconciliation and record-update connectivity wording | Continuous browser matches overdue subject to designated escalation; durable delivery/retry/worker regressions retained. Exhaustive exports/filter permutations remain partial (F3). |
+| Data integrity | Atomic metadata batch, fresh post-lock actor/state checks and conflicting external-ID compare | Three baseline race reproductions; atomic/duplicate/stale-actor/state/concurrent-payload regression paths. No live AICTE connector claim. |
+| Public provenance | Three separate historical 2025–26 source-linked profiles; fictional/pilot/unclassified origin filters/counts | Read-only/no-operational-contribution regression, missing-year browser check; team human sign-off pending and no pilot feed configured. |
+
+## Detailed retained regression mapping
+
 Current review classification, 26 October 2026; exact tested source `54206f21b8e69f2e946c9421800cada99aa466f7`. Primary requirement: [SIH2026 entry 26262](https://www.sih.gov.in/sih2026PS), A–F and Regulatory Safeguard. Fresh primary retrieval returned HTTP 403; this review uses the supplied A–F brief and retained mapping, without claiming a newly verified official revision. These are prototype capabilities, not verified statutory values. The [dated report](TEST_REPORT_2026-10-26.md) records 35/35 backend tests, restart preservation and all five Chromium journeys in one complete run. Code/test mappings below are finite path coverage, not exhaustive combinations. Earlier reports remain historical.
 
 | PS bullet | Status | Implementation / user interaction | Supporting code/API/UI and evidence |

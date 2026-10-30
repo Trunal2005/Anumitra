@@ -1,0 +1,6 @@
+
+> anumitra@1.0.0 format:check
+> prettier --check apps packages tests scripts vite.config.ts playwright.config.ts
+
+Checking formatting...
+All matched files use Prettier code style!

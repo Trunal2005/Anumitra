@@ -1,0 +1,69 @@
+Browser group: tests/browser/operations.spec.ts
+
+Running 5 tests using 1 worker
+
+  ok 1 tests\browser\operations.spec.ts:73:1 › role-specific desks expose scoped tasks, deterministic counts and update connectivity (14.1s)
+  ok 2 tests\browser\operations.spec.ts:115:1 › specialised workspaces: role desks, queue drilldowns, source provenance, visual policy controls and accessible layouts (14.8s)
+  ok 3 tests\browser\operations.spec.ts:287:1 › public references retain field-level sources, historical year and missing-year disclosure (2.7s)
+  ok 4 tests\browser\operations.spec.ts:330:1 › responsive workspaces preserve keyboard focus, sampled contrast and 200 percent enlargement (39.7s)
+  ok 5 tests\browser\operations.spec.ts:499:1 › continuous evaluator walkthrough uses one real browser page across the guarded institutional review and human decision workflow (39.0s)
+
+  5 passed (1.9m)
+
+To open last HTML report run:
+[36m[39m
+[36m  npx playwright show-report[39m
+[36m[39m
+
+
+Browser group: tests/browser/ui.spec.ts
+
+Running 5 tests using 1 worker
+
+  ok 1 tests\browser\ui.spec.ts:38:1 › welcome and authenticated workspaces use real API and retain responsive design (7.3s)
+  ok 2 tests\browser\ui.spec.ts:143:1 › institution can save and submit a draft through browser forms (2.7s)
+  ok 3 tests\browser\ui.spec.ts:226:1 › cross-role repair journey: repeated response, EVC, conditional undertaking, effective renewal and escalation retry (34.5s)
+  ok 4 tests\browser\ui.spec.ts:650:1 › the first live revision refreshes a stale initial compliance snapshot (5.1s)
+  x  5 tests\browser\ui.spec.ts:769:1 › readable reports, contextual history, scoped next actors and reviewed simulator provenance use the real API (5.8s)
+
+
+  1) tests\browser\ui.spec.ts:769:1 › readable reports, contextual history, scoped next actors and reviewed simulator provenance use the real API 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: getByText('No application transition pending', { exact: true })
+    Expected: visible
+    Error: strict mode violation: getByText('No application transition pending', { exact: true }) resolved to 2 elements:
+        1) <strong>No application transition pending</strong> aka getByRole('strong').filter({ hasText: 'No application transition' })
+        2) <p>No application transition pending</p> aka getByRole('paragraph').filter({ hasText: 'No application transition' })
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for getByText('No application transition pending', { exact: true })[22m
+
+
+      937 |     await expect(
+      938 |       page.getByText("No application transition pending", { exact: true }),
+    > 939 |     ).toBeVisible();
+          |       ^
+      940 |     await page.getByRole("button", { name: "History", exact: true }).click();
+      941 |     await expect(page.locator(".escalation-context").first()).toBeVisible();
+      942 |     await expect(page.locator(".escalation-context").first()).toContainText(
+        at C:\projects\sih\Anumitra(SIH26262)\tests\browser\ui.spec.ts:939:7
+
+    attachment #1: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\browser\ui-readable-reports-contex-c192d-provenance-use-the-real-API\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\browser\ui-readable-reports-contex-c192d-provenance-use-the-real-API\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    tests\browser\ui.spec.ts:769:1 › readable reports, contextual history, scoped next actors and reviewed simulator provenance use the real API 
+  4 passed (58.1s)
+
+To open last HTML report run:
+[36m[39m
+[36m  npx playwright show-report[39m
+[36m[39m
