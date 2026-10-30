@@ -25,6 +25,7 @@ import { parse } from "csv-parse/sync";
 import { z } from "zod";
 import { Prisma } from "@prisma/client";
 import { db } from "../../../packages/db/index.ts";
+import { publicInstitutionProfiles } from "../../../packages/reference/institutions.ts";
 import {
   type Actor,
   DomainError,
@@ -78,6 +79,12 @@ import {
   simulatorRecords,
   simulatorSource,
 } from "../../../packages/domain/institution-import.ts";
+import {
+  operations,
+  actionDesk,
+  recordOrigin,
+} from "../../../packages/domain/operations.ts";
+import { importDocumentMetadata } from "../../../packages/domain/metadata-import.ts";
 import { deadlineSubjects } from "../../../packages/domain/deadlines.ts";
 import { ageing } from "../../../packages/domain/ageing.ts";
 declare module "express-session" {
@@ -480,6 +487,182 @@ app.get("/api/applications", async (req, res) => {
   ]);
   res.json({ items, total, page, limit });
 });
+app.get("/api/reference/institutions", async (req, res) => {
+  await actor(req);
+  const query = z
+    .object({
+      q: z.string().max(150).default(""),
+      year: z.string().max(20).default(""),
+    })
+    .parse(req.query);
+  const profiles = publicInstitutionProfiles.filter(
+    (p) =>
+      (!query.year || p.academicYear === query.year) &&
+      (p.name + " " + p.facts.find((f) => f.key === "permanentId")?.value)
+        .toLowerCase()
+        .includes(query.q.toLowerCase()),
+  );
+  res.json({
+    kind: "PUBLIC_REFERENCE",
+    readOnly: true,
+    profiles,
+    count: profiles.length,
+    operationalCountContribution: 0,
+    authorizedPilotConfigured: false,
+  });
+});
+app.get("/api/action-desk", async (req, res) =>
+  res.json(await actionDesk(await actor(req))),
+);
+app.get("/api/review-queue", async (req, res) => {
+  const a = await actor(req);
+  const data = await operations(a, await scopedFilter(req, a));
+  const view = z
+    .enum(["all", "active", "mine", "due-soon", "overdue", "unassigned"])
+    .default("all")
+    .parse(req.query.view);
+  const page = z.coerce.number().int().min(1).default(1).parse(req.query.page);
+  const limit = z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(100)
+    .default(15)
+    .parse(req.query.limit);
+  const sort = z
+    .enum(["priority", "age", "reference", "stage", "due"])
+    .default("priority")
+    .parse(req.query.sort);
+  const direction = z
+    .enum(["asc", "desc"])
+    .default("asc")
+    .parse(req.query.direction);
+  const origin = z
+    .enum(["FICTIONAL_DEMO", "AUTHORIZED_PILOT", "UNCLASSIFIED"])
+    .optional()
+    .parse(req.query.origin);
+  let items = data.cases.filter(
+    (c) =>
+      (!origin || c.recordOrigin === origin) &&
+      (view !== "active" ||
+        !["DRAFT", "APPROVED", "REJECTED", "CONDITIONAL"].includes(c.state)) &&
+      (view !== "mine" || c.ownerId === a.id) &&
+      (view !== "overdue" || c.urgency.key === "OVERDUE") &&
+      (view !== "due-soon" || ["TODAY", "DUE_SOON"].includes(c.urgency.key)) &&
+      (view !== "unassigned" ||
+        (!c.ownerId &&
+          !["DRAFT", "APPROVED", "REJECTED", "CONDITIONAL"].includes(c.state))),
+  );
+  items.sort((x, y) => {
+    const compare =
+      sort === "reference"
+        ? x.reference.localeCompare(y.reference)
+        : sort === "stage"
+          ? x.state.localeCompare(y.state)
+          : sort === "age"
+            ? (x.ageDays ?? -1) - (y.ageDays ?? -1)
+            : sort === "due"
+              ? +(x.dueAt ?? new Date("9999-01-01")) -
+                +(y.dueAt ?? new Date("9999-01-01"))
+              : x.urgency.rank - y.urgency.rank ||
+                +(x.dueAt ?? new Date("9999-01-01")) -
+                  +(y.dueAt ?? new Date("9999-01-01"));
+    return (
+      (direction === "desc" ? -compare : compare) || x.id.localeCompare(y.id)
+    );
+  });
+  res.json({
+    items: items.slice((page - 1) * limit, page * limit),
+    total: items.length,
+    page,
+    limit,
+    now: data.now,
+    countUnit: "distinct cases",
+    dataClass: "operational records only; public references excluded",
+  });
+});
+app.get("/api/committee-agenda", async (req, res) => {
+  const a = await actor(req);
+  const data = await operations(a);
+  res.json({
+    now: data.now,
+    items: data.cases.filter(
+      (c) =>
+        c.allowedActions.includes("record-recommendation") ||
+        c.visits.some((v) => v.participants.some((p) => p.id === a.id)),
+    ),
+    meetingModel:
+      "Assigned-case agenda; no meetings, statutory appointments or quorum are inferred.",
+  });
+});
+app.get("/api/evc-planner", async (req, res) => {
+  const a = await actor(req);
+  const data = await operations(a);
+  const relevantIds = data.cases.map((c) => c.id);
+  const visits = await db.visit.findMany({
+    where: { applicationId: { in: relevantIds } },
+    include: {
+      application: { include: { institution: true } },
+      reservations: true,
+    },
+    orderBy: { startAt: "asc" },
+  });
+  const coordinator = a.grants.some((g) =>
+    ["SUPERVISOR", "BUREAU"].includes(g.role),
+  );
+  const candidates = data.users.filter(
+    (u) =>
+      u.active &&
+      data.records.some(
+        (r) =>
+          r.state === "EVC" &&
+          can(a, r, ["SUPERVISOR", "BUREAU"]) &&
+          eligible(u, r, "EVC"),
+      ),
+  );
+  const ids = coordinator ? candidates.map((u) => u.id) : [a.id];
+  const [availability, reservations] = await Promise.all([
+    db.availability.findMany({
+      where: { userId: { in: ids } },
+      orderBy: { startAt: "asc" },
+    }),
+    db.reservation.findMany({
+      where: { userId: { in: ids }, active: true },
+      select: { userId: true, startAt: true, endAt: true, visitId: true },
+    }),
+  ]);
+  res.json({
+    now: data.now,
+    queue: data.cases.filter((c) => c.state === "EVC"),
+    visits: visits.map((v) => ({
+      ...v,
+      canCoordinate: can(a, v.application, ["SUPERVISOR", "BUREAU"]),
+      canReport: v.reservations.some((r) => r.userId === a.id && r.active),
+      participantNames: v.reservations
+        .filter((p) => p.active)
+        .map((p) => data.byUser.get(p.userId)?.name ?? "Assigned member"),
+    })),
+    participants: coordinator
+      ? candidates.map((u) => ({
+          id: u.id,
+          name: u.name,
+          applicationIds: data.records
+            .filter(
+              (r) =>
+                r.state === "EVC" &&
+                can(a, r, ["SUPERVISOR", "BUREAU"]) &&
+                eligible(u, r, "EVC"),
+            )
+            .map((r) => r.id),
+        }))
+      : [],
+    availability,
+    reservations,
+    timezone: "Asia/Kolkata",
+    appointmentBasis:
+      "Fictional prototype reservations; not statutory appointments",
+  });
+});
 app.get("/api/dashboard", async (req, res) => {
   const a = await actor(req);
   const where = await scopedFilter(req, a);
@@ -564,6 +747,16 @@ app.post("/api/applications", async (req, res) => {
     const record = await tx.application.create({
       data: {
         ...c,
+        data: {
+          ...c.data,
+          provenance: {
+            kind:
+              process.env.DEMO_MODE === "true"
+                ? "FICTIONAL_DEMO"
+                : "UNCLASSIFIED",
+            declaredBy: a.id,
+          },
+        },
         reference: `AN-${randomUUID().slice(0, 8).toUpperCase()}`,
         runId: await runId(tx),
       },
@@ -600,7 +793,12 @@ app.put("/api/applications/:id/draft", async (req, res) => {
     const r = await tx.application.update({
       where: { id: record.id },
       data: {
-        data: c.data,
+        data: {
+          ...c.data,
+          provenance: (record.data as any).provenance ?? {
+            kind: "UNCLASSIFIED",
+          },
+        },
         category: c.category,
         cycle: c.cycle,
         version: { increment: 1 },
@@ -623,6 +821,15 @@ app.get("/api/applications/:id", async (req, res) => {
   });
   res.json({
     ...record,
+    recordOrigin: recordOrigin(record.data),
+    stageAgeDays: record.attempts.find((t) => t.state === "OPEN")
+      ? Math.max(
+          0,
+          (+(await clock()) -
+            +record.attempts.find((t) => t.state === "OPEN")!.startedAt) /
+            86400000,
+        )
+      : null,
     ...actions(a, record),
     assignees: can(a, record, ["SUPERVISOR", "BUREAU"])
       ? (
@@ -959,6 +1166,12 @@ app.get("/api/documents", async (req, res) => {
       return {
         ...d,
         compliance,
+        canReview: can(a, d.application, ["REVIEWER", "SUPERVISOR", "BUREAU"]),
+        canUpload:
+          can(a, d.application, ["INSTITUTION"]) &&
+          ["DRAFT", "AWAITING_RESPONSE", "CONDITIONAL", "APPROVED"].includes(
+            d.application.state,
+          ),
         versions: institutionOnly
           ? d.versions.filter(
               (v) =>
@@ -1045,12 +1258,37 @@ app.post("/api/documents/:id/review", async (req, res) => {
 });
 app.get("/api/obligations", async (req, res) => {
   const a = await actor(req);
+  const rows = await db.obligation.findMany({
+    where: { application: { ...scope(a), runId: await runId() } },
+    include: { application: { include: { institution: true } } },
+    orderBy: { dueAt: "asc" },
+  });
+  const events = await db.escalation.findMany({
+    where: {
+      applicationId: { in: rows.map((r) => r.applicationId) },
+      subjectType: "OBLIGATION",
+    },
+    orderBy: { createdAt: "desc" },
+  });
   res.json(
-    await db.obligation.findMany({
-      where: { application: { ...scope(a), runId: await runId() } },
-      include: { application: { include: { institution: true } } },
-      orderBy: { dueAt: "asc" },
-    }),
+    rows.map((o) => ({
+      ...o,
+      escalationState: events.find((e) => e.subjectId === o.id)?.state ?? null,
+      allowedActions: [
+        ...(can(a, o.application, ["INSTITUTION"]) &&
+        ["OPEN", "RETURNED"].includes(o.state)
+          ? ["submit"]
+          : []),
+        ...(can(a, o.application, ["REVIEWER", "SUPERVISOR", "BUREAU"]) &&
+        o.state === "SUBMITTED"
+          ? ["accept", "return"]
+          : []),
+        ...(can(a, o.application, ["AUTHORITY"]) &&
+        !["ACCEPTED", "WAIVED"].includes(o.state)
+          ? ["extend", "waive"]
+          : []),
+      ],
+    })),
   );
 });
 app.post("/api/obligations/:id/commands", async (req, res) => {
@@ -2113,7 +2351,6 @@ app.post("/api/integrations/master", async (req, res) => {
     c.format === "json"
       ? JSON.parse(c.content)
       : parse(c.content, { columns: true, skip_empty_lines: true });
-  const results: any[] = [];
   if (c.entity === "institutions") {
     return res.json(
       await importInstitutions(a, {
@@ -2123,107 +2360,17 @@ app.post("/api/integrations/master", async (req, res) => {
         reviewId: c.reviewId,
       }),
     );
-  } else {
-    const records = z
-      .array(
-        z
-          .object({
-            externalId: z.string().min(1).max(100),
-            applicationId: z.string(),
-            kind: z.enum(["LEASE", "AFFIDAVIT", "COMPLIANCE", "OTHER"]),
-            title: z.string().min(3).max(200),
-          })
-          .strict(),
-      )
-      .max(200)
-      .parse(rows);
-    for (const r of records) {
-      const appRecord = await getApp(a, r.applicationId);
-      ensure(
-        can(a, appRecord, ["INSTITUTION", "BUREAU"]),
-        "Document metadata import permission required",
-        403,
-      );
-      ensure(
-        ["DRAFT", "AWAITING_RESPONSE"].includes(appRecord.state),
-        "Metadata imports cannot rewrite reviewed or decided evidence",
-      );
-      const existing = await db.externalMapping.findUnique({
-        where: {
-          source_externalId: {
-            source: "LOCAL_DOCUMENT_METADATA",
-            externalId: r.externalId,
-          },
-        },
-      });
-      ensure(
-        !existing || existing.payloadHash === hash(r),
-        "External metadata ID changed",
-      );
-      if (!c.preview && !existing)
-        await db.$transaction(async (tx) => {
-          await tx.$queryRaw`SELECT 1 AS locked FROM pg_advisory_xact_lock(hashtext(${`metadata:${r.externalId}`}))`;
-          const replay = await tx.externalMapping.findUnique({
-            where: {
-              source_externalId: {
-                source: "LOCAL_DOCUMENT_METADATA",
-                externalId: r.externalId,
-              },
-            },
-          });
-          if (replay) return;
-          const doc = await tx.document.create({
-            data: {
-              applicationId: r.applicationId,
-              title: r.title,
-              kind: r.kind,
-            },
-          });
-          await tx.externalMapping.create({
-            data: {
-              source: "LOCAL_DOCUMENT_METADATA",
-              externalId: r.externalId,
-              applicationId: r.applicationId,
-              payloadHash: hash(r),
-            },
-          });
-          await audit(
-            tx,
-            a,
-            appRecord,
-            "local-document-metadata-import",
-            `Pending document ${doc.id}; private bytes still required`,
-            appRecord.state,
-            "PUBLIC",
-          );
-        });
-      results.push({
-        externalId: r.externalId,
-        state: existing
-          ? "UNCHANGED"
-          : c.preview
-            ? "VALID_METADATA"
-            : "IMPORTED_PENDING_BYTES",
-      });
-    }
   }
-  await db.syncRun.create({
-    data: { actorId: a.id, preview: c.preview, result: results },
-  });
-  res.json({
-    mode: "LOCAL_ADAPTER",
-    entity: c.entity,
-    preview: c.preview,
-    results,
-  });
+  return res.json(await importDocumentMetadata(a, rows, c.preview));
 });
 app.get("/api/openapi.json", (_req, res) => res.json(openapi(app, origin)));
 app.use("/api", (_req, res) =>
   res.status(404).json({ error: "Unknown API endpoint" }),
 );
-app.use(express.static(path.resolve("dist/web")));
+const webRoot = path.resolve(process.env.WEB_DIST_PATH ?? "dist/web");
+app.use(express.static(webRoot));
 app.get("/{*path}", (_req, res) =>
-  res.sendFile(path.resolve("dist/web/index.html")),
+  res.sendFile("index.html", { root: webRoot }),
 );
 app.use((e: unknown, _req: Request, res: Response, _next: NextFunction) => {
   if (res.headersSent) return;

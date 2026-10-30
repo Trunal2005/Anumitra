@@ -1,0 +1,19 @@
+{
+  "completed": false,
+  "continuity": {
+    "browserContexts": 1,
+    "pages": 1
+  },
+  "logins": [
+    "institution.a"
+  ],
+  "notes": [
+    {
+      "time": 2204,
+      "text": "This is Anumitra, an independent prototype. The institution starts from a task-focused action desk."
+    }
+  ],
+  "fictional": true,
+  "normalDemoTouched": false,
+  "videoRecorded": false
+}

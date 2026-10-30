@@ -256,6 +256,10 @@ export async function seedRun() {
         ownerId: owner,
         data: {
           contact: `demo${i + 1}@institution.test`,
+          provenance: {
+            kind: "FICTIONAL_DEMO",
+            source: "bundled synthetic fixture",
+          },
           programme: "Computer Engineering",
           intake: 60,
         },

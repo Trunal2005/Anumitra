@@ -25,6 +25,7 @@ import {
   reportValue,
   reportHeading,
 } from "../packages/contracts/presentation.ts";
+
 const institution = await new Client().login("institution.a"),
   supervisor = await new Client().login("supervisor.north"),
   reviewer = await new Client().login("reviewer.north"),
@@ -1706,4 +1707,355 @@ test("overdue VISIT escalation reaches the designated supervisor in real local S
     "RESOLVED",
   );
   await time(original);
+});
+
+test("operations: metadata batch is atomic and duplicate external IDs are rejected", async () => {
+  const app = await institution.create();
+  const externalId = "batch-" + randomUUID();
+  const row = {
+    externalId,
+    applicationId: app.id,
+    kind: "LEASE",
+    title: "Fictional batch evidence metadata",
+  };
+  const response = await institution.request("/integrations/master", "POST", {
+    entity: "documentMetadata",
+    format: "json",
+    preview: false,
+    content: JSON.stringify([
+      row,
+      { ...row, externalId: randomUUID(), applicationId: randomUUID() },
+    ]),
+  });
+  assert.equal(response.status, 404);
+  assert.equal(
+    await db.document.count({ where: { applicationId: app.id } }),
+    0,
+  );
+  assert.equal(
+    await db.externalMapping.count({
+      where: { source: "LOCAL_DOCUMENT_METADATA", externalId },
+    }),
+    0,
+  );
+  const duplicate = await institution.request("/integrations/master", "POST", {
+    entity: "documentMetadata",
+    format: "json",
+    preview: false,
+    content: JSON.stringify([row, row]),
+  });
+  assert.equal(duplicate.status, 400);
+  assert.equal(
+    await db.document.count({ where: { applicationId: app.id } }),
+    0,
+  );
+  // A request snapshot invalidated before the transaction must not import bytes
+  // or mappings even when its institution/case grant used to be valid.
+  const { importDocumentMetadata } = await import(
+    "../packages/domain/metadata-import.ts"
+  );
+  const currentActor = await db.user.findUniqueOrThrow({
+    where: { id: actor("institution.a").id },
+    include: { grants: true },
+  });
+  await assert.rejects(
+    importDocumentMetadata(
+      { ...currentActor, securityVersion: currentActor.securityVersion - 1 },
+      [row],
+      false,
+    ),
+    (error: any) => error.status === 403,
+  );
+  assert.equal(
+    await db.document.count({ where: { applicationId: app.id } }),
+    0,
+  );
+  assert.equal(
+    await db.externalMapping.count({
+      where: { source: "LOCAL_DOCUMENT_METADATA", externalId },
+    }),
+    0,
+  );
+});
+
+test("operations: concurrent metadata payload conflict is rechecked after locks and replay is truthful", async () => {
+  const app = await institution.create();
+  const id = "concurrent-" + randomUUID();
+  const connection = new pg.Client({
+    connectionString: process.env.DATABASE_URL,
+  });
+  await connection.connect();
+  const row = (title: string) => ({
+    externalId: id,
+    applicationId: app.id,
+    kind: "LEASE",
+    title,
+  });
+  const request = (r: any) =>
+    institution.request("/integrations/master", "POST", {
+      entity: "documentMetadata",
+      format: "json",
+      preview: false,
+      content: JSON.stringify([r]),
+    });
+  try {
+    await connection.query("BEGIN");
+    await connection.query("SELECT pg_advisory_xact_lock(hashtext($1))", [
+      "metadata:" + id,
+    ]);
+    const rows = [
+      row("Fictional concurrent metadata A"),
+      row("Fictional conflicting metadata B"),
+    ];
+    const pending = rows.map(request);
+    await waitFor(async () => {
+      await connection.query("SELECT pg_stat_clear_snapshot()");
+      return (
+        (
+          await connection.query(
+            "SELECT count(*)::int AS n FROM pg_stat_activity WHERE datname=current_database() AND usename=current_user AND pid<>pg_backend_pid() AND wait_event_type='Lock'",
+          )
+        ).rows[0].n >= 2
+      );
+    }, "both imports reached the lock boundary");
+    await connection.query("COMMIT");
+    const responses = await Promise.all(pending);
+    assert.deepEqual(responses.map((r) => r.status).sort(), [200, 409]);
+    const winner = responses.findIndex((r) => r.status === 200);
+    const replay = await request(rows[winner]);
+    assert.equal(replay.status, 200);
+    assert.equal(replay.data.results[0].state, "UNCHANGED");
+    assert.equal(
+      await db.document.count({ where: { applicationId: app.id } }),
+      1,
+    );
+    const mapping = await db.externalMapping.findUniqueOrThrow({
+      where: {
+        source_externalId: {
+          source: "LOCAL_DOCUMENT_METADATA",
+          externalId: id,
+        },
+      },
+    });
+    assert.equal(mapping.payloadHash, hash(rows[winner]));
+  } finally {
+    await connection.query("ROLLBACK").catch(() => {});
+    await connection.end();
+  }
+});
+
+test("operations: metadata import rechecks editable state after the application lock", async () => {
+  const app = await institution.create();
+  const id = "state-" + randomUUID();
+  const connection = new pg.Client({
+    connectionString: process.env.DATABASE_URL,
+  });
+  await connection.connect();
+  try {
+    await connection.query("BEGIN");
+    await connection.query(
+      'SELECT id FROM "Application" WHERE id=$1 FOR UPDATE',
+      [app.id],
+    );
+    const pending = institution.request("/integrations/master", "POST", {
+      entity: "documentMetadata",
+      format: "json",
+      preview: false,
+      content: JSON.stringify([
+        {
+          externalId: id,
+          applicationId: app.id,
+          kind: "LEASE",
+          title: "Fictional state-race metadata",
+        },
+      ]),
+    });
+    await waitFor(async () => {
+      await connection.query("SELECT pg_stat_clear_snapshot()");
+      return (
+        (
+          await connection.query(
+            "SELECT count(*)::int AS n FROM pg_stat_activity WHERE datname=current_database() AND usename=current_user AND pid<>pg_backend_pid() AND wait_event_type='Lock'",
+          )
+        ).rows[0].n > 0
+      );
+    }, "metadata waits on the locked case");
+    // Test-only fixture transition, not a simulated regulatory decision.
+    await connection.query('UPDATE "Application" SET state=$2 WHERE id=$1', [
+      app.id,
+      "SCRUTINY",
+    ]);
+    await connection.query("COMMIT");
+    assert.equal((await pending).status, 409);
+    assert.equal(
+      await db.document.count({ where: { applicationId: app.id } }),
+      0,
+    );
+    assert.equal(
+      await db.externalMapping.count({
+        where: { source: "LOCAL_DOCUMENT_METADATA", externalId: id },
+      }),
+      0,
+    );
+  } finally {
+    await connection.query("ROLLBACK").catch(() => {});
+    await connection.end();
+  }
+});
+
+test("operations: role tasks, unknown stage age and backlog drilldowns reconcile under scope", async () => {
+  const { app } = await prepared();
+  await reviewer.command(app.id, "raise-deficiency", {
+    items: ["Fictional lease correction", "Fictional programme correction"],
+    reason: "Two recorded corrections need institutional evidence",
+  });
+  const desk = await institution.ok("/action-desk");
+  assert.equal(
+    desk.tasks.filter(
+      (t: any) => t.applicationId === app.id && t.kind === "DEFICIENCY",
+    ).length,
+    2,
+  );
+  assert.ok(
+    desk.tasks
+      .filter((t: any) => t.applicationId === app.id && t.kind === "DEFICIENCY")
+      .every(
+        (t: any) =>
+          t.href.includes("deficiency=") &&
+          t.responsibleRole === "Institution representative",
+      ),
+  );
+  const reviewerDesk = await reviewer.ok("/action-desk");
+  assert.ok(!reviewerDesk.tasks.some((t: any) => t.kind === "DEFICIENCY"));
+  const foreign = await db.application.findFirstOrThrow({
+    where: { institutionId: "I02", runId: await runId() },
+  });
+  assert.ok(!desk.tasks.some((t: any) => t.applicationId === foreign.id));
+  const unknown = await institution.create();
+  await db.application.update({
+    where: { id: unknown.id },
+    data: { state: "SCRUTINY" },
+  });
+  const queue = await institution.ok("/review-queue?q=" + unknown.reference);
+  assert.equal(queue.items[0].ageDays, null);
+  assert.equal(queue.items[0].recordOrigin, "FICTIONAL_DEMO");
+  const scoped = await supervisor.ok("/action-desk");
+  for (const row of scoped.backlog) {
+    const drilled = await supervisor.ok(
+      "/review-queue?" +
+        new URLSearchParams({ state: row.stage, region: row.regionId }),
+    );
+    assert.equal(drilled.total, row.count);
+  }
+  for (const row of scoped.workload) {
+    const drilled = await supervisor.ok(
+      "/review-queue?" +
+        new URLSearchParams(
+          row.ownerId
+            ? { view: "active", owner: row.ownerId }
+            : { view: "unassigned" },
+        ),
+    );
+    assert.equal(drilled.total, row.count);
+  }
+  const first = await supervisor.ok(
+    "/review-queue?limit=3&sort=reference&direction=asc",
+  );
+  const second = await supervisor.ok(
+    "/review-queue?limit=3&page=2&sort=reference&direction=asc",
+  );
+  assert.equal(first.items.length, 3);
+  assert.ok(
+    !second.items.some((r: any) => first.items.some((f: any) => f.id === r.id)),
+  );
+});
+
+test("operations: source-linked historical references cannot create operational records or imply current approval", async () => {
+  const before = await db.application.count();
+  const refs = await institution.ok("/reference/institutions");
+  assert.equal(refs.kind, "PUBLIC_REFERENCE");
+  assert.equal(refs.readOnly, true);
+  assert.equal(refs.count, 3);
+  assert.equal(refs.operationalCountContribution, 0);
+  for (const p of refs.profiles) {
+    assert.equal(p.academicYear, "2025-26");
+    assert.equal(p.readOnly, true);
+    assert.match(p.warning, /does not establish 2026/);
+    assert.ok(!("visits" in p));
+    for (const fact of p.facts) {
+      assert.match(fact.source.url, /^https:\/\//);
+      assert.equal(fact.source.humanReviewStatus, "TEAM_HUMAN_REVIEW_PENDING");
+      assert.equal(fact.source.academicYear, "2025-26");
+      assert.match(fact.source.sha256, /^[a-f0-9]{64}$/);
+      assert.ok(fact.source.location.includes("page 1"));
+    }
+  }
+  assert.equal(
+    (await institution.ok("/reference/institutions?year=2026-27")).count,
+    0,
+  );
+  assert.equal(
+    (await institution.ok("/reference/institutions?q=1-14068819")).profiles[0]
+      .id,
+    "public-vit-2025-26",
+  );
+  assert.equal(
+    (
+      await institution.request("/reference/institutions", "POST", {
+        decision: "APPROVED",
+      })
+    ).status,
+    404,
+  );
+  assert.equal(await db.application.count(), before);
+});
+
+test("operations: policy simulation evaluates real constrained guards without changing cases or policy", async () => {
+  const app = await institution.create();
+  const rules = await bureau.ok("/rules");
+  const rule = rules.rules.find(
+    (r: any) => r.name === "Scrutiny + EVC" && r.state === "PUBLISHED",
+  );
+  assert.ok(rule);
+  const simulate = (scenario: any) =>
+    bureau.ok(`/rules/${rule.id}/simulate`, "POST", {
+      config: rule.config,
+      expectedRevision: rule.revision,
+      expectedHash: rule.contentHash,
+      scenario,
+    });
+  const blocked = await simulate({
+    category: "NEW_INSTITUTION",
+    evidence: [],
+    openDeficiencies: 1,
+    completedVisit: false,
+    recommendationRecorded: false,
+  });
+  assert.equal(blocked.evaluation.mutatesRecords, false);
+  assert.ok(blocked.evaluation.submissionBlockers.length);
+  assert.ok(
+    blocked.evaluation.steps
+      .find((s: any) => s.stage === "EVC")
+      .blockers.some((s: string) => s.includes("completed visit")),
+  );
+  const ready = await simulate({
+    category: "NEW_INSTITUTION",
+    evidence: [{ kind: "LEASE", reviewState: "ACCEPTED" }],
+    openDeficiencies: 0,
+    completedVisit: true,
+    recommendationRecorded: true,
+  });
+  assert.ok(
+    ready.evaluation.steps.every(
+      (s: any) => s.state === "HUMAN_ACTION_REQUIRED",
+    ),
+  );
+  assert.equal(
+    (await db.application.findUniqueOrThrow({ where: { id: app.id } })).version,
+    app.version,
+  );
+  assert.equal(
+    (await db.workflow.findUniqueOrThrow({ where: { id: rule.id } })).revision,
+    rule.revision,
+  );
 });

@@ -4,13 +4,21 @@ import { db } from "../db/index.ts";
 import { clock, type getApp } from "./engine.ts";
 import { deadlineSubjects } from "./deadlines.ts";
 
-export async function nextStep(record: Awaited<ReturnType<typeof getApp>>) {
-  const owner = record.ownerId
-    ? await db.user.findUnique({
-        where: { id: record.ownerId },
-        include: { grants: true },
-      })
-    : null;
+export async function nextStep(
+  record: Awaited<ReturnType<typeof getApp>>,
+  context?: {
+    owner: Actor | null;
+    subjects: Awaited<ReturnType<typeof deadlineSubjects>>;
+  },
+) {
+  const owner = context
+    ? context.owner
+    : record.ownerId
+      ? await db.user.findUnique({
+          where: { id: record.ownerId },
+          include: { grants: true },
+        })
+      : null;
   const assigned =
     owner?.active && eligible(owner as Actor, record) ? owner.name : null;
   const result = (
@@ -44,7 +52,9 @@ export async function nextStep(record: Awaited<ReturnType<typeof getApp>>) {
           : "Submit evidence for the outstanding decision condition.",
         pending.dueAt,
       );
-    const subjects = await deadlineSubjects({ id: record.id }, await clock());
+    const subjects =
+      context?.subjects ??
+      (await deadlineSubjects({ id: record.id }, await clock()));
     const review = record.documents.find(
       (d) => d.compliance.submitted?.reviewState === "PENDING",
     );

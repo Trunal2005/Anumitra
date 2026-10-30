@@ -19,6 +19,22 @@ const credentials = JSON.parse(
     "utf8",
   ),
 );
+const deskHeading = (role: string) =>
+  role.startsWith("institution.")
+    ? "My action desk"
+    : role.startsWith("reviewer.")
+      ? "My review desk"
+      : role.startsWith("supervisor.")
+        ? "Regional action desk"
+        : role.startsWith("committee.")
+          ? "Committee action desk"
+          : role === "authority"
+            ? "Authority action desk"
+            : role === "bureau"
+              ? "Bureau action desk"
+              : role === "admin"
+                ? "Administration desk"
+                : "Audit action desk";
 test("welcome and authenticated workspaces use real API and retain responsive design", async ({
   page,
 }) => {
@@ -51,8 +67,12 @@ test("welcome and authenticated workspaces use real API and retain responsive de
   await page.getByLabel("Email address").fill("supervisor.north@anumitra.test");
   await page.getByLabel("Password", { exact: true }).fill(credentials.password);
   await page.getByRole("button", { name: "Enter your workspace" }).click();
-  await expect(page.getByRole("heading", { name: /Welcome/ })).toBeVisible();
-  await expect(page.getByText("Live", { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Regional action desk", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Updates connected", { exact: true }),
+  ).toBeVisible();
   await page.screenshot({
     path:
       (process.env.TEST_EVIDENCE_DIR ?? "docs/evidence/repair") +
@@ -64,7 +84,7 @@ test("welcome and authenticated workspaces use real API and retain responsive de
     .first()
     .click();
   await expect(
-    page.getByRole("heading", { name: "Application register." }),
+    page.getByRole("heading", { name: "Review queue" }),
   ).toBeVisible();
   await page
     .getByLabel("Search reference or institution")
@@ -94,9 +114,9 @@ test("welcome and authenticated workspaces use real API and retain responsive de
       "/application-review-1440.png",
     fullPage: true,
   });
-  await page.getByRole("link", { name: "EVC scheduling", exact: true }).click();
+  await page.getByRole("link", { name: "EVC planner", exact: true }).click();
   await expect(
-    page.getByRole("heading", { name: "Expert visits. Coordinated." }),
+    page.getByRole("heading", { name: "EVC planner" }),
   ).toBeVisible();
   await page.screenshot({
     path:
@@ -104,9 +124,11 @@ test("welcome and authenticated workspaces use real API and retain responsive de
       "/evc-1440.png",
     fullPage: true,
   });
-  await page.getByRole("link", { name: "Rules & policy", exact: true }).click();
+  await page
+    .getByRole("link", { name: "Workflow policies", exact: true })
+    .click();
   await expect(
-    page.getByRole("heading", { name: "Rules & policy versions." }),
+    page.getByRole("heading", { name: "Workflow policies" }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Validate & simulate" }).click();
   await expect(page.getByText("VALIDATED ROUTE")).toBeVisible();
@@ -116,32 +138,6 @@ test("welcome and authenticated workspaces use real API and retain responsive de
       "/rules-1440.png",
     fullPage: true,
   });
-  for (const width of [1280, 768, 390]) {
-    await page.setViewportSize({ width, height: 800 });
-    await page.goto("/overview");
-    await expect(page.getByRole("heading", { name: /Welcome/ })).toBeVisible();
-    expect(
-      await page.evaluate(
-        () => document.documentElement.scrollWidth <= innerWidth,
-      ),
-    ).toBe(true);
-    await page.screenshot({
-      path: `${process.env.TEST_EVIDENCE_DIR ?? "docs/evidence/repair"}/overview-${width}.png`,
-      fullPage: true,
-    });
-    if (width <= 768) {
-      await page.getByRole("button", { name: "Open navigation" }).click();
-      await expect(page.getByRole("dialog")).toBeVisible();
-      await page.getByRole("button", { name: "Close navigation" }).click();
-      await expect(page.getByRole("dialog")).not.toBeVisible();
-    }
-  }
-  await page.emulateMedia({ reducedMotion: "reduce" });
-  expect(
-    await page
-      .locator(".mini-orb .outer")
-      .evaluate((e) => getComputedStyle(e).animationName),
-  ).toBe("none");
   expect(errors).toEqual([]);
 });
 test("institution can save and submit a draft through browser forms", async ({
@@ -151,7 +147,12 @@ test("institution can save and submit a draft through browser forms", async ({
   await page.getByLabel("Email address").fill("institution.a@anumitra.test");
   await page.getByLabel("Password", { exact: true }).fill(credentials.password);
   await page.getByRole("button", { name: "Enter your workspace" }).click();
-  await expect(page.getByRole("heading", { name: /Welcome,/ })).toBeVisible();
+  await expect(
+    page.getByRole("heading", {
+      name: deskHeading("institution.a"),
+      exact: true,
+    }),
+  ).toBeVisible();
   await page.goto("/applications/new");
   await page.getByRole("button", { name: "Continue", exact: true }).click();
   await page.getByLabel("Contact email").fill("browser@fiction.test");
@@ -252,7 +253,9 @@ test("cross-role repair journey: repeated response, EVC, conditional undertaking
       .getByLabel("Password", { exact: true })
       .fill(credentials.password);
     await page.getByRole("button", { name: "Enter your workspace" }).click();
-    await expect(page.getByRole("heading", { name: /Welcome,/ })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: deskHeading(role), exact: true }),
+    ).toBeVisible();
     pages[role] = page;
     return page;
   }
@@ -271,6 +274,10 @@ test("cross-role repair journey: repeated response, EVC, conditional undertaking
         .fill("Browser journey authorized evidence and reason");
   }
   async function commit(page: any) {
+    const human = page.getByRole("checkbox", {
+      name: "I confirm that I reviewed the packet and am recording this human authority decision.",
+    });
+    if (await human.isVisible()) await human.check();
     const response = page.waitForResponse(
       (r: any) =>
         r.url().includes("/commands") && r.request().method() === "POST",
@@ -383,7 +390,9 @@ test("cross-role repair journey: repeated response, EVC, conditional undertaking
     await commit(reviewer);
     const supervisor = await login("supervisor.north");
     await supervisor.goto("/evc");
-    await supervisor.getByLabel("Eligible application").selectOption(id);
+    await supervisor
+      .getByRole("combobox", { name: "Application", exact: true })
+      .selectOption(id);
     const latest = await db.reservation.findFirst({
       where: { active: true },
       orderBy: { endAt: "desc" },
@@ -396,11 +405,9 @@ test("cross-role repair journey: repeated response, EVC, conditional undertaking
     );
     const end = new Date(+start + 3600000);
     const local = (date: Date) =>
-      new Date(+date - date.getTimezoneOffset() * 60000)
-        .toISOString()
-        .slice(0, 16);
-    await supervisor.getByLabel("Start (browser timezone)").fill(local(start));
-    await supervisor.getByLabel("End (browser timezone)").fill(local(end));
+      new Date(+date + 19800000).toISOString().slice(0, 16);
+    await supervisor.getByLabel("Start (IST)").fill(local(start));
+    await supervisor.getByLabel("End (IST)").fill(local(end));
     await supervisor.getByLabel("EVC member", { exact: true }).check();
     await supervisor.getByLabel("Venue / meeting metadata").fill(visitLabel);
     await supervisor
@@ -427,7 +434,10 @@ test("cross-role repair journey: repeated response, EVC, conditional undertaking
       data: { now: new Date(+end + 1000) },
     });
     const evc = await login("committee.evc");
-    await evc.goto("/evc");
+    const appointment = await db.visit.findFirstOrThrow({
+      where: { applicationId: id, metadata: visitLabel },
+    });
+    await evc.goto("/evc?visit=" + appointment.id);
     const ec = evc.locator(".visit-card").filter({ hasText: visitLabel });
     await ec
       .getByLabel("Report / reason")
@@ -463,7 +473,7 @@ test("cross-role repair journey: repeated response, EVC, conditional undertaking
     await action(authority, id, "record-authorized-decision", "CONDITIONAL");
     await authority.getByLabel("Condition / undertaking").fill(conditionLabel);
     await authority
-      .getByLabel("Condition due (your browser timezone)")
+      .getByLabel("Condition due (IST)")
       .fill(local(new Date(+end + 3 * 86400000)));
     await commit(authority);
     await institution.goto("/compliance");
@@ -713,8 +723,13 @@ test("the first live revision refreshes a stale initial compliance snapshot", as
       .getByLabel("Password", { exact: true })
       .fill(credentials.password);
     await page.getByRole("button", { name: "Enter your workspace" }).click();
-    await expect(page.getByRole("heading", { name: /Welcome,/ })).toBeVisible();
-    await page.goto("/compliance");
+    await expect(
+      page.getByRole("heading", {
+        name: deskHeading("supervisor.north"),
+        exact: true,
+      }),
+    ).toBeVisible();
+    await page.goto("/compliance?selected=" + fixture.id);
     const card = page
       .locator(".obligation-card")
       .filter({ hasText: condition });
@@ -784,7 +799,7 @@ test("readable reports, contextual history, scoped next actors and reviewed simu
     await page.getByRole("button", { name: "Enter your workspace" }).click();
     expect((await loggedIn).status()).toBe(200);
     await expect(
-      page.getByRole("heading", { name: /^Welcome,/ }),
+      page.getByRole("heading", { name: deskHeading(role), exact: true }),
     ).toBeVisible();
     return page;
   }

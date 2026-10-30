@@ -1,0 +1,239 @@
+
+Running 7 tests using 1 worker
+
+  x  1 tests\browser\operations.spec.ts:82:1 › specialised workspaces: role desks, queue drilldowns, source provenance, visual policy controls and accessible layouts (2.0m)
+  x  2 tests\browser\operations.spec.ts:349:1 › continuous evaluator walkthrough uses one real browser page across the guarded institutional review and human decision workflow (12.3s)
+  x  3 tests\browser\ui.spec.ts:38:1 › welcome and authenticated workspaces use real API and retain responsive design (37.7s)
+  x  4 tests\browser\ui.spec.ts:177:1 › institution can save and submit a draft through browser forms (45.8s)
+  x  5 tests\browser\ui.spec.ts:260:1 › cross-role repair journey: repeated response, EVC, conditional undertaking, effective renewal and escalation retry (14.0s)
+  x  6 tests\browser\ui.spec.ts:684:1 › the first live revision refreshes a stale initial compliance snapshot (16.0s)
+  x  7 tests\browser\ui.spec.ts:803:1 › readable reports, contextual history, scoped next actors and reviewed simulator provenance use the real API (45.0s)
+
+
+  1) tests\browser\operations.spec.ts:82:1 › specialised workspaces: role desks, queue drilldowns, source provenance, visual policy controls and accessible layouts 
+
+    [31mTest timeout of 120000ms exceeded.[39m
+
+    Error: page.waitForResponse: Test ended.
+
+      140 |     }
+      141 |     await page.goto("/applications");
+    > 142 |     const filtered = page.waitForResponse(
+          |                           ^
+      143 |       (r) =>
+      144 |         r.url().includes("/api/review-queue?") &&
+      145 |         r.url().includes("state=SCRUTINY"),
+        at C:\projects\sih\Anumitra(SIH26262)\tests\browser\operations.spec.ts:142:27
+
+    Error: browserContext.close: Target page, context or browser has been closed
+
+      343 |     expect(errors).toEqual([]);
+      344 |   } finally {
+    > 345 |     await context.close();
+          |     ^
+      346 |   }
+      347 | });
+      348 |
+        at C:\projects\sih\Anumitra(SIH26262)\tests\browser\operations.spec.ts:345:5
+
+    Error Context: test-results\browser\operations-specialised-wor-87bbf-rols-and-accessible-layouts\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\browser\operations-specialised-wor-87bbf-rols-and-accessible-layouts\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\browser\operations-specialised-wor-87bbf-rols-and-accessible-layouts\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) tests\browser\operations.spec.ts:349:1 › continuous evaluator walkthrough uses one real browser page across the guarded institutional review and human decision workflow 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: getByLabel('Current document version', { exact: true })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for getByLabel('Current document version', { exact: true })[22m
+
+
+      442 |     await expect(
+      443 |       page.getByLabel("Current document version", { exact: true }),
+    > 444 |     ).toBeVisible();
+          |       ^
+      445 |   }
+      446 |   const ist = (d: Date) => new Date(+d + 19800000).toISOString().slice(0, 16);
+      447 |   try {
+        at upload (C:\projects\sih\Anumitra(SIH26262)\tests\browser\operations.spec.ts:444:7)
+        at C:\projects\sih\Anumitra(SIH26262)\tests\browser\operations.spec.ts:469:5
+
+    attachment #1: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\browser\operations-continuous-eval-50c8d-and-human-decision-workflow\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\browser\operations-continuous-eval-50c8d-and-human-decision-workflow\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) tests\browser\ui.spec.ts:38:1 › welcome and authenticated workspaces use real API and retain responsive design 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: getByRole('heading', { name: 'Regional action desk', exact: true })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for getByRole('heading', { name: 'Regional action desk', exact: true })[22m
+
+
+      144 |     await expect(
+      145 |       page.getByRole("heading", { name: "Regional action desk", exact: true }),
+    > 146 |     ).toBeVisible();
+          |       ^
+      147 |     expect(
+      148 |       await page.evaluate(
+      149 |         () => document.documentElement.scrollWidth <= innerWidth,
+        at C:\projects\sih\Anumitra(SIH26262)\tests\browser\ui.spec.ts:146:7
+
+    Error Context: test-results\browser\ui-welcome-and-authenticat-52f74-nd-retain-responsive-design\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\browser\ui-welcome-and-authenticat-52f74-nd-retain-responsive-design\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\browser\ui-welcome-and-authenticat-52f74-nd-retain-responsive-design\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4) tests\browser\ui.spec.ts:177:1 › institution can save and submit a draft through browser forms 
+
+    [31mTest timeout of 45000ms exceeded.[39m
+
+    Error: locator.click: Test timeout of 45000ms exceeded.
+    Call log:
+    [2m  - waiting for getByRole('button', { name: 'Continue', exact: true })[22m
+
+
+      189 |   ).toBeVisible();
+      190 |   await page.goto("/applications/new");
+    > 191 |   await page.getByRole("button", { name: "Continue", exact: true }).click();
+          |                                                                     ^
+      192 |   await page.getByLabel("Contact email").fill("browser@fiction.test");
+      193 |   await page
+      194 |     .getByLabel("Programme", { exact: true })
+        at C:\projects\sih\Anumitra(SIH26262)\tests\browser\ui.spec.ts:191:69
+
+    Error Context: test-results\browser\ui-institution-can-save-an-1ea90-draft-through-browser-forms\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\browser\ui-institution-can-save-an-1ea90-draft-through-browser-forms\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\browser\ui-institution-can-save-an-1ea90-draft-through-browser-forms\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  5) tests\browser\ui.spec.ts:260:1 › cross-role repair journey: repeated response, EVC, conditional undertaking, effective renewal and escalation retry 
+
+    TimeoutError: locator.selectOption: Timeout 10000ms exceeded.
+    Call log:
+    [2m  - waiting for getByLabel('Workflow route')[22m
+
+
+      354 |     await institution
+      355 |       .getByLabel("Workflow route")
+    > 356 |       .selectOption({ label: "Scrutiny + EVC · v1" });
+          |        ^
+      357 |     await institution
+      358 |       .getByRole("button", { name: "Continue", exact: true })
+      359 |       .click();
+        at C:\projects\sih\Anumitra(SIH26262)\tests\browser\ui.spec.ts:356:8
+
+    attachment #1: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\browser\ui-cross-role-repair-journ-aa5ef-enewal-and-escalation-retry\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\browser\ui-cross-role-repair-journ-aa5ef-enewal-and-escalation-retry\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  6) tests\browser\ui.spec.ts:684:1 › the first live revision refreshes a stale initial compliance snapshot 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('.obligation-card').filter({ hasText: 'SSE initial snapshot race 1793300232460' }).getByText('OPEN', { exact: true })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('.obligation-card').filter({ hasText: 'SSE initial snapshot race 1793300232460' }).getByText('OPEN', { exact: true })[22m
+
+
+      768 |       .locator(".obligation-card")
+      769 |       .filter({ hasText: condition });
+    > 770 |     await expect(card.getByText("OPEN", { exact: true })).toBeVisible();
+          |                                                           ^
+      771 |     const institution = await new Client().login("institution.a");
+      772 |     await institution.ok(`/obligations/${fixture.id}/commands`, "POST", {
+      773 |       command: "submit",
+        at C:\projects\sih\Anumitra(SIH26262)\tests\browser\ui.spec.ts:770:59
+
+    Error Context: test-results\browser\ui-the-first-live-revision-9861f-initial-compliance-snapshot\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\browser\ui-the-first-live-revision-9861f-initial-compliance-snapshot\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\browser\ui-the-first-live-revision-9861f-initial-compliance-snapshot\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  7) tests\browser\ui.spec.ts:803:1 › readable reports, contextual history, scoped next actors and reviewed simulator provenance use the real API 
+
+    [31mTest timeout of 45000ms exceeded.[39m
+
+    Error: locator.selectOption: Test ended.
+    Call log:
+    [2m  - waiting for getByRole('combobox', { name: 'Report', exact: true })[22m
+
+
+      919 |     await page
+      920 |       .getByRole("combobox", { name: "Report", exact: true })
+    > 921 |       .selectOption("validity");
+          |        ^
+      922 |     await expect(
+      923 |       page.getByRole("columnheader", {
+      924 |         name: "Accepted effective version",
+        at C:\projects\sih\Anumitra(SIH26262)\tests\browser\ui.spec.ts:921:8
+
+    Error Context: test-results\browser\ui-readable-reports-contex-c192d-provenance-use-the-real-API\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\browser\ui-readable-reports-contex-c192d-provenance-use-the-real-API\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\browser\ui-readable-reports-contex-c192d-provenance-use-the-real-API\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  7 failed
+    tests\browser\operations.spec.ts:82:1 › specialised workspaces: role desks, queue drilldowns, source provenance, visual policy controls and accessible layouts 
+    tests\browser\operations.spec.ts:349:1 › continuous evaluator walkthrough uses one real browser page across the guarded institutional review and human decision workflow 
+    tests\browser\ui.spec.ts:38:1 › welcome and authenticated workspaces use real API and retain responsive design 
+    tests\browser\ui.spec.ts:177:1 › institution can save and submit a draft through browser forms ─
+    tests\browser\ui.spec.ts:260:1 › cross-role repair journey: repeated response, EVC, conditional undertaking, effective renewal and escalation retry 
+    tests\browser\ui.spec.ts:684:1 › the first live revision refreshes a stale initial compliance snapshot 
+    tests\browser\ui.spec.ts:803:1 › readable reports, contextual history, scoped next actors and reviewed simulator provenance use the real API 
+
+To open last HTML report run:
+[36m[39m
+[36m  npx playwright show-report[39m
+[36m[39m

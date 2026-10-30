@@ -32,6 +32,7 @@ if (existing) {
 } else state = await createTestEnvironment();
 const { env, directory } = state;
 env.TEST_EVIDENCE_DIR = evidenceDirectory;
+env.WEB_DIST_PATH = path.join(directory, "web");
 assertTestTarget(env.DATABASE_URL);
 mkdirSync(evidenceDirectory, { recursive: true });
 function run(args, custom = env, file) {
@@ -181,21 +182,36 @@ try {
       report.checks.push("backend/operations/repair tests passed");
     }
     if (!process.argv.includes("--backend")) {
-      const connection = new pg.Client({ connectionString: env.DATABASE_URL });
-      await connection.connect();
-      const sampleQuery =
-        'SELECT id,version,"workflowId" FROM "Application" ORDER BY id';
-      const before = JSON.stringify((await connection.query(sampleQuery)).rows);
-      api.kill();
-      await new Promise((r) => {
-        api.once("exit", r);
-        setTimeout(r, 3000);
-      });
-      api = start(["--import", "tsx", "apps/api/src/index.ts"], "api-restart");
-      await ready(env.TEST_API_ORIGIN + "/api/health");
-      if (before !== JSON.stringify((await connection.query(sampleQuery)).rows))
-        throw new Error("Case persistence changed across API restart");
-      await connection.end();
+      async function restartApi(logName) {
+        const connection = new pg.Client({
+          connectionString: env.DATABASE_URL,
+        });
+        await connection.connect();
+        try {
+          const sampleQuery =
+            'SELECT id,version,"workflowId" FROM "Application" ORDER BY id';
+          const before = JSON.stringify(
+            (await connection.query(sampleQuery)).rows,
+          );
+          const previous = api;
+          previous.kill();
+          await new Promise((resolve) => {
+            if (previous.exitCode !== null) return resolve();
+            previous.once("exit", resolve);
+            setTimeout(resolve, 3000);
+          });
+          api = start(["--import", "tsx", "apps/api/src/index.ts"], logName);
+          await ready(env.TEST_API_ORIGIN + "/api/health");
+          if (
+            before !==
+            JSON.stringify((await connection.query(sampleQuery)).rows)
+          )
+            throw new Error("Case persistence changed across API restart");
+        } finally {
+          await connection.end();
+        }
+      }
+      await restartApi("api-restart");
       report.checks.push(
         "API restart preserved all case IDs, versions and policy pins",
       );
@@ -212,19 +228,56 @@ try {
           throw new Error("Worker/SMTP readiness did not become ready");
         await new Promise((r) => setTimeout(r, 250));
       }
-      run(
-        [
-          "node_modules/@playwright/test/cli.js",
-          "test",
-          ...(browserPattern
-            ? ["--grep", browserPattern]
-            : process.argv.includes("--journey-only")
-              ? ["--grep", "cross-role"]
-              : []),
-        ],
-        runtime,
-        path.join(evidenceDirectory, "browser.txt"),
-      );
+      if (!browserPattern && !process.argv.includes("--journey-only")) {
+        // Independent files use independent API-process fixtures. Keep the real
+        // 30-attempt production login limiter intact; do not disable it or let
+        // unrelated role-switching journeys consume each other's memory bucket.
+        // Database, private storage and the worker persist across both groups.
+        const groups = [
+          ["tests/browser/operations.spec.ts", "browser-operations.txt"],
+          ["tests/browser/ui.spec.ts", "browser-ui.txt"],
+        ];
+        const outputs = [];
+        for (const [index, [file, name]] of groups.entries()) {
+          if (index) {
+            await restartApi("api-browser-ui");
+            report.checks.push(
+              "Between browser files: API restart preserved all case IDs, versions and policy pins",
+            );
+          }
+          const logFile = path.join(evidenceDirectory, name);
+          try {
+            run(
+              ["node_modules/@playwright/test/cli.js", "test", file],
+              runtime,
+              logFile,
+            );
+          } finally {
+            outputs.push(
+              "Browser group: " + file + "\n" + readFileSync(logFile, "utf8"),
+            );
+            writeFileSync(
+              path.join(evidenceDirectory, "browser.txt"),
+              outputs.join("\n\n"),
+            );
+          }
+          report.checks.push(file + " passed");
+        }
+      } else {
+        run(
+          [
+            "node_modules/@playwright/test/cli.js",
+            "test",
+            ...(browserPattern
+              ? ["--grep", browserPattern]
+              : process.argv.includes("--journey-only")
+                ? ["--grep", "cross-role"]
+                : []),
+          ],
+          runtime,
+          path.join(evidenceDirectory, "browser.txt"),
+        );
+      }
       report.checks.push("browser passed");
       worker.kill();
     }

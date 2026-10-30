@@ -1,0 +1,350 @@
+vite v6.4.5 building for production...
+transforming...
+✓ 1816 modules transformed.
+rendering chunks...
+computing gzip size...
+../../.local/test-runs/anumitra_test_1793021839518/web/index.html                                                     0.55 kB │ gzip:   0.35 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/space-grotesk-vietnamese-700-normal-DMty7AZE.woff2      4.20 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/jetbrains-mono-greek-400-normal-C190GLew.woff2          4.23 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/jetbrains-mono-greek-500-normal-JpySY46c.woff2          4.28 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/space-grotesk-vietnamese-400-normal-B7xT_GF5.woff2      4.30 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/space-grotesk-vietnamese-600-normal-DUi7WF5p.woff2      4.31 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/space-grotesk-vietnamese-500-normal-BmEvtly_.woff2      4.32 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/inter-vietnamese-400-normal-DMkecbls.woff2              4.97 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/inter-vietnamese-600-normal-Cc8MFFhd.woff2              5.10 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/inter-vietnamese-500-normal-DOriooB6.woff2              5.11 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/inter-greek-ext-400-normal-DGGRlc-M.woff2               5.26 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/jetbrains-mono-cyrillic-400-normal-BEIGL1Tu.woff2       5.33 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/jetbrains-mono-cyrillic-500-normal-DmUKJPL_.woff2       5.36 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/jetbrains-mono-vietnamese-400-normal-CqNFfHCs.woff      5.37 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/inter-greek-ext-500-normal-C4iEst2y.woff2               5.43 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/inter-greek-ext-600-normal-DRtmH8MT.woff2               5.43 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/jetbrains-mono-vietnamese-500-normal-DNRqzVM1.woff      5.48 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/space-grotesk-vietnamese-700-normal-Duxec5Rn.woff       5.59 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/jetbrains-mono-greek-400-normal-B9oWc5Lo.woff           5.66 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/space-grotesk-vietnamese-600-normal-D6zpsUhD.woff       5.70 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/space-grotesk-vietnamese-500-normal-BTqKIpxg.woff       5.72 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/jetbrains-mono-greek-500-normal-D7SFKleX.woff           5.72 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/space-grotesk-vietnamese-400-normal-BIWiOVfw.woff       5.73 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/inter-vietnamese-400-normal-Bbgyi5SW.woff               6.50 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/inter-vietnamese-500-normal-mJboJaSs.woff               6.60 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/inter-vietnamese-600-normal-BuLX-rYi.woff               6.64 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/jetbrains-mono-cyrillic-400-normal-ugxPyKxw.woff        6.98 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/jetbrains-mono-cyrillic-500-normal-DJqRU3vO.woff        7.02 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/inter-greek-ext-400-normal-KugGGMne.woff                7.06 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/inter-greek-ext-500-normal-2j5mBUwD.woff                7.19 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/inter-greek-ext-600-normal-B8X0CLgF.woff                7.21 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/jetbrains-mono-latin-ext-400-normal-Bc8Ftmh3.woff2      7.34 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/jetbrains-mono-latin-ext-500-normal-Cut-4mMH.woff2      7.53 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/inter-cyrillic-400-normal-obahsSVq.woff2                7.71 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/inter-greek-400-normal-B4URO6DV.woff2                   7.78 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/inter-cyrillic-500-normal-BasfLYem.woff2                7.90 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/inter-greek-500-normal-BIZE56-Y.woff2                   7.92 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/inter-greek-600-normal-plRanbMR.woff2                   7.94 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/inter-cyrillic-600-normal-CWCymEST.woff2                7.97 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/inter-cyrillic-400-normal-HOLc17fK.woff                 9.78 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/inter-greek-400-normal-q2sYcFCs.woff                    9.92 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/inter-cyrillic-600-normal-4D_pXhcN.woff                 9.94 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/inter-cyrillic-500-normal-CxZf_p3X.woff                 9.94 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/inter-greek-500-normal-Xzm54t5V.woff                    9.98 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/inter-greek-600-normal-BZpKdvQh.woff                   10.03 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/jetbrains-mono-latin-ext-400-normal-fXTG6kC5.woff      10.13 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/inter-cyrillic-ext-400-normal-BQZuk6qB.woff2           10.23 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/jetbrains-mono-latin-ext-500-normal-ckzbgY84.woff      10.34 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/inter-cyrillic-ext-500-normal-B0yAr1jD.woff2           10.43 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/inter-cyrillic-ext-600-normal-Dfes3d0z.woff2           10.48 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/space-grotesk-latin-ext-700-normal-BQnZhY3m.woff2      11.99 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/space-grotesk-latin-ext-400-normal-CfP_5XZW.woff2      12.26 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/space-grotesk-latin-ext-500-normal-DUe3BAxM.woff2      12.27 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/space-grotesk-latin-ext-600-normal-DxxdqCpr.woff2      12.29 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/space-grotesk-latin-700-normal-RjhwGPKo.woff2          12.84 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/space-grotesk-latin-600-normal-DjKNqYRj.woff2          13.28 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/space-grotesk-latin-500-normal-lFbtlQH6.woff2          13.31 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/inter-cyrillic-ext-400-normal-DQukG94-.woff            13.34 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/space-grotesk-latin-400-normal-CJ-V5oYT.woff2          13.39 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/inter-cyrillic-ext-500-normal-BmqWE9Dz.woff            13.45 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/inter-cyrillic-ext-600-normal-Bcila6Z-.woff            13.46 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/space-grotesk-latin-700-normal-CwsQ-cCU.woff           16.42 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/space-grotesk-latin-ext-700-normal-HVCqSBdx.woff       16.46 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/space-grotesk-latin-ext-600-normal-VcznFIpX.woff       16.73 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/space-grotesk-latin-ext-400-normal-DRPE3kg4.woff       16.79 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/space-grotesk-latin-ext-500-normal-3dgZTiw9.woff       16.79 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/space-grotesk-latin-600-normal-BflQw4A9.woff           16.88 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/space-grotesk-latin-500-normal-CNSSEhBt.woff           16.99 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/space-grotesk-latin-400-normal-BnQMeOim.woff           17.00 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/jetbrains-mono-latin-400-normal-V6pRDFza.woff2         21.17 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/jetbrains-mono-latin-500-normal-BWZEU5yA.woff2         21.83 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/inter-latin-400-normal-C38fXH4l.woff2                  23.66 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/inter-latin-500-normal-Cerq10X2.woff2                  24.27 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/inter-latin-600-normal-LgqL8muc.woff2                  24.45 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/jetbrains-mono-latin-400-normal-6-qcROiO.woff          27.50 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/jetbrains-mono-latin-500-normal-CJOVTJB7.woff          28.21 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/inter-latin-400-normal-CyCys3Eg.woff                   30.70 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/inter-latin-600-normal-CiBQ2DWP.woff                   31.26 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/inter-latin-500-normal-BL9OpVg8.woff                   31.28 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/inter-latin-ext-400-normal-C1nco2VV.woff2              35.00 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/inter-latin-ext-500-normal-CV4jyFjo.woff2              36.02 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/inter-latin-ext-600-normal-D2bJ5OIk.woff2              36.26 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/inter-latin-ext-400-normal-77YHD8bZ.woff               47.56 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/inter-latin-ext-500-normal-BxGbmqWO.woff               48.49 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/inter-latin-ext-600-normal-CIVaiw4L.woff               48.67 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/pdf.worker.min-qwK7q_zL.mjs                         1,046.21 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/index-CRAcX1Su.css                                    105.63 kB │ gzip:  31.39 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/PdfPreview-DuYREvOy.js                                442.45 kB │ gzip: 129.53 kB
+../../.local/test-runs/anumitra_test_1793021839518/web/assets/index-DbEEnHL8.js                                     837.77 kB │ gzip: 206.64 kB
+✓ built in 6.92s
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+
+Running 7 tests using 1 worker
+
+  x  1 tests\browser\operations.spec.ts:82:1 › specialised workspaces: role desks, queue drilldowns, source provenance, visual policy controls and accessible layouts (2.0m)
+  x  2 tests\browser\operations.spec.ts:349:1 › continuous evaluator walkthrough uses one real browser page across the guarded institutional review and human decision workflow (12.3s)
+  x  3 tests\browser\ui.spec.ts:38:1 › welcome and authenticated workspaces use real API and retain responsive design (37.7s)
+  x  4 tests\browser\ui.spec.ts:177:1 › institution can save and submit a draft through browser forms (45.8s)
+  x  5 tests\browser\ui.spec.ts:260:1 › cross-role repair journey: repeated response, EVC, conditional undertaking, effective renewal and escalation retry (14.0s)
+  x  6 tests\browser\ui.spec.ts:684:1 › the first live revision refreshes a stale initial compliance snapshot (16.0s)
+  x  7 tests\browser\ui.spec.ts:803:1 › readable reports, contextual history, scoped next actors and reviewed simulator provenance use the real API (45.0s)
+
+
+  1) tests\browser\operations.spec.ts:82:1 › specialised workspaces: role desks, queue drilldowns, source provenance, visual policy controls and accessible layouts 
+
+    [31mTest timeout of 120000ms exceeded.[39m
+
+    Error: page.waitForResponse: Test ended.
+
+      140 |     }
+      141 |     await page.goto("/applications");
+    > 142 |     const filtered = page.waitForResponse(
+          |                           ^
+      143 |       (r) =>
+      144 |         r.url().includes("/api/review-queue?") &&
+      145 |         r.url().includes("state=SCRUTINY"),
+        at C:\projects\sih\Anumitra(SIH26262)\tests\browser\operations.spec.ts:142:27
+
+    Error: browserContext.close: Target page, context or browser has been closed
+
+      343 |     expect(errors).toEqual([]);
+      344 |   } finally {
+    > 345 |     await context.close();
+          |     ^
+      346 |   }
+      347 | });
+      348 |
+        at C:\projects\sih\Anumitra(SIH26262)\tests\browser\operations.spec.ts:345:5
+
+    Error Context: test-results\browser\operations-specialised-wor-87bbf-rols-and-accessible-layouts\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\browser\operations-specialised-wor-87bbf-rols-and-accessible-layouts\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\browser\operations-specialised-wor-87bbf-rols-and-accessible-layouts\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) tests\browser\operations.spec.ts:349:1 › continuous evaluator walkthrough uses one real browser page across the guarded institutional review and human decision workflow 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: getByLabel('Current document version', { exact: true })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for getByLabel('Current document version', { exact: true })[22m
+
+
+      442 |     await expect(
+      443 |       page.getByLabel("Current document version", { exact: true }),
+    > 444 |     ).toBeVisible();
+          |       ^
+      445 |   }
+      446 |   const ist = (d: Date) => new Date(+d + 19800000).toISOString().slice(0, 16);
+      447 |   try {
+        at upload (C:\projects\sih\Anumitra(SIH26262)\tests\browser\operations.spec.ts:444:7)
+        at C:\projects\sih\Anumitra(SIH26262)\tests\browser\operations.spec.ts:469:5
+
+    attachment #1: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\browser\operations-continuous-eval-50c8d-and-human-decision-workflow\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\browser\operations-continuous-eval-50c8d-and-human-decision-workflow\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) tests\browser\ui.spec.ts:38:1 › welcome and authenticated workspaces use real API and retain responsive design 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: getByRole('heading', { name: 'Regional action desk', exact: true })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for getByRole('heading', { name: 'Regional action desk', exact: true })[22m
+
+
+      144 |     await expect(
+      145 |       page.getByRole("heading", { name: "Regional action desk", exact: true }),
+    > 146 |     ).toBeVisible();
+          |       ^
+      147 |     expect(
+      148 |       await page.evaluate(
+      149 |         () => document.documentElement.scrollWidth <= innerWidth,
+        at C:\projects\sih\Anumitra(SIH26262)\tests\browser\ui.spec.ts:146:7
+
+    Error Context: test-results\browser\ui-welcome-and-authenticat-52f74-nd-retain-responsive-design\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\browser\ui-welcome-and-authenticat-52f74-nd-retain-responsive-design\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\browser\ui-welcome-and-authenticat-52f74-nd-retain-responsive-design\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4) tests\browser\ui.spec.ts:177:1 › institution can save and submit a draft through browser forms 
+
+    [31mTest timeout of 45000ms exceeded.[39m
+
+    Error: locator.click: Test timeout of 45000ms exceeded.
+    Call log:
+    [2m  - waiting for getByRole('button', { name: 'Continue', exact: true })[22m
+
+
+      189 |   ).toBeVisible();
+      190 |   await page.goto("/applications/new");
+    > 191 |   await page.getByRole("button", { name: "Continue", exact: true }).click();
+          |                                                                     ^
+      192 |   await page.getByLabel("Contact email").fill("browser@fiction.test");
+      193 |   await page
+      194 |     .getByLabel("Programme", { exact: true })
+        at C:\projects\sih\Anumitra(SIH26262)\tests\browser\ui.spec.ts:191:69
+
+    Error Context: test-results\browser\ui-institution-can-save-an-1ea90-draft-through-browser-forms\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\browser\ui-institution-can-save-an-1ea90-draft-through-browser-forms\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\browser\ui-institution-can-save-an-1ea90-draft-through-browser-forms\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  5) tests\browser\ui.spec.ts:260:1 › cross-role repair journey: repeated response, EVC, conditional undertaking, effective renewal and escalation retry 
+
+    TimeoutError: locator.selectOption: Timeout 10000ms exceeded.
+    Call log:
+    [2m  - waiting for getByLabel('Workflow route')[22m
+
+
+      354 |     await institution
+      355 |       .getByLabel("Workflow route")
+    > 356 |       .selectOption({ label: "Scrutiny + EVC · v1" });
+          |        ^
+      357 |     await institution
+      358 |       .getByRole("button", { name: "Continue", exact: true })
+      359 |       .click();
+        at C:\projects\sih\Anumitra(SIH26262)\tests\browser\ui.spec.ts:356:8
+
+    attachment #1: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\browser\ui-cross-role-repair-journ-aa5ef-enewal-and-escalation-retry\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\browser\ui-cross-role-repair-journ-aa5ef-enewal-and-escalation-retry\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  6) tests\browser\ui.spec.ts:684:1 › the first live revision refreshes a stale initial compliance snapshot 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('.obligation-card').filter({ hasText: 'SSE initial snapshot race 1793300232460' }).getByText('OPEN', { exact: true })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('.obligation-card').filter({ hasText: 'SSE initial snapshot race 1793300232460' }).getByText('OPEN', { exact: true })[22m
+
+
+      768 |       .locator(".obligation-card")
+      769 |       .filter({ hasText: condition });
+    > 770 |     await expect(card.getByText("OPEN", { exact: true })).toBeVisible();
+          |                                                           ^
+      771 |     const institution = await new Client().login("institution.a");
+      772 |     await institution.ok(`/obligations/${fixture.id}/commands`, "POST", {
+      773 |       command: "submit",
+        at C:\projects\sih\Anumitra(SIH26262)\tests\browser\ui.spec.ts:770:59
+
+    Error Context: test-results\browser\ui-the-first-live-revision-9861f-initial-compliance-snapshot\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\browser\ui-the-first-live-revision-9861f-initial-compliance-snapshot\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\browser\ui-the-first-live-revision-9861f-initial-compliance-snapshot\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  7) tests\browser\ui.spec.ts:803:1 › readable reports, contextual history, scoped next actors and reviewed simulator provenance use the real API 
+
+    [31mTest timeout of 45000ms exceeded.[39m
+
+    Error: locator.selectOption: Test ended.
+    Call log:
+    [2m  - waiting for getByRole('combobox', { name: 'Report', exact: true })[22m
+
+
+      919 |     await page
+      920 |       .getByRole("combobox", { name: "Report", exact: true })
+    > 921 |       .selectOption("validity");
+          |        ^
+      922 |     await expect(
+      923 |       page.getByRole("columnheader", {
+      924 |         name: "Accepted effective version",
+        at C:\projects\sih\Anumitra(SIH26262)\tests\browser\ui.spec.ts:921:8
+
+    Error Context: test-results\browser\ui-readable-reports-contex-c192d-provenance-use-the-real-API\error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\browser\ui-readable-reports-contex-c192d-provenance-use-the-real-API\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\browser\ui-readable-reports-contex-c192d-provenance-use-the-real-API\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  7 failed
+    tests\browser\operations.spec.ts:82:1 › specialised workspaces: role desks, queue drilldowns, source provenance, visual policy controls and accessible layouts 
+    tests\browser\operations.spec.ts:349:1 › continuous evaluator walkthrough uses one real browser page across the guarded institutional review and human decision workflow 
+    tests\browser\ui.spec.ts:38:1 › welcome and authenticated workspaces use real API and retain responsive design 
+    tests\browser\ui.spec.ts:177:1 › institution can save and submit a draft through browser forms ─
+    tests\browser\ui.spec.ts:260:1 › cross-role repair journey: repeated response, EVC, conditional undertaking, effective renewal and escalation retry 
+    tests\browser\ui.spec.ts:684:1 › the first live revision refreshes a stale initial compliance snapshot 
+    tests\browser\ui.spec.ts:803:1 › readable reports, contextual history, scoped next actors and reviewed simulator provenance use the real API 
+
+To open last HTML report run:
+[36m[39m
+[36m  npx playwright show-report[39m
+[36m[39m
+Disposable target retained for inspection; normal demo untouched.
+file:///C:/projects/sih/Anumitra(SIH26262)/scripts/verify.mjs:50
+    throw new Error(
+          ^
+
+Error: Verification command failed: node_modules/@playwright/test/cli.js test (1)
+    at run (file:///C:/projects/sih/Anumitra(SIH26262)/scripts/verify.mjs:50:11)
+    at file:///C:/projects/sih/Anumitra(SIH26262)/scripts/verify.mjs:216:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+
+Node.js v20.19.4

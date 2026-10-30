@@ -15,6 +15,7 @@ import {
   eligible,
   officialScope,
 } from "./permissions.ts";
+import { reviewBlockers } from "../contracts/workflow-checks.ts";
 import { transitionAttempt } from "./attempts.ts";
 import { windowDays } from "./deadlines.ts";
 import { resolveRecipients } from "./recipients.ts";
@@ -185,16 +186,7 @@ export function actions(a: Actor, app: Awaited<ReturnType<typeof getApp>>) {
     allowed.push("refer-adverse");
   if (app.state === "AUTHORITY" && can(a, app, ["AUTHORITY"]))
     allowed.push("record-authorized-decision");
-  if (!app.documents.some((d) => d.versions.length))
-    blockers.push("Submission needs at least one private evidence document.");
-  if (app.deficiencies.some((d) => d.state !== "ACCEPTED"))
-    blockers.push(
-      "Open deficiencies need evidence responses and verification.",
-    );
-  if (app.documents.some((d) => d.versions[0]?.reviewState !== "ACCEPTED"))
-    blockers.push("Current evidence versions require official verification.");
-  if (app.state === "EVC" && !app.visits.some((v) => v.state === "COMPLETED"))
-    blockers.push("EVC requires a completed visit and reviewed report.");
+  blockers.push(...reviewBlockers(app));
   const reviewed =
     app.documents.length > 0 &&
     app.documents.every((d) =>

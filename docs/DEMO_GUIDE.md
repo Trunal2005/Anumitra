@@ -1,6 +1,23 @@
 # Anumitra demonstration: 5-7 minute operator guide
 
-## Deterministic evaluator story — 26 October 2026
+## Current operational walkthrough — 30 October 2026
+
+Use the specialised screens in this order, with fictional evidence in an isolated rehearsal. The current continuous evaluator test is `tests/browser/operations.spec.ts` (test name starts `continuous evaluator walkthrough`). It uses one page/context throughout, separate role sign-ins and the real guarded mutation endpoints. It restores the isolated run/clock after completion; it does not reset the normal demo. Generated video and simple-English subtitle notes belong outside the checkout.
+
+1. **Institution → My action desk:** find OPEN deficiency subjects or start a fictional Scrutiny + EVC draft. Save, upload synthetic evidence and submit explicitly.
+2. **Reviewer → My review desk / case:** raise two checklist items; institution responds to both. Reject one, resubmit that item, then verify both separately. Accept the exact document version and complete scrutiny.
+3. **Supervisor → EVC planner:** select the eligible case; inspect actual declared availability and reservations. Propose a nonconflicting IST slot and confirm. Use only the isolated test clock to move beyond the visit. Member submits the report; supervisor separately accepts completion.
+4. **Member → Committee agenda:** consider the same case, inspect evidence/current-attempt blockers, record a reasoned recommendation, then complete the stage. No meeting/quorum/appointment is inferred.
+5. **Authority → decision packet:** review evidence, recommendation, findings and proposed condition. Enter a reason, acknowledge the human confirmation checkbox and commit a conditional decision. Recommendation and decision are separate records.
+6. **Institution / supervisor → Compliance ledger:** select the linked condition, submit evidence, then sign in as authorized reviewer and accept it. SUBMITTED differs from ACCEPTED. Original due dates/history remain visible.
+7. **Institution / supervisor → Evidence review:** submit a future-dated replacement, compare latest versus effective version, then reject it. Accepted v1's recorded expiry remains effective.
+8. **Supervisor → Alerts / Reports:** inspect designated escalation subjects and matching overdue report rows. Task counts can exceed distinct case counts.
+9. **Public references:** show the historical 2025–26 year, a field-level publisher/page link and pending team human review status. These profiles contribute zero operational cases.
+10. **Bureau → Workflow policies:** published versions are read-only. Clone a new draft, use keyboard Move controls, inspect source/applicability/pinning and run blocked/ready fictional scenarios. Simulation issues no decision and changes no case.
+
+Before presenting, use `npm run doctor -- --strict`. Application: http://127.0.0.1:3000 ; local Mailpit: http://127.0.0.1:8025 . Credentials remain in ignored `.local/demo-credentials.json`; never project that file. Do not advertise a live AICTE feed, verified numerical statutory policy, malware scanning or production readiness.
+
+## Historical operator schedule — 26 October 2026
 
 Use one new **clearly fictional** `Scrutiny + EVC` application for the entire story. Do not reset the normal demo, alter its published policies, or use actual institutional documents. The repeatable browser scenario in `tests/browser/ui.spec.ts` creates a fresh fictional case in isolated storage; it temporarily uses its own test-only run namespace and restores the prior isolated clock/run afterward. References are unique to avoid overwriting earlier runs, while the ordered actions and expected transitions are fixed. Old screenshot/page tours are not substitutes for this workflow.
 

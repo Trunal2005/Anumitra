@@ -1,0 +1,7 @@
+
+Running 7 tests using 1 worker
+
+  x  1 tests\browser\operations.spec.ts:82:1 › specialised workspaces: role desks, queue drilldowns, source provenance, visual policy controls and accessible layouts (2.0m)
+  x  2 tests\browser\operations.spec.ts:349:1 › continuous evaluator walkthrough uses one real browser page across the guarded institutional review and human decision workflow (4.0m)
+  x  3 tests\browser\ui.spec.ts:38:1 › welcome and authenticated workspaces use real API and retain responsive design (59.4s)
+  ok 4 tests\browser\ui.spec.ts:177:1 › institution can save and submit a draft through browser forms (12.0s)

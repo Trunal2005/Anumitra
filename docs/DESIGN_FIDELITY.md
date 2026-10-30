@@ -1,5 +1,13 @@
 # Design fidelity
 
+## Current operational direction — 30 October 2026
+
+The new product brief supersedes the earlier authenticated dark-card design below. `operations.css` scopes a single light workspace to `.app-shell`: charcoal 224px navigation, 64px white header, 24px canvas padding, white surfaces, dark text, 13px or larger tables and restrained orange actions. Red/amber/blue/green states include text. Public welcome branding remains unchanged. Specialised Action desk, queue, case review, Committee agenda, EVC planner, Compliance ledger, Evidence review and visual policy editor replace the generic layouts.
+
+Current before/after evidence and finite accessibility results belong to the dated operational report. Earlier captures below describe historical source only. No formal GIGW/WCAG certification is claimed.
+
+## Historical dark workspace — through 26 October
+
 Canonical reference: supplied written dark orange/gold UI system. No raster reference was supplied; no pixel-identical claim is made.
 
 Tokens in `apps/web/src/styles.css`: background #030304, surface #0F1115, white foreground, #94A3B8 muted, #1E293B border, #F7931A primary, #EA580C secondary and #FFD600 gold. Exact two gradients and four glow/elevation values are retained. Local Fontsource assets bundle Space Grotesk 400–700, Inter 400–600 and JetBrains Mono 400/500. No font/CDN request is required at runtime.

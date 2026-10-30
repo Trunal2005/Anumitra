@@ -1,0 +1,53 @@
+
+Running 2 tests using 1 worker
+
+  x  1 tests\browser\operations.spec.ts:330:1 › responsive workspaces preserve keyboard focus, sampled contrast and 200 percent enlargement (57.7s)
+  ok 2 tests\browser\operations.spec.ts:499:1 › continuous evaluator walkthrough uses one real browser page across the guarded institutional review and human decision workflow (2.5m)
+
+
+  1) tests\browser\operations.spec.ts:330:1 › responsive workspaces preserve keyboard focus, sampled contrast and 200 percent enlargement 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+
+    Expected: [32mtrue[39m
+    Received: [31mfalse[39m
+
+    Call Log:
+    - Timeout 5000ms exceeded while waiting on the predicate
+
+      481 |       page.getByRole("button", { name: "Search", exact: true }),
+      482 |     ).toBeVisible();
+    > 483 |     await expect
+          |     ^
+      484 |       .poll(() =>
+      485 |         page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
+      486 |       )
+        at C:\projects\sih\Anumitra(SIH26262)\tests\browser\operations.spec.ts:483:5
+
+    attachment #1: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\browser\operations-responsive-work-38d28-and-200-percent-enlargement\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\browser\operations-responsive-work-38d28-and-200-percent-enlargement\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    tests\browser\operations.spec.ts:330:1 › responsive workspaces preserve keyboard focus, sampled contrast and 200 percent enlargement 
+  1 passed (3.6m)
+
+To open last HTML report run:
+[36m[39m
+[36m  npx playwright show-report[39m
+[36m[39m
+Disposable target retained for inspection; normal demo untouched.
+file:///C:/projects/sih/Anumitra(SIH26262)/scripts/verify.mjs:50
+    throw new Error(
+          ^
+
+Error: Verification command failed: node_modules/@playwright/test/cli.js test --grep responsive workspaces|continuous evaluator (1)
+    at run (file:///C:/projects/sih/Anumitra(SIH26262)/scripts/verify.mjs:50:11)
+    at file:///C:/projects/sih/Anumitra(SIH26262)/scripts/verify.mjs:216:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+
+Node.js v20.19.4

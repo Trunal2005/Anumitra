@@ -1,6 +1,7 @@
 import { db } from "../db/index.ts";
+import { simulateWorkflow } from "../contracts/workflow-checks.ts";
 import { workflowSchema } from "../contracts/index.ts";
-import { type Actor, audit, ensure, hash, hasRole } from "./engine.ts";
+import { type Actor, audit, ensure, hash, hasRole, clock } from "./engine.ts";
 export async function ruleOperation(
   a: Actor,
   id: string,
@@ -16,6 +17,7 @@ export async function ruleOperation(
     if (operation === "simulate")
       return {
         valid: true,
+        evaluation: simulateWorkflow(proposed, input.scenario, await clock(tx)),
         route: ["DRAFT", ...proposed.stages],
         deadlineDays: proposed.deadlineDays,
         windows: proposed.windows ?? {},

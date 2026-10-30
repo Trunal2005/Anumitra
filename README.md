@@ -8,13 +8,17 @@ Independent student prototype. Fictional records, demonstration policy values an
 
 Start with the setup commands below. The [documentation index](docs/README.md) separates implementation guides, current verification and historical reports. Requirements are maintained in [the A–F matrix](docs/REQUIREMENTS.md); the old AI build prompt is no longer part of the project tree.
 
-## Current prototype checkpoint — 26 October 2026
+## Operational iteration — 30 October 2026
 
-The React/Express/PostgreSQL application implements authenticated scoped workflows, private evidence/PDF preview, repeated multi-item deficiency responses, five configured route families, EVC scheduling/reports, committee recommendations, separate human decisions, undertakings, effective-document renewal, designated escalation, durable delivery/retry, six reports and versioned DEMO policies. Current improvements make reports and history readable, correct next-actor guidance and enforce scoped, atomic institution-master review before commit. A paginated **fictional local simulator** records declared provenance; no official dataset or authorized live AICTE contract was verified.
+The authenticated application now uses a compact charcoal navigation, light canvas and white operational surfaces. Role-specific Action desks, a server-paginated Review queue, evidence-first case review, an EVC week/agenda planner, a distinct Committee agenda, a Compliance ledger, split Evidence review and a constrained visual policy editor expose the existing guarded workflow. Public welcome branding is preserved. Record-update connectivity is labelled **Updates connected**, without implying a live AICTE feed.
 
-The full sequential `npm run verify:isolated -- --evidence-dir=docs/evidence/product-2026-10-26/full-3` gate passed on source **`54206f21b8e69f2e946c9421800cada99aa466f7`**: **35 backend tests, API restart preservation and all five Chromium journeys**, with no skipped backend cases. TypeScript and production build ran within that gate; formatting and the live dependency audit passed (zero advisories at retrieval). The build still warns about large chunks. See the [dated report](docs/TEST_REPORT_2026-10-26.md), [classified A–F matrix](docs/REQUIREMENTS.md), [demo guide](docs/DEMO_GUIDE.md) and [local contract](docs/INTEGRATION_CONTRACT.md). Earlier failures and reports are retained separately. Documentation/evidence commits after the tested source do not change its implementation hashes.
+Three separate read-only **2025–26 public reference profiles** retain field-level publisher/page links, dates, extraction method and checksums. They do not create operational cases or establish 2026–27 approval. Team human sign-off is pending. See [public-source inventory](docs/PUBLIC_REFERENCE_INVENTORY.md). Fictional drafts, unclassified legacy records and authorized-pilot tags remain distinguishable; no pilot feed is configured.
 
-Partial coverage remains for historical missing waiting intervals (B2), exhaustive report/export/filter combinations (F3) and authorized external integration. Local Compose, official numerical policy applicability and complete accessibility/security assurance remain unverified; malware/authenticity scanning and an authorized live connector are missing. No measured efficiency gain, production readiness or selection probability is claimed. Public CI on entry source 679b12b failed the Zod audit after passing its workflow tests; the dependency is now patched. Consult [actual GitHub Actions runs](https://github.com/Trunal2005/Anumitra/actions) for each published SHA; local success does not establish a future hosted result. No project licence has been selected.
+Metadata imports now use an atomic locked batch with fresh permission/state/payload checks. The entry source reproduced partial commit, stale editable-state and concurrent conflicting-payload defects; the repair and retained failed attempts are described in [the operational report](docs/OPERATIONS_ITERATION_2026-10-30.md).
+
+**Current verification is in progress.** The [30 October test report](docs/TEST_REPORT_2026-10-30.md) will record the exact committed source and complete gate. The earlier complete 35-backend/five-browser result belongs to source `54206f21b8e69f2e946c9421800cada99aa466f7`, not automatically to this iteration. Failed runs remain historical evidence. Check [actual GitHub Actions](https://github.com/Trunal2005/Anumitra/actions) for each published SHA.
+
+Partial coverage remains for historical missing waiting intervals (B2), exhaustive report/export/filter combinations (F3) and authorized external integration. Official numerical policy, local Compose and complete accessibility/security assurance remain unverified; malware/authenticity scanning and an authorized live connector are missing. No measured efficiency gain, production readiness or selection probability is claimed. No project licence has been selected.
 
 ## Run locally on this Windows workspace
 
@@ -27,7 +31,7 @@ npm run bootstrap
 
 Bootstrap creates an isolated password-protected PostgreSQL cluster on **127.0.0.1:55432**, applies migrations, generates 20 fictional institutions and 120 applications, bundles the frontend, separates runtime/migration credentials, and starts Mailpit if the executable is available. Existing demo data is preserved. It never resets an existing database.
 
-For this already upgraded workspace, a restart does not require bootstrap, migrations or seeding. If PostgreSQL is stopped, start the existing cluster with `& 'C:\Program Files\PostgreSQL\18\bin\pg_ctl.exe' -D .local/db -l .local/postgres.log -o '-p 55432 -h 127.0.0.1' -w start`. Start local Mailpit with `.local/mailpit.exe --listen 127.0.0.1:8025 --smtp 127.0.0.1:1025 --database .local/mailpit.db`, then start API and worker below. Check for existing processes before starting duplicates.
+After updating source, run `npm run build` before restarting the API. This iteration adds no schema migration. For this existing workspace, a restart does not require bootstrap, migrations or seeding. If PostgreSQL is stopped, start the existing cluster with `& 'C:\Program Files\PostgreSQL\18\bin\pg_ctl.exe' -D .local/db -l .local/postgres.log -o '-p 55432 -h 127.0.0.1' -w start`. Start local Mailpit with `.local/mailpit.exe --listen 127.0.0.1:8025 --smtp 127.0.0.1:1025 --database .local/mailpit.db`, then start API and worker below. Check for existing processes before starting duplicates.
 
 Start these in two terminals:
 
@@ -58,7 +62,7 @@ Use http://127.0.0.1:5173 for Vite. Stop any existing worker before starting `de
 
 | Location | Purpose |
 |---|---|
-| `apps/web` | React operational UI, exact dark orange/gold tokens, local fonts |
+| `apps/web` | Specialised React operational workspaces, light authenticated canvas, preserved public branding and local fonts |
 | `apps/web/src/PdfPreview.tsx` | Authenticated PDF.js canvas preview, page navigation and accessible extracted text |
 | `apps/api` | Authenticated Express API, private storage, scoped SSE and reports |
 | `apps/worker` | Separate durable pg-boss notification coordinator |

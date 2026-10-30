@@ -1,0 +1,36 @@
+{
+  "completed": false,
+  "continuity": {
+    "browserContexts": 1,
+    "pages": 1
+  },
+  "logins": [
+    "institution.a",
+    "reviewer.north",
+    "institution.a",
+    "reviewer.north",
+    "institution.a",
+    "reviewer.north"
+  ],
+  "notes": [
+    {
+      "time": 2900,
+      "text": "This is Anumitra, an independent prototype. The institution starts from a task-focused action desk."
+    },
+    {
+      "time": 11843,
+      "text": "The institution submits a fictional application with private evidence. The selected policy keeps its own version."
+    },
+    {
+      "time": 18559,
+      "text": "The reviewer requests two reasoned corrections. Each item has its own evidence response and review."
+    },
+    {
+      "time": 37937,
+      "text": "Rejecting a response returns the case to institutional waiting. It does not erase the earlier response."
+    }
+  ],
+  "fictional": true,
+  "normalDemoTouched": false,
+  "videoRecorded": false
+}

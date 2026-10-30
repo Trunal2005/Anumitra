@@ -50,3 +50,17 @@ Document scanner contract: versions expose scanState; no local malware engine is
 Institution preview/commit now requires the [reviewed local contract](INTEGRATION_CONTRACT.md). Preview returns a persisted `reviewId` bound to the actor, intersected grants, normalized payload and current-master snapshot. Commit must send that ID with the same content; conflicts reject the complete batch and existing masters are never overwritten or retired. Provenance is explicitly FICTIONAL_SIMULATION or UNVERIFIED_LOCAL. `GET /api/integrations/simulator/institutions?cursor=0` provides the two-page fictional local fixture to authorized global admin/bureau accounts; it is not an official sandbox or external API. Existing application draft and document-metadata adapters remain local.
 
 Scoped application details now include `brief.next` (role, task, due, assignee). Post-decision document follow-up uses accepted expiry or the configured first-review deadline rather than the old application deadline. Scoped history may include correlated escalation context, labelled current where applicable; institutional projections omit structured recipient identities. Machine report JSON retains typed enums/booleans; human labels apply to UI/CSV/PDF.
+
+## Operational workspaces — 30 October iteration
+
+All routes below require the same authenticated session and intersected scope.
+
+| GET endpoint (under `/api`) | Behaviour |
+|---|---|
+| `/action-desk` | Role-specific task subjects, deterministic due/age urgency, provenance counts, scoped backlog and workload drilldowns |
+| `/review-queue` | Scoped search, stage/region/owner/origin filters, all/active/mine/due-soon/overdue/unassigned views, stable sorting and server pagination |
+| `/committee-agenda` | Assigned cases or participating visits, current-attempt recommendations, readiness and historical attempts; no fabricated meetings |
+| `/evc-planner` | Eligible queue, scoped visits, permitted candidates, declared availability/busy intervals and per-record coordination/report flags |
+| `/reference/institutions` | Read-only 2025–26 public factual profiles with field provenance; `q`/`year` filters; zero operational contribution |
+
+Metadata import uses one atomic batch transaction, ordered case/external-ID locks and fresh actor/state/payload checks. Invalid or contradictory batches do not partially commit. Existing scoped mutation endpoints remain the authority for operational controls.

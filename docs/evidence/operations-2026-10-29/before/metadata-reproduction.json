@@ -1,0 +1,28 @@
+{
+  "source": "22afb3a4c89c7e3ad658296632a98a1eb8880b48",
+  "normalDemoTouched": false,
+  "partialBatch": {
+    "expectedCommittedRows": 0,
+    "observedCommittedRows": 1,
+    "httpStatus": 404
+  },
+  "concurrentConflict": {
+    "expectedStatuses": [
+      200,
+      409
+    ],
+    "observedStatuses": [
+      200,
+      200
+    ],
+    "reportedOutcomes": [
+      "IMPORTED_PENDING_BYTES",
+      "IMPORTED_PENDING_BYTES"
+    ]
+  },
+  "stateRace": {
+    "expectedStatus": 409,
+    "observedStatus": 200,
+    "stateAtCommit": "SCRUTINY"
+  }
+}

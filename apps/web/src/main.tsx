@@ -65,53 +65,22 @@ import "@fontsource/space-grotesk/700.css";
 import "@fontsource/jetbrains-mono/400.css";
 import "@fontsource/jetbrains-mono/500.css";
 import "./styles.css";
+import "./operations.css";
+import ActionDesk from "./ActionDesk.tsx";
+import PublicReferences from "./PublicReferences.tsx";
+import ReviewQueue from "./ReviewQueue.tsx";
+import CommitteeAgenda from "./CommitteeAgenda.tsx";
+import ComplianceLedger from "./ComplianceLedger.tsx";
+import EvidenceRegister from "./EvidenceRegister.tsx";
+import EvcPlanner from "./EvcPlanner.tsx";
+import { Status, Origin } from "./workspace-ui.tsx";
 import {
   readable,
   reportHeading,
   reportValue,
 } from "../../../packages/contracts/presentation.ts";
 const PdfPreview = React.lazy(() => import("./PdfPreview.tsx"));
-let csrf = "";
-async function api(url: string, options: RequestInit = {}) {
-  const isForm = options.body instanceof FormData;
-  const response = await fetch("/api" + url, {
-    ...options,
-    headers: {
-      ...(isForm ? {} : { "Content-Type": "application/json" }),
-      "X-CSRF-Token": csrf,
-      ...options.headers,
-    },
-  });
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.error ?? "Request failed");
-  if (data.csrf) csrf = data.csrf;
-  return data;
-}
-const post = (url: string, data: unknown) =>
-  api(url, { method: "POST", body: JSON.stringify(data) });
-const client = new QueryClient({
-  defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },
-});
-function useData(key: string, url: string, enabled = true) {
-  return useQuery<any>({
-    queryKey: [key, url],
-    queryFn: () => api(url),
-    enabled,
-  });
-}
-const date = (v: string | null | undefined) =>
-  v
-    ? new Date(v).toLocaleString("en-IN", {
-        timeZone: "Asia/Kolkata",
-        dateStyle: "medium",
-        timeStyle: "short",
-      })
-    : "Not assigned";
-const label = (s: string) =>
-  s
-    ?.replaceAll("_", " ")
-    .toLowerCase()
-    .replace(/\b\w/g, (c) => c.toUpperCase());
+import { api, post, client, useData, date, label } from "./data.ts";
 function Brand() {
   return (
     <Link to="/" className="brand">
@@ -193,13 +162,48 @@ function Heading({
   );
 }
 function Field({ title, children }: { title: string; children: ReactNode }) {
+  const labelId = React.useId();
+  const nodes = React.Children.toArray(children);
+  const helpIds = nodes.flatMap((child, index) =>
+    React.isValidElement(child) && child.type === "small"
+      ? [labelId + "-help-" + index]
+      : [],
+  );
   return (
     <label className="field">
-      <span>{title}</span>
-      {children}
+      <span id={labelId}>{title}</span>
+      {nodes.map((child, index) => {
+        if (!React.isValidElement(child)) return child;
+        const element = child as React.ReactElement<Record<string, unknown>>;
+        if (child.type === "small")
+          return React.cloneElement(element, {
+            id: labelId + "-help-" + index,
+          });
+        if (
+          typeof child.type === "string" &&
+          ["input", "select", "textarea"].includes(child.type)
+        )
+          return React.cloneElement(element, {
+            ...(element.props["aria-label"] || element.props["aria-labelledby"]
+              ? {}
+              : { "aria-labelledby": labelId }),
+            ...(helpIds.length
+              ? {
+                  "aria-describedby": [
+                    element.props["aria-describedby"],
+                    ...helpIds,
+                  ]
+                    .filter(Boolean)
+                    .join(" "),
+                }
+              : {}),
+          });
+        return child;
+      })}
     </label>
   );
 }
+
 function Orb() {
   return (
     <div
@@ -421,15 +425,16 @@ function Welcome({
   );
 }
 const nav = [
-  ["/overview", "Overview", LayoutDashboard],
+  ["/overview", "Action desk", LayoutDashboard],
   ["/applications", "Applications", FolderOpen],
-  ["/evc", "EVC scheduling", CalendarDays],
-  ["/committees", "Committee work", Users],
-  ["/compliance", "Undertakings", FileCheck2],
-  ["/documents", "Document registry", FileText],
+  ["/evc", "EVC planner", CalendarDays],
+  ["/committees", "Committee agenda", Users],
+  ["/compliance", "Compliance ledger", FileCheck2],
+  ["/documents", "Evidence review", FileText],
   ["/alerts", "Alerts & delivery", Bell],
   ["/reports", "Reports & audit", Activity],
-  ["/rules", "Rules & policy", GitBranch],
+  ["/references", "Public references", BookOpen],
+  ["/rules", "Workflow policies", GitBranch],
   ["/admin", "Administration", Settings2],
 ] as const;
 function App() {
@@ -453,9 +458,9 @@ function App() {
     }
     let revision = "";
     const events = new EventSource("/api/events");
-    events.addEventListener("ready", () => setConnected("Live"));
+    events.addEventListener("ready", () => setConnected("Updates connected"));
     events.addEventListener("refresh", (e) => {
-      setConnected("Live");
+      setConnected("Updates connected");
       const d = JSON.parse((e as MessageEvent).data);
       const next = d.revision + ":" + d.count;
       if (next !== revision)
@@ -601,14 +606,14 @@ function App() {
             </span>
           </div>
           <div className="topbar-actions">
-            <Badge active={connected === "Live"}>
+            <Badge active={connected === "Updates connected"}>
               <span className="tiny-dot" />
               {connected}
             </Badge>
             <button
               className="icon-button ghost"
               aria-label={
-                refresh ? "Pause live refresh" : "Resume live refresh"
+                refresh ? "Pause record updates" : "Resume record updates"
               }
               onClick={() => setRefresh(!refresh)}
             >
@@ -620,15 +625,6 @@ function App() {
               onClick={() => q.invalidateQueries()}
             >
               <RefreshCw size={16} />
-            </button>
-            <button
-              className="icon-button ghost"
-              aria-label={
-                motion ? "Pause decorative motion" : "Resume decorative motion"
-              }
-              onClick={() => setMotion(!motion)}
-            >
-              {motion ? <Sparkles size={16} /> : <Play size={16} />}
             </button>
             <Link
               to="/alerts"
@@ -642,23 +638,24 @@ function App() {
         </header>
         <main id="main" className="workspace">
           <Routes>
-            <Route path="/" element={<Overview user={user} />} />
-            <Route path="/overview" element={<Overview user={user} />} />
-            <Route path="/applications" element={<Register user={user} />} />
+            <Route path="/" element={<ActionDesk user={user} />} />
+            <Route path="/overview" element={<ActionDesk user={user} />} />
+            <Route path="/applications" element={<ReviewQueue user={user} />} />
             <Route path="/applications/new" element={<Wizard />} />
             <Route
               path="/applications/:id"
               element={<ApplicationWorkspace user={user} />}
             />
-            <Route path="/evc" element={<Evc user={user} />} />
+            <Route path="/evc" element={<EvcPlanner user={user} />} />
+            <Route path="/committees" element={<CommitteeAgenda />} />
             <Route
-              path="/committees"
-              element={<Register user={user} committee />}
+              path="/compliance"
+              element={<ComplianceLedger user={user} Review={ObligationCard} />}
             />
-            <Route path="/compliance" element={<Compliance user={user} />} />
-            <Route path="/documents" element={<Documents user={user} />} />
+            <Route path="/documents" element={<EvidenceRegister />} />
             <Route path="/alerts" element={<Alerts />} />
             <Route path="/reports" element={<Reports />} />
+            <Route path="/references" element={<PublicReferences />} />
             <Route path="/rules" element={<Rules user={user} />} />
             <Route path="/admin" element={<Admin user={user} />} />
             <Route path="/profile" element={<Profile user={user} />} />
@@ -679,580 +676,6 @@ function App() {
         </footer>
       </div>
     </div>
-  );
-}
-function Overview({ user }: { user: any }) {
-  const { data: d, isPending, error } = useData("dashboard", "/dashboard");
-  const recent = useData("recent", "/applications?limit=5");
-  const options = useData("options", "/options");
-  if (isPending) return <Loading />;
-  if (error) return <ErrorBox error={error} />;
-  const metrics = [
-    [
-      "Open applications",
-      d.open,
-      FolderOpen,
-      "/applications?open=true",
-      "Awaiting the next action",
-    ],
-    [
-      "Overdue cases",
-      d.overdue,
-      Clock,
-      "/applications?overdue=true",
-      "Requires scoped follow-up",
-    ],
-    ["EVC in progress", d.evc, Users, "/evc", "From scheduling to report"],
-    [
-      "Open undertakings",
-      d.obligations,
-      FileCheck2,
-      "/compliance",
-      "Evidence is not acceptance",
-    ],
-  ] as const;
-  return (
-    <>
-      <Heading
-        eyebrow="A CLEARER VIEW. A BETTER NEXT STEP."
-        title={`Welcome, ${user.name.split(" ")[0]}.`}
-        accent="Let’s move work forward."
-      >
-        <Badge>
-          DEMO ·{" "}
-          {new Date(d.now).toLocaleDateString("en-IN", {
-            timeZone: "Asia/Kolkata",
-          })}
-        </Badge>
-      </Heading>
-      <div className="overview-banner panel">
-        <div>
-          <Badge active>CONNECTED APPROVAL WORKSPACE</Badge>
-          <h2>
-            From pending <span className="gradient">to accounted for.</span>
-          </h2>
-          <p>
-            Every case has a stage. Every action has an owner.
-            <br />
-            Your authorized work, brought into focus.
-          </p>
-          <Link className="primary" to="/applications">
-            Explore applications <ArrowUpRight size={18} />
-          </Link>
-        </div>
-        <div className="mini-orb">
-          <div className="orbit outer" />
-          <div className="orbit inner" />
-          <img src="/brand.svg" alt="" />
-        </div>
-        <div className="banner-footnote">
-          Local database · Human decisions · Traceable evidence
-        </div>
-      </div>
-      <div className="metric-grid">
-        {metrics.map(([title, value, Icon, url, hint], i) => (
-          <Link
-            to={url}
-            className={"metric panel " + (i === 0 ? "emphasis" : "")}
-            key={title}
-          >
-            <div className="metric-top">
-              <span>{title}</span>
-              <ArrowUpRight size={16} />
-            </div>
-            <strong className="metric-number">
-              {String(value).padStart(2, "0")}
-            </strong>
-            <p>{hint}</p>
-            <Icon className="watermark" />
-            <span className="corner" />
-          </Link>
-        ))}
-      </div>
-      <div className="metric-grid three">
-        {[
-          ["Upcoming deadlines", d.upcoming, "/applications?upcoming=true"],
-          [
-            "Pending evidence verification",
-            d.pendingEvidence,
-            "/documents?review=PENDING",
-          ],
-          [
-            "Expiring / expired documents",
-            d.documents,
-            "/documents?validity=ATTENTION",
-          ],
-        ].map(([title, value, url]) => (
-          <Link className="panel metric" to={String(url)} key={String(title)}>
-            <div className="metric-top">
-              <span>{title}</span>
-              <ArrowUpRight size={16} />
-            </div>
-            <strong className="metric-number">{value}</strong>
-            <p>Persisted records · seven-day attention window</p>
-          </Link>
-        ))}
-      </div>
-      <div className="dashboard-grid">
-        <Panel>
-          <div className="section-heading">
-            <div>
-              <p className="eyebrow">APPLICATION MOVEMENT</p>
-              <h2>Where work stands</h2>
-            </div>
-            <GitBranch className="orange" size={20} />
-          </div>
-          <p className="muted">
-            Persisted stage counts · select a stage to inspect its cases.
-          </p>
-          <div className="stage-bars">
-            {Object.entries(d.counts).map(([stage, count]: [string, any]) => (
-              <Link key={stage} to={"/applications?state=" + stage}>
-                <span>{label(stage)}</span>
-                <div className="bar-track">
-                  <div
-                    style={{
-                      width: `${Math.max(3, (count / Math.max(...(Object.values(d.counts) as number[]))) * 100)}%`,
-                    }}
-                  />
-                </div>
-                <strong>{count}</strong>
-              </Link>
-            ))}
-          </div>
-        </Panel>
-        <Panel>
-          <div className="section-heading">
-            <div>
-              <p className="eyebrow">YOUR NEXT ACTION</p>
-              <h2>Keep the journey moving</h2>
-            </div>
-            <Activity size={20} className="orange" />
-          </div>
-          <div className="next-step">
-            <span className="step-circle">01</span>
-            <div>
-              <strong>Review your work queue</strong>
-              <p>
-                Open the case brief to see what is blocking progress and which
-                evidence is required.
-              </p>
-              <Link to="/applications">
-                View authorized cases <ArrowRight size={15} />
-              </Link>
-            </div>
-          </div>
-          <div className="next-step">
-            <span className="step-circle">02</span>
-            <div>
-              <strong>Check approaching deadlines</strong>
-              <p>
-                Business clock: {date(d.now)} IST. Deadline policies are
-                labelled demo assumptions.
-              </p>
-              <Link to="/alerts">
-                Open alerts <ArrowRight size={15} />
-              </Link>
-            </div>
-          </div>
-          <div className="scope-note">
-            <ShieldCheck size={18} />
-            <span>
-              Counts use your institution, region and assignment grants.
-            </span>
-          </div>
-        </Panel>
-      </div>
-      <Panel>
-        <div className="section-heading">
-          <div>
-            <p className="eyebrow">RECENTLY UPDATED</p>
-            <h2>Applications in focus</h2>
-          </div>
-          <Link to="/applications" className="text-link">
-            View register <ArrowRight size={16} />
-          </Link>
-        </div>
-        <ApplicationTable
-          items={recent.data?.items ?? []}
-          users={options.data?.users ?? []}
-        />
-      </Panel>
-      <p className="freshness">
-        Database snapshot {date(d.updatedAt)} IST · {d.total} authorized
-        applications
-      </p>
-      <div className="dashboard-grid">
-        <Panel>
-          <p className="eyebrow">OWNERSHIP, NOT BLAME</p>
-          <h2>Workload distribution</h2>
-          <div className="stage-bars">
-            {d.workload.map(([owner, count]: [string, number]) => (
-              <Link
-                key={owner}
-                to={
-                  owner === "Unassigned"
-                    ? "/applications"
-                    : "/applications?owner=" + owner
-                }
-              >
-                <span>
-                  {options.data?.users.find((u: any) => u.id === owner)?.name ??
-                    (owner === user.id
-                      ? "You"
-                      : owner === "Unassigned"
-                        ? "Unassigned"
-                        : "Assigned official")}
-                </span>
-                <div className="bar-track">
-                  <div
-                    style={{
-                      width: `${(count / Math.max(1, d.total)) * 100}%`,
-                    }}
-                  />
-                </div>
-                <strong>{count}</strong>
-              </Link>
-            ))}
-          </div>
-          <p className="fine-print">
-            Each assigned-owner count drills into its matching filtered
-            register.
-          </p>
-        </Panel>
-        <Panel>
-          <p className="eyebrow">
-            SEPARATE CLOCKS FOR DIFFERENT RESPONSIBILITIES
-          </p>
-          <h2>Case ageing</h2>
-          <div className="table-scroll">
-            <table>
-              <thead>
-                <tr>
-                  <th>Case</th>
-                  <th>Total days</th>
-                  <th>Institution wait</th>
-                  <th>Official stage</th>
-                </tr>
-              </thead>
-              <tbody>
-                {d.ageing.map((x: any) => (
-                  <tr key={x.id}>
-                    <td>
-                      <Link
-                        className="orange mono"
-                        to={"/applications/" + x.id}
-                      >
-                        {x.reference}
-                      </Link>
-                    </td>
-                    <td>{x.totalDays.toFixed(1)}</td>
-                    <td>{x.institutionDays.toFixed(1)}</td>
-                    <td>{x.officialDays.toFixed(1)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <p className="fine-print">
-            Recorded stage intervals; unrecorded historical intervals are not
-            inferred. Total age alone does not attribute delay to an officer.
-          </p>
-        </Panel>
-      </div>
-    </>
-  );
-}
-function ApplicationTable({
-  items,
-  users = [],
-}: {
-  items: any[];
-  users?: any[];
-}) {
-  if (!items.length) return <Empty />;
-  return (
-    <div className="table-scroll">
-      <table>
-        <thead>
-          <tr>
-            <th>Application / institution</th>
-            <th>Category</th>
-            <th>Current stage</th>
-            <th>Due · IST</th>
-            <th>Owner</th>
-            <th>
-              <span className="sr-only">Open</span>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {items.map((x) => (
-            <tr key={x.id}>
-              <td>
-                <Link className="mono orange" to={"/applications/" + x.id}>
-                  {x.reference}
-                </Link>
-                <small>{x.institution.name}</small>
-              </td>
-              <td>
-                {label(x.category)}
-                <small>{x.cycle}</small>
-              </td>
-              <td>
-                <Badge
-                  active={["SCRUTINY", "EVC", "RESCRUTINY"].includes(x.state)}
-                >
-                  {label(x.state)}
-                </Badge>
-              </td>
-              <td className="mono">{date(x.dueAt)}</td>
-              <td>
-                {users.find((u) => u.id === x.ownerId)?.name ??
-                  (x.ownerId ? "Assigned" : "Unassigned")}
-              </td>
-              <td>
-                <Link
-                  to={"/applications/" + x.id}
-                  className="icon-button ghost"
-                  aria-label={"Open " + x.reference}
-                >
-                  <ArrowUpRight size={18} />
-                </Link>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-function Register({
-  user,
-  committee = false,
-}: {
-  user: any;
-  committee?: boolean;
-}) {
-  const [params, setParams] = useSearchParams();
-  const [search, setSearch] = useState(params.get("q") ?? "");
-  const q = useQueryClient();
-  const options = useData("options", "/options");
-  const query = new URLSearchParams(params);
-  if (committee && !query.has("state"))
-    query.set(
-      "state",
-      user.grants.find((g: any) => g.committee)?.committee ?? "SAC",
-    );
-  const data = useData("register", "/applications?" + query.toString());
-  function filter(k: string, v: string) {
-    const next = new URLSearchParams(params);
-    v ? next.set(k, v) : next.delete(k);
-    next.delete("page");
-    setParams(next);
-  }
-  return (
-    <>
-      <Heading
-        eyebrow={
-          committee
-            ? "RECOMMENDATIONS REQUIRE HUMAN OVERSIGHT"
-            : "A SINGLE REGISTER. A TRACEABLE JOURNEY."
-        }
-        title={committee ? "Committee" : "Application"}
-        accent={committee ? "work." : "register."}
-      >
-        {user.grants.some((g: any) => g.role === "INSTITUTION") && (
-          <Link to="/applications/new" className="primary">
-            <Plus size={18} />
-            New application
-          </Link>
-        )}
-      </Heading>
-      <Panel>
-        <form
-          className="filters"
-          onSubmit={(e) => {
-            e.preventDefault();
-            filter("q", search);
-          }}
-        >
-          <Field title="Search reference or institution">
-            <div className="search-input">
-              <Search size={17} />
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Find an application…"
-              />
-            </div>
-          </Field>
-          <Field title="Stage">
-            <select
-              value={query.get("state") ?? ""}
-              onChange={(e) => filter("state", e.target.value)}
-            >
-              <option value="">All stages</option>
-              {[
-                "DRAFT",
-                "SCRUTINY",
-                "AWAITING_RESPONSE",
-                "RESCRUTINY",
-                "EVC",
-                "SAC",
-                "SHC",
-                "AUTHORITY",
-                "APPROVED",
-                "CONDITIONAL",
-                "REJECTED",
-              ].map((s) => (
-                <option key={s}>{s}</option>
-              ))}
-            </select>
-          </Field>
-          <Field title="Region">
-            <select
-              value={params.get("region") ?? ""}
-              onChange={(e) => filter("region", e.target.value)}
-            >
-              <option value="">Authorized regions</option>
-              {options.data?.regions.map((r: any) => (
-                <option key={r.id} value={r.id}>
-                  {r.name}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field title="Category">
-            <select
-              value={params.get("category") ?? ""}
-              onChange={(e) => filter("category", e.target.value)}
-            >
-              <option value="">All categories</option>
-              {["NEW_INSTITUTION", "EXTENSION", "CHANGE"].map((x) => (
-                <option key={x}>{x}</option>
-              ))}
-            </select>
-          </Field>
-          <button className="secondary" type="submit">
-            Search
-          </button>
-        </form>
-        <details className="advanced">
-          <summary>More filters & sorting</summary>
-          <div className="filters">
-            {[
-              ["institution", "Institution", options.data?.institutions ?? []],
-              ["owner", "Owner", options.data?.users ?? []],
-            ].map(([key, title, items]: any) => (
-              <Field title={title} key={key}>
-                <select
-                  value={params.get(key) ?? ""}
-                  onChange={(e) => filter(key, e.target.value)}
-                >
-                  <option value="">All authorized</option>
-                  {items.map((x: any) => (
-                    <option key={x.id} value={x.id}>
-                      {x.name}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-            ))}
-            <Field title="Cycle">
-              <input
-                placeholder="2026-27"
-                value={params.get("cycle") ?? ""}
-                onChange={(e) => filter("cycle", e.target.value)}
-              />
-            </Field>
-            {["from", "to"].map((k) => (
-              <Field
-                title={k === "from" ? "Created from" : "Created through"}
-                key={k}
-              >
-                <input
-                  type="date"
-                  value={params.get(k) ?? ""}
-                  onChange={(e) => filter(k, e.target.value)}
-                />
-              </Field>
-            ))}
-            <Field title="Sort">
-              <select
-                value={params.get("sort") ?? "updatedAt"}
-                onChange={(e) => filter("sort", e.target.value)}
-              >
-                {["updatedAt", "createdAt", "reference", "dueAt", "state"].map(
-                  (x) => (
-                    <option key={x}>{x}</option>
-                  ),
-                )}
-              </select>
-            </Field>
-            <Field title="Direction">
-              <select
-                value={params.get("direction") ?? "desc"}
-                onChange={(e) => filter("direction", e.target.value)}
-              >
-                <option value="desc">Descending</option>
-                <option value="asc">Ascending</option>
-              </select>
-            </Field>
-            <button
-              className="ghost"
-              type="button"
-              onClick={() => {
-                setParams({});
-                setSearch("");
-              }}
-            >
-              Clear filters
-            </button>
-          </div>
-        </details>
-        {params.get("overdue") && <Badge active>Overdue work only</Badge>}
-        {data.isPending ? (
-          <Loading />
-        ) : data.error ? (
-          <ErrorBox error={data.error} />
-        ) : (
-          <>
-            <ApplicationTable
-              items={data.data.items}
-              users={options.data?.users}
-            />
-            <div className="pagination">
-              <span>
-                {data.data.total} matching records · page {data.data.page}
-              </span>
-              <button
-                className="ghost"
-                disabled={data.data.page <= 1}
-                onClick={() => {
-                  const n = new URLSearchParams(params);
-                  n.set("page", String(data.data.page - 1));
-                  setParams(n);
-                }}
-              >
-                Previous
-              </button>
-              <button
-                className="secondary"
-                disabled={data.data.page * data.data.limit >= data.data.total}
-                onClick={() => {
-                  const n = new URLSearchParams(params);
-                  n.set("page", String(data.data.page + 1));
-                  setParams(n);
-                }}
-              >
-                Next <ArrowRight size={16} />
-              </button>
-            </div>
-          </>
-        )}
-      </Panel>
-    </>
   );
 }
 function Wizard() {
@@ -1572,6 +995,8 @@ function UploadForm({
 }
 function ApplicationWorkspace({ user }: { user: any }) {
   const { id } = useParams();
+  const [routeParams] = useSearchParams();
+  const [humanConfirmed, setHumanConfirmed] = useState(false);
   const q = useQueryClient();
   const data = useData("application", "/applications/" + id);
   const options = useData("options", "/options");
@@ -1586,11 +1011,45 @@ function ApplicationWorkspace({ user }: { user: any }) {
   const [dueAt, setDueAt] = useState("");
   const [error, setError] = useState<unknown>();
   const [pending, setPending] = useState(false);
-  const [tab, setTab] = useState("evidence");
+  const [tab, setTab] = useState(
+    routeParams.get("tab") === "deficiencies" ? "deficiencies" : "evidence",
+  );
   const [message, setMessage] = useState("");
   const [retryKey, setRetryKey] = useState("");
   const [retryBody, setRetryBody] = useState("");
   const r = data.data;
+  useEffect(() => {
+    setHumanConfirmed(false);
+  }, [id, r?.version, cmd, outcome]);
+  useEffect(() => {
+    if (routeParams.get("deficiency")) {
+      setDeficiencyId(routeParams.get("deficiency")!);
+      setCmd("submit-response");
+    }
+    if (
+      ["evidence", "deficiencies", "history"].includes(
+        routeParams.get("tab") ?? "",
+      )
+    )
+      setTab(routeParams.get("tab")!);
+  }, [id, routeParams.toString()]);
+  const commandTitle = (command: string) =>
+    ({
+      submit: "Submit application",
+      "submit-response": "Respond to deficiency",
+      "verify-response": "Review submitted response",
+      "review-document": "Accept / return evidence",
+      "raise-deficiency": "Request correction",
+      "return-with-reason": "Return with reason",
+      "complete-stage": ["EVC", "SAC", "SHC"].includes(r?.state)
+        ? "Complete committee stage"
+        : "Complete scrutiny",
+      "record-recommendation": "Record recommendation",
+      "record-authorized-decision": "Record human decision",
+      "refer-adverse": "Refer adverse finding",
+      assign: "Assign eligible officer",
+    })[command] ?? label(command);
+
   const versions =
     r?.documents.flatMap((d: any) =>
       d.versions
@@ -1600,12 +1059,29 @@ function ApplicationWorkspace({ user }: { user: any }) {
   const version = versions.find((v: any) => v.id === selected) ?? versions[0];
   const effectiveCmd = r?.allowedActions.includes(cmd)
     ? cmd
-    : (r?.allowedActions[0] ?? "");
+    : ([
+        "submit-response",
+        "submit",
+        "record-authorized-decision",
+        "verify-response",
+        ...(r?.documents.some(
+          (d: any) => d.versions[0]?.reviewState === "PENDING",
+        )
+          ? ["review-document"]
+          : []),
+        "record-recommendation",
+        "complete-stage",
+        "assign",
+      ].find((c) => r?.allowedActions.includes(c)) ?? "");
   async function execute(e: FormEvent) {
     e.preventDefault();
     setPending(true);
     setError(null);
     try {
+      if (effectiveCmd === "record-authorized-decision" && !humanConfirmed)
+        throw new Error(
+          "Confirm that a competent human reviewed this decision packet.",
+        );
       const body = {
         command: effectiveCmd,
         expectedVersion: r.version,
@@ -1645,7 +1121,7 @@ function ApplicationWorkspace({ user }: { user: any }) {
           : {}),
         ...(outcome === "CONDITIONAL" &&
         effectiveCmd === "record-authorized-decision"
-          ? { condition, dueAt: new Date(dueAt).toISOString() }
+          ? { condition, dueAt: new Date(dueAt + "+05:30").toISOString() }
           : {}),
       };
       const encoded = JSON.stringify(body);
@@ -1679,7 +1155,7 @@ function ApplicationWorkspace({ user }: { user: any }) {
         <ChevronRight size={14} />
         <span className="mono">{r.reference}</span>
       </div>
-      <Heading eyebrow={r.reference} title={r.institution.name} accent="">
+      <Heading eyebrow="Case review" title={r.reference} accent="">
         <a
           className="secondary"
           href={`/api/applications/${id}/notice`}
@@ -1690,21 +1166,25 @@ function ApplicationWorkspace({ user }: { user: any }) {
           Case summary
         </a>
       </Heading>
+      <p className="case-identity">
+        {r.institution.name} · {label(r.category)} · {r.cycle}{" "}
+        <Origin kind={r.recordOrigin ?? "UNCLASSIFIED"} />
+      </p>
       <div className="context-strip panel">
         <div>
           <small>CURRENT STAGE</small>
-          <Badge active>{label(r.state)}</Badge>
+          <Status value={r.state} />
         </div>
         <div>
-          <small>RESPONSIBLE OWNER</small>
-          <strong>
-            {options.data?.users.find((u: any) => u.id === r.ownerId)?.name ??
-              (r.ownerId === user.id ? "You" : "Assigned official")}
-          </strong>
+          <small>NEXT RESPONSIBILITY</small>
+          <strong>{r.brief.next.assignee ?? r.brief.next.role}</strong>
+          {r.brief.ownerName && <small>Case owner: {r.brief.ownerName}</small>}
         </div>
         <div>
           <small>DEADLINE · IST</small>
-          <strong className="mono">{date(r.dueAt)}</strong>
+          <strong className="mono">
+            {r.brief.next.due ? date(r.brief.next.due) : "No current deadline"}
+          </strong>
         </div>
         <div>
           <small>GOVERNING POLICY</small>
@@ -1720,7 +1200,7 @@ function ApplicationWorkspace({ user }: { user: any }) {
       <div className="review-grid">
         <Panel className="workflow-rail">
           <p className="eyebrow">THE APPROVAL JOURNEY</p>
-          <h2>Every step, visible.</h2>
+          <h2>Approval stages</h2>
           <div className="timeline">
             {["DRAFT", ...config.stages].map((s: string, i: number) => (
               <div
@@ -1730,7 +1210,13 @@ function ApplicationWorkspace({ user }: { user: any }) {
                   (r.state === s ||
                   (r.state === "RESCRUTINY" && s === "SCRUTINY")
                     ? "current"
-                    : "")
+                    : (i === 0 && r.state !== "DRAFT") ||
+                        (i > 0 && i - 1 < r.stageIndex) ||
+                        ["APPROVED", "REJECTED", "CONDITIONAL"].includes(
+                          r.state,
+                        )
+                      ? "completed"
+                      : "pending")
                 }
               >
                 <span>{String(i + 1).padStart(2, "0")}</span>
@@ -1787,6 +1273,66 @@ function ApplicationWorkspace({ user }: { user: any }) {
               History
             </button>
           </div>
+          {r.state === "AUTHORITY" && (
+            <section className="decision-packet">
+              <h2>Decision-ready packet</h2>
+              <p>
+                {r.institution.name} · {r.category} · {r.cycle} ·{" "}
+                {r.data.programme} · Proposed intake {r.data.intake}
+              </p>
+              <h3>Recorded recommendations / adverse findings</h3>
+              {r.recommendations.length ? (
+                r.recommendations.map((rec: any) => (
+                  <div className="packet-finding" key={rec.id}>
+                    <Status value={rec.outcome} />
+                    <strong>{label(rec.stage)}</strong>
+                    <p>{rec.reason}</p>
+                    <small>
+                      Attempt {rec.attemptId ?? "Not recorded"} ·{" "}
+                      {date(rec.createdAt)} IST
+                    </small>
+                  </div>
+                ))
+              ) : (
+                <p>
+                  No recommendation recorded. This route may be scrutiny-only;
+                  no committee record is invented.
+                </p>
+              )}
+              <h3>Reviewed evidence</h3>
+              {versions.map((v: any) => (
+                <p key={v.id}>
+                  {v.title} · v{v.number} · {label(v.reviewState)}
+                </p>
+              ))}
+              <h3>Unresolved findings</h3>
+              {r.blockingReasons.length ? (
+                <ul>
+                  {r.blockingReasons.map((b: string) => (
+                    <li key={b}>{b}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p>
+                  Positive evidence checks are clear. Only an authorized human
+                  can record the final outcome.
+                </p>
+              )}
+              <p>
+                Proposed condition:{" "}
+                {condition ||
+                  "Not entered; required for a conditional decision."}
+              </p>
+              <a
+                className="task-link"
+                href={`/api/applications/${id}/notice`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Review case summary
+              </a>
+            </section>
+          )}
           {tab === "evidence" ? (
             <>
               <div className="section-heading">
@@ -1898,14 +1444,69 @@ function ApplicationWorkspace({ user }: { user: any }) {
                   </Badge>
                   <h3>{d.item}</h3>
                   <p>{d.reason}</p>
-                  {d.responses.map((x: any) => (
-                    <blockquote key={x.id}>
-                      {x.text}
-                      <small className="mono">
-                        Evidence {x.documentVersionId}
-                      </small>
-                    </blockquote>
-                  ))}
+                  {d.responses.map((x: any) => {
+                    const linked = r.documents
+                      .flatMap((doc: any) =>
+                        doc.versions.map((v: any) => ({
+                          ...v,
+                          title: doc.title,
+                        })),
+                      )
+                      .find((v: any) => v.id === x.documentVersionId);
+                    return (
+                      <blockquote key={x.id}>
+                        <p>{x.text}</p>
+                        <small>Submitted {date(x.createdAt)} IST</small>
+                        <small>
+                          Evidence:{" "}
+                          {linked
+                            ? `${linked.title} · v${linked.number}`
+                            : x.documentVersionId}
+                        </small>
+                        <Status value={x.reviewOutcome ?? "PENDING"}>
+                          {x.reviewOutcome
+                            ? `Official review: ${label(x.reviewOutcome)}`
+                            : "Awaiting official review"}
+                        </Status>
+                        {x.reviewedAt && (
+                          <small>
+                            Reviewed {date(x.reviewedAt)} IST · reason retained
+                            in case history
+                          </small>
+                        )}
+                        {linked && (
+                          <a
+                            className="task-link"
+                            href={`/api/documents/${linked.id}/content`}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            Inspect exact response evidence
+                          </a>
+                        )}
+                      </blockquote>
+                    );
+                  })}
+                  {r.allowedActions.some((c: string) =>
+                    ["submit-response", "verify-response"].includes(c),
+                  ) &&
+                    ["OPEN", "RESPONDED"].includes(d.state) && (
+                      <button
+                        className="secondary"
+                        onClick={() => {
+                          setDeficiencyId(d.id);
+                          setCmd(
+                            d.state === "OPEN"
+                              ? "submit-response"
+                              : "verify-response",
+                          );
+                        }}
+                      >
+                        {d.state === "OPEN"
+                          ? "Respond to this item"
+                          : "Review this response"}
+                      </button>
+                    )}
                 </div>
               ))
             ) : (
@@ -1919,7 +1520,6 @@ function ApplicationWorkspace({ user }: { user: any }) {
           <Panel className="active-module">
             <div className="section-heading">
               <div>
-                <p className="eyebrow">CLEAR CONTEXT. CONFIDENT ACTION.</p>
                 <h2>What happens next?</h2>
               </div>
               <Workflow size={23} className="orange" />
@@ -1963,6 +1563,30 @@ function ApplicationWorkspace({ user }: { user: any }) {
                 </>
               )}
             </div>
+            <details className="route-explanation">
+              <summary>Why this route / deadline?</summary>
+              <p>
+                {r.workflow.name} v{r.workflow.version}:{" "}
+                {config.stages.map((stage: string) => label(stage)).join(" → ")}
+              </p>
+              <p>
+                Category {label(r.category)} · Academic year {r.cycle}. This
+                case is pinned to the recorded policy version.
+              </p>
+              <p>Source: {r.workflow.source}</p>
+              <p>
+                Verification: DEMO / applicability unverified. Effective policy
+                period: not recorded. Calendar days; Asia/Kolkata. The recorded
+                subject deadline above is authoritative for this prototype;
+                policy migration never silently changes an existing due date.
+              </p>
+              <Link
+                className="task-link"
+                to={"/rules?selected=" + r.workflowId}
+              >
+                Inspect governing policy
+              </Link>
+            </details>
             <span className="corner" />
           </Panel>
           <Panel>
@@ -1975,6 +1599,34 @@ function ApplicationWorkspace({ user }: { user: any }) {
             )}
             {r.allowedActions.length ? (
               <form onSubmit={execute}>
+                <div className="task-actions" aria-label="Eligible case tasks">
+                  {r.allowedActions
+                    .filter((c: string) => c !== "assign")
+                    .map((c: string) => (
+                      <button
+                        type="button"
+                        key={c}
+                        className={effectiveCmd === c ? "selected" : ""}
+                        onClick={() => {
+                          setCmd(c);
+                          setOutcome(
+                            c === "record-authorized-decision"
+                              ? "APPROVED"
+                              : "ACCEPTED",
+                          );
+                          setHumanConfirmed(false);
+                          setError(null);
+                          setMessage("");
+                        }}
+                      >
+                        {commandTitle(c)}
+                      </button>
+                    ))}
+                </div>
+                <p className="fine-print">
+                  Selected task: {commandTitle(effectiveCmd)}. Advanced eligible
+                  actions remain available below.
+                </p>
                 <Field title="Action">
                   <select
                     value={effectiveCmd}
@@ -2061,7 +1713,10 @@ function ApplicationWorkspace({ user }: { user: any }) {
                   <Field title="Outcome">
                     <select
                       value={outcome}
-                      onChange={(e) => setOutcome(e.target.value)}
+                      onChange={(e) => {
+                        setOutcome(e.target.value);
+                        setHumanConfirmed(false);
+                      }}
                     >
                       {(effectiveCmd === "record-authorized-decision"
                         ? ["APPROVED", "CONDITIONAL", "REJECTED"]
@@ -2082,7 +1737,7 @@ function ApplicationWorkspace({ user }: { user: any }) {
                           required
                         />
                       </Field>
-                      <Field title="Condition due (your browser timezone)">
+                      <Field title="Condition due (IST)">
                         <input
                           type="datetime-local"
                           value={dueAt}
@@ -2111,6 +1766,17 @@ function ApplicationWorkspace({ user }: { user: any }) {
                     {version?.title ?? "No document selected"} v
                     {version?.number}
                   </p>
+                )}
+                {effectiveCmd === "record-authorized-decision" && (
+                  <label className="human-confirmation">
+                    <input
+                      type="checkbox"
+                      checked={humanConfirmed}
+                      onChange={(e) => setHumanConfirmed(e.target.checked)}
+                    />
+                    I confirm that I reviewed the packet and am recording this
+                    human authority decision.
+                  </label>
                 )}
                 <ErrorBox error={error} />
                 <button className="primary full stable" disabled={pending}>
@@ -2235,412 +1901,6 @@ function InternalNote({ id, onDone }: { id: string; onDone: () => void }) {
     </Panel>
   );
 }
-function Evc({ user }: { user: any }) {
-  const visits = useData("visits", "/visits");
-  const queue = useData("evcQueue", "/applications?state=EVC&limit=100");
-  const options = useData("options", "/options");
-  const q = useQueryClient();
-  const [application, setApplication] = useState("");
-  const [visitId, setVisitId] = useState("");
-  const [error, setError] = useState<unknown>();
-  const [message, setMessage] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [reason, setReason] = useState<Record<string, string>>({});
-  const coordinator = user.grants.some((g: any) =>
-    ["SUPERVISOR", "BUREAU"].includes(g.role),
-  );
-  const committee = user.grants.some(
-    (g: any) => g.role === "COMMITTEE" && g.committee === "EVC",
-  );
-  async function act(id: string, op: string) {
-    setBusy(true);
-    try {
-      await post(`/visits/${id}/${op}`, { reason: reason[id] ?? "" });
-      q.invalidateQueries();
-      setError(null);
-      setMessage("Visit action persisted with history.");
-    } catch (e) {
-      setError(e);
-    } finally {
-      setBusy(false);
-    }
-  }
-  return (
-    <>
-      <Heading
-        eyebrow="VISITS WITH A CLEAR NEXT STEP"
-        title="Expert visits."
-        accent="Coordinated."
-      />
-      <div className="metric-grid three">
-        <Panel>
-          <CalendarDays className="orange" />
-          <h3>Awaiting scheduling</h3>
-          <strong className="metric-number">
-            {queue.data?.items.filter(
-              (a: any) =>
-                !visits.data?.some((v: any) => v.applicationId === a.id),
-            ).length ?? "—"}
-          </strong>
-        </Panel>
-        <Panel>
-          <Clock className="orange" />
-          <h3>Proposed / confirmed</h3>
-          <strong className="metric-number">
-            {visits.data?.filter((v: any) =>
-              ["PROPOSED", "CONFIRMED", "RESCHEDULED"].includes(v.state),
-            ).length ?? "—"}
-          </strong>
-        </Panel>
-        <Panel>
-          <FileCheck2 className="orange" />
-          <h3>Report review pending</h3>
-          <strong className="metric-number">
-            {visits.data?.filter((v: any) => v.state === "REPORT_PENDING")
-              .length ?? "—"}
-          </strong>
-        </Panel>
-      </div>
-      <div className="dashboard-grid">
-        <Panel>
-          <div className="section-heading">
-            <div>
-              <p className="eyebrow">ELIGIBLE AFTER PRECEDING STAGES</p>
-              <h2>EVC queue</h2>
-            </div>
-            <Users className="orange" />
-          </div>
-          <p className="muted">
-            New-institution cases are explicitly labelled. Scheduling does not
-            complete the stage.
-          </p>
-          {queue.isPending ? (
-            <Loading />
-          ) : queue.data?.items.length ? (
-            queue.data.items.map((a: any) => (
-              <div className="queue-row" key={a.id}>
-                <Link to={"/applications/" + a.id}>
-                  <strong className="mono orange">{a.reference}</strong>
-                  <small>{a.institution.name}</small>
-                </Link>
-                <Badge>{label(a.category)}</Badge>
-                {coordinator && (
-                  <button
-                    className="ghost"
-                    onClick={() => {
-                      setApplication(a.id);
-                      setVisitId("");
-                    }}
-                  >
-                    Schedule <ArrowRight size={16} />
-                  </button>
-                )}
-              </div>
-            ))
-          ) : (
-            <Empty />
-          )}
-        </Panel>
-        <Panel>
-          <p className="eyebrow">ALL TIMES SHOWN IN IST</p>
-          <h2>
-            {coordinator
-              ? "Schedule a visit"
-              : committee
-                ? "Declare your availability"
-                : "EVC coordination"}
-          </h2>
-          <p className="muted">
-            One assigned eligible member is a demo quorum assumption.
-            Availability and overlapping reservations are checked on the server.
-          </p>
-          {coordinator ? (
-            <form
-              onSubmit={async (e) => {
-                e.preventDefault();
-                setBusy(true);
-                const f = new FormData(e.currentTarget);
-                try {
-                  await post(
-                    `/applications/${application || queue.data.items[0]?.id}/visits`,
-                    {
-                      mode: f.get("mode"),
-                      startAt: new Date(String(f.get("startAt"))).toISOString(),
-                      endAt: new Date(String(f.get("endAt"))).toISOString(),
-                      participants: f.getAll("participants"),
-                      metadata: f.get("metadata"),
-                      reason: f.get("reason"),
-                      ...(visitId ? { visitId } : {}),
-                    },
-                  );
-                  q.invalidateQueries();
-                  setError(null);
-                  setMessage(
-                    "Reservation persisted. Confirm the visit as the next step.",
-                  );
-                } catch (e) {
-                  setError(e);
-                } finally {
-                  setBusy(false);
-                }
-              }}
-            >
-              <Field title="Eligible application">
-                <select
-                  value={application}
-                  onChange={(e) => setApplication(e.target.value)}
-                >
-                  <option value="">First eligible case</option>
-                  {queue.data?.items.map((a: any) => (
-                    <option key={a.id} value={a.id}>
-                      {a.reference} · {a.institution.name}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-              <Field title="Visit mode">
-                <select name="mode">
-                  {["PHYSICAL", "ONLINE", "HYBRID"].map((x) => (
-                    <option key={x}>{x}</option>
-                  ))}
-                </select>
-              </Field>
-              <div className="form-grid">
-                <Field title="Start (browser timezone)">
-                  <input type="datetime-local" name="startAt" required />
-                </Field>
-                <Field title="End (browser timezone)">
-                  <input type="datetime-local" name="endAt" required />
-                </Field>
-              </div>
-              <fieldset>
-                <legend>Assigned EVC participants</legend>
-                {options.data?.users
-                  .filter((u: any) =>
-                    u.grants.some(
-                      (g: any) =>
-                        g.role === "COMMITTEE" && g.committee === "EVC",
-                    ),
-                  )
-                  .map((u: any) => (
-                    <label className="check-label" key={u.id}>
-                      <input type="checkbox" name="participants" value={u.id} />
-                      {u.name}
-                    </label>
-                  ))}
-              </fieldset>
-              <Field title="Venue / meeting metadata">
-                <input name="metadata" required minLength={3} />
-              </Field>
-              <Field title="Scheduling / rescheduling reason">
-                <textarea name="reason" required minLength={5} />
-              </Field>
-              {visitId && <Badge>Rescheduling {visitId.slice(0, 8)}</Badge>}
-              <button className="primary" disabled={busy}>
-                {busy
-                  ? "Saving…"
-                  : visitId
-                    ? "Save reasoned reschedule"
-                    : "Propose visit"}
-              </button>
-            </form>
-          ) : committee ? (
-            <form
-              onSubmit={async (e) => {
-                e.preventDefault();
-                const f = new FormData(e.currentTarget);
-                try {
-                  await post("/availability", {
-                    startAt: new Date(String(f.get("startAt"))).toISOString(),
-                    endAt: new Date(String(f.get("endAt"))).toISOString(),
-                  });
-                  setMessage("Availability stored.");
-                  setError(null);
-                } catch (e) {
-                  setError(e);
-                }
-              }}
-            >
-              <Field title="Available from (browser timezone)">
-                <input type="datetime-local" name="startAt" required />
-              </Field>
-              <Field title="Available through (browser timezone)">
-                <input type="datetime-local" name="endAt" required />
-              </Field>
-              <button className="secondary">Save availability</button>
-            </form>
-          ) : (
-            <div className="scope-note">
-              <Shield size={20} />
-              Your grants provide a scoped view. Coordinators manage
-              appointments; assigned members submit reports.
-            </div>
-          )}
-          <ErrorBox error={error} />
-          {message && (
-            <p role="status" className="success">
-              {message}
-            </p>
-          )}
-        </Panel>
-      </div>
-      <Panel>
-        <div className="section-heading">
-          <div>
-            <p className="eyebrow">AGENDA & REPORTS</p>
-            <h2>The visit lifecycle</h2>
-          </div>
-          <Badge>PROPOSE → CONFIRM → REPORT → REVIEW</Badge>
-        </div>
-        {visits.isPending ? (
-          <Loading />
-        ) : visits.data?.length ? (
-          visits.data.map((v: any) => (
-            <div className="visit-card" key={v.id}>
-              <div className="section-heading">
-                <div>
-                  <Link
-                    className="mono orange"
-                    to={"/applications/" + v.applicationId}
-                  >
-                    {v.application.reference}
-                  </Link>
-                  <h3>{v.application.institution.name}</h3>
-                </div>
-                <Badge active>{v.state}</Badge>
-              </div>
-              <div className="form-grid">
-                <p>
-                  <CalendarDays size={16} /> {date(v.startAt)} — {date(v.endAt)}{" "}
-                  IST
-                </p>
-                <p>
-                  {v.mode} · {v.metadata}
-                </p>
-              </div>
-              <p className="muted">
-                {v.reservations.filter((r: any) => r.active).length} active
-                participant(s) · {v.reason}
-              </p>
-              {v.report && <blockquote>{v.report}</blockquote>}
-              {(coordinator || committee) &&
-                !["COMPLETED", "CANCELLED"].includes(v.state) && (
-                  <>
-                    <Field
-                      title={
-                        v.state === "CONFIRMED"
-                          ? "Report / reason"
-                          : "Recorded reason"
-                      }
-                    >
-                      <textarea
-                        value={reason[v.id] ?? ""}
-                        onChange={(e) =>
-                          setReason({ ...reason, [v.id]: e.target.value })
-                        }
-                      />
-                    </Field>
-                    <div className="button-row">
-                      {coordinator &&
-                        ["PROPOSED", "RESCHEDULED"].includes(v.state) && (
-                          <button
-                            className="secondary stable"
-                            disabled={busy}
-                            onClick={() => act(v.id, "confirm")}
-                          >
-                            Confirm visit
-                          </button>
-                        )}
-                      {committee &&
-                        v.state === "CONFIRMED" &&
-                        v.reservations.some(
-                          (r: any) => r.userId === user.id && r.active,
-                        ) && (
-                          <button
-                            className="secondary stable"
-                            disabled={busy}
-                            onClick={() => act(v.id, "report")}
-                          >
-                            Submit report
-                          </button>
-                        )}
-                      {coordinator && v.state === "REPORT_PENDING" && (
-                        <button
-                          className="primary stable"
-                          disabled={busy}
-                          onClick={() => act(v.id, "complete")}
-                        >
-                          Accept completion report
-                        </button>
-                      )}
-                      {coordinator && (
-                        <button
-                          className="ghost"
-                          onClick={() => {
-                            setApplication(v.applicationId);
-                            setVisitId(v.id);
-                            window.scrollTo({ top: 0, behavior: "smooth" });
-                          }}
-                        >
-                          Reschedule
-                        </button>
-                      )}
-                      {coordinator && (
-                        <button
-                          className="ghost"
-                          disabled={busy}
-                          onClick={() => act(v.id, "cancel")}
-                        >
-                          Cancel appointment
-                        </button>
-                      )}
-                    </div>
-                  </>
-                )}
-              <details>
-                <summary>Previous appointment dates</summary>
-                <pre>{JSON.stringify(v.history, null, 2)}</pre>
-              </details>
-            </div>
-          ))
-        ) : (
-          <Empty>No visits scheduled in your scope.</Empty>
-        )}
-      </Panel>
-    </>
-  );
-}
-function Compliance({ user }: { user: any }) {
-  const data = useData("obligations", "/obligations");
-  return (
-    <>
-      <Heading
-        eyebrow="APPROVAL IS ONLY PART OF THE JOURNEY"
-        title="Every condition."
-        accent="Still in view."
-      />
-      <p className="intro-note">
-        Conditional decisions can coexist with open undertakings. Uploading
-        evidence never closes an obligation automatically.
-      </p>
-      {data.isPending ? (
-        <Loading />
-      ) : data.error ? (
-        <ErrorBox error={data.error} />
-      ) : data.data.length ? (
-        <div className="obligation-grid">
-          {data.data.map((o: any) => (
-            <ObligationCard o={o} user={user} key={o.id} />
-          ))}
-        </div>
-      ) : (
-        <Panel>
-          <Empty>No undertakings in your authorized scope.</Empty>
-        </Panel>
-      )}
-    </>
-  );
-}
 function ObligationCard({ o, user }: { o: any; user: any }) {
   const q = useQueryClient();
   const [command, setCommand] = useState("");
@@ -2655,7 +1915,7 @@ function ObligationCard({ o, user }: { o: any; user: any }) {
     ["REVIEWER", "SUPERVISOR", "BUREAU"].includes(g.role),
   );
   const authority = user.grants.some((g: any) => g.role === "AUTHORITY");
-  const allowed = [
+  const allowed: string[] = o.allowedActions ?? [
     ...(institution && ["OPEN", "RETURNED"].includes(o.state)
       ? ["submit"]
       : []),
@@ -2720,7 +1980,7 @@ function ObligationCard({ o, user }: { o: any; user: any }) {
                     }
                   : {}),
                 ...(effective === "extend"
-                  ? { dueAt: new Date(due).toISOString() }
+                  ? { dueAt: new Date(due + "+05:30").toISOString() }
                   : {}),
               });
               setReason("");
@@ -2761,7 +2021,7 @@ function ObligationCard({ o, user }: { o: any; user: any }) {
             </Field>
           )}
           {effective === "extend" && (
-            <Field title="Revised due (browser timezone)">
+            <Field title="Revised due (IST)">
               <input
                 type="datetime-local"
                 required
@@ -2797,244 +2057,34 @@ function ObligationCard({ o, user }: { o: any; user: any }) {
     </Panel>
   );
 }
-function Documents({ user }: { user: any }) {
-  const [params, setParams] = useSearchParams();
-  const data = useData("documents", "/documents");
-  const [filter, setFilter] = useState("");
-  const [error, setError] = useState<unknown>();
-  const [reason, setReason] = useState<Record<string, string>>({});
-  const q = useQueryClient();
-  const reviewer = user.grants.some((g: any) =>
-    ["REVIEWER", "SUPERVISOR", "BUREAU"].includes(g.role),
-  );
-  const opts = useData("options", "/options");
-  const now = opts.data?.now ?? new Date().toISOString();
-  async function review(id: string, outcome: string) {
-    try {
-      await post("/documents/" + id + "/review", {
-        outcome,
-        reason: reason[id] ?? "",
-      });
-      setError(null);
-      q.invalidateQueries();
-    } catch (e) {
-      setError(e);
-    }
-  }
-  return (
-    <>
-      <Heading
-        eyebrow="PRIVATE EVIDENCE. VISIBLE LINEAGE."
-        title="Document"
-        accent="registry."
-      />
-      <Panel>
-        <div className="form-grid">
-          <Field title="Verification filter">
-            <select
-              value={params.get("review") ?? ""}
-              onChange={(e) => {
-                const n = new URLSearchParams(params);
-                e.target.value
-                  ? n.set("review", e.target.value)
-                  : n.delete("review");
-                setParams(n);
-              }}
-            >
-              <option value="">All review states</option>
-              {["PENDING", "ACCEPTED", "REJECTED"].map((x) => (
-                <option key={x}>{x}</option>
-              ))}
-            </select>
-          </Field>
-          <Field title="Validity filter">
-            <select
-              value={params.get("validity") ?? ""}
-              onChange={(e) => {
-                const n = new URLSearchParams(params);
-                e.target.value
-                  ? n.set("validity", e.target.value)
-                  : n.delete("validity");
-                setParams(n);
-              }}
-            >
-              <option value="">All validity states</option>
-              <option value="ATTENTION">
-                Expiring or expired within seven-day window
-              </option>
-            </select>
-          </Field>
-        </div>
-        <Field title="Search title or reference">
-          <div className="search-input">
-            <Search size={18} />
-            <input
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              placeholder="Search authorized documents…"
-            />
-          </div>
-        </Field>
-        <ErrorBox error={error} />
-        {data.isPending ? (
-          <Loading />
-        ) : data.error ? (
-          <ErrorBox error={data.error} />
-        ) : (
-          data.data
-            .filter(
-              (d: any) =>
-                (!params.get("review") ||
-                  d.versions[0]?.reviewState === params.get("review")) &&
-                (!params.get("validity") ||
-                  ["EXPIRED", "EXPIRING"].includes(d.compliance?.status)),
-            )
-            .filter((d: any) =>
-              (d.title + " " + d.application.reference)
-                .toLowerCase()
-                .includes(filter.toLowerCase()),
-            )
-            .map((d: any) => {
-              const v = d.versions[0];
-              const validity = d.compliance?.status ?? "NO_ACCEPTED_VERSION";
-              return (
-                <div className="document-card" key={d.id}>
-                  <div className="section-heading">
-                    <div>
-                      <Link
-                        className="mono orange"
-                        to={"/applications/" + d.applicationId}
-                      >
-                        {d.application.reference}
-                      </Link>
-                      <h2>{d.title}</h2>
-                      <p>{d.application.institution.name}</p>
-                    </div>
-                    <FileText className="orange" />
-                  </div>
-                  <div className="button-row">
-                    <Badge active={validity !== "CURRENT"}>
-                      {readable(validity)}
-                    </Badge>
-                    <Badge>
-                      {v?.reviewState
-                        ? `Latest submission: ${readable(v.reviewState)}`
-                        : "No submitted file"}
-                    </Badge>
-                    <Badge>{v?.scanState}</Badge>
-                    <span className="mono">
-                      Effective v{d.compliance?.effective?.number ?? "—"} ·
-                      valid through {date(d.compliance?.effective?.validUntil)}{" "}
-                      IST
-                    </span>
-                  </div>
-                  <p className="muted">
-                    Effective evidence is the highest accepted version. A
-                    pending or rejected replacement does not change its expiry.
-                  </p>
-                  <div className="lineage-row">
-                    <span>
-                      Newest submission v{v?.number} · {v?.mime}
-                      {d.compliance?.renewalPending
-                        ? " · Renewal pending verification"
-                        : ""}
-                    </span>
-                    <a
-                      href={`/api/documents/${v?.id}/content`}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      Preview <ArrowUpRight size={16} />
-                    </a>
-                    <a href={`/api/documents/${v?.id}/content?download=true`}>
-                      Download
-                    </a>
-                  </div>
-                  <details>
-                    <summary>
-                      Versions & verification history ({d.versions.length})
-                    </summary>
-                    {d.versions.map((x: any, i: number) => (
-                      <div key={x.id} className="version-row">
-                        <strong>
-                          v{x.number} ·{" "}
-                          {x.id === d.compliance?.effective?.id
-                            ? "Effective"
-                            : i === 0
-                              ? "Newest submission"
-                              : "History"}{" "}
-                          · {x.reviewState}
-                        </strong>
-                        <code>{x.hash}</code>
-                        <small>
-                          {date(x.createdAt)} · {x.reviews.length} review(s)
-                        </small>
-                        {!user.grants.some(
-                          (g: any) => g.role === "INSTITUTION",
-                        ) && (
-                          <a
-                            href={`/api/documents/${x.id}/content?download=true`}
-                          >
-                            Download version
-                          </a>
-                        )}
-                        {x.reviews.map((r: any) => (
-                          <p key={r.id}>
-                            {r.outcome}: {r.reason}
-                          </p>
-                        ))}
-                      </div>
-                    ))}
-                  </details>
-                  {reviewer && v?.reviewState === "PENDING" && (
-                    <div className="review-renewal">
-                      <Field title="Verification reason">
-                        <textarea
-                          value={reason[v.id] ?? ""}
-                          onChange={(e) =>
-                            setReason({ ...reason, [v.id]: e.target.value })
-                          }
-                        />
-                      </Field>
-                      <div className="button-row">
-                        <button
-                          className="secondary stable"
-                          onClick={() => review(v.id, "ACCEPTED")}
-                        >
-                          Accept evidence
-                        </button>
-                        <button
-                          className="ghost stable"
-                          onClick={() => review(v.id, "REJECTED")}
-                        >
-                          Return evidence
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                  <p className="fine-print">
-                    Expiry triggers follow-up. It does not automatically revoke
-                    approval.
-                  </p>
-                </div>
-              );
-            })
-        )}
-      </Panel>
-    </>
-  );
-}
 function Alerts() {
+  const [alertParams] = useSearchParams();
+  const highlighted = React.useRef("");
   const data = useData("alerts", "/alerts");
   const q = useQueryClient();
   const [tab, setTab] = useState("inbox");
   const [error, setError] = useState<unknown>();
+  useEffect(() => {
+    const id = alertParams.get("event");
+    if (
+      id &&
+      highlighted.current !== id &&
+      data.data?.escalations?.some((e: any) => e.id === id)
+    ) {
+      const target = document.getElementById("escalation-" + id);
+      if (target) {
+        target.focus();
+        target.scrollIntoView({ block: "center" });
+        highlighted.current = id;
+      }
+    }
+  }, [alertParams.toString(), data.data?.escalations?.length]);
   return (
     <>
       <Heading
         eyebrow="EVERY FOLLOW-UP HAS A RECORD"
-        title="Alerts &"
-        accent="delivery."
+        title="Alerts & delivery"
+        accent=""
       />
       <Panel>
         <div className="tabs">
@@ -3058,12 +2108,22 @@ function Alerts() {
         </p>
         <ErrorBox error={error} />
         {!!data.data?.escalations?.length && (
-          <details>
+          <details open={alertParams.has("event") ? true : undefined}>
             <summary>
               Designated escalation events ({data.data.escalations.length})
             </summary>
             {data.data.escalations.map((event: any) => (
-              <div className="notification" key={event.id}>
+              <div
+                className={
+                  "notification " +
+                  (alertParams.get("event") === event.id
+                    ? "selected-escalation"
+                    : "")
+                }
+                id={"escalation-" + event.id}
+                tabIndex={-1}
+                key={event.id}
+              >
                 <div>
                   <Link to={"/applications/" + event.applicationId}>
                     Level {event.level} · {event.recipientRole} · {event.state}
@@ -3227,8 +2287,8 @@ function Reports() {
     <>
       <Heading
         eyebrow="EVIDENCE YOU CAN TAKE WITH YOU"
-        title="Reports &"
-        accent="audit trail."
+        title="Reports & audit"
+        accent=""
       />
       <Panel>
         <div className="tabs">
@@ -3426,10 +2486,20 @@ function HistoryRows({ rows }: { rows: any[] }) {
 }
 function Rules({ user }: { user: any }) {
   const data = useData("rules", "/rules");
+  const [policyParams] = useSearchParams();
   const q = useQueryClient();
-  const [selected, setSelected] = useState("");
+  const [selected, setSelected] = useState(policyParams.get("selected") ?? "");
   const [name, setName] = useState("");
-  const [stages, setStages] = useState("SCRUTINY, EVC, AUTHORITY");
+  const [stages, setStages] = useState<string[]>([
+    "SCRUTINY",
+    "EVC",
+    "AUTHORITY",
+  ]);
+  const [addStage, setAddStage] = useState("SCRUTINY");
+  const [simEvidence, setSimEvidence] = useState(false);
+  const [simDeficiency, setSimDeficiency] = useState(false);
+  const [simVisit, setSimVisit] = useState(false);
+  const [simRecommendation, setSimRecommendation] = useState(false);
   const [days, setDays] = useState(14);
   const [reminders, setReminders] = useState(3);
   const [source, setSource] = useState("DEMO: unverified calendar-day policy");
@@ -3451,14 +2521,13 @@ function Rules({ user }: { user: any }) {
   const editor = user.grants.some((g: any) =>
     ["ADMIN", "BUREAU"].includes(g.role),
   );
-  const publisher = user.grants.some((g: any) => g.role === "BUREAU");
+  const publisher = user.grants.some(
+    (g: any) => g.role === "BUREAU" && g.global,
+  );
   const rule =
     data.data?.rules.find((r: any) => r.id === selected) ?? data.data?.rules[0];
   const config = () => ({
-    stages: stages
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean),
+    stages,
     deadlineDays: Number(days),
     reminderDays: Number(reminders),
     label: "DEMO policy; calendar days in Asia/Kolkata",
@@ -3481,7 +2550,7 @@ function Rules({ user }: { user: any }) {
   function choose(r: any) {
     setSelected(r.id);
     setName(r.name);
-    setStages(r.config.stages.join(", "));
+    setStages([...r.config.stages]);
     setDays(r.config.deadlineDays);
     setReminders(r.config.reminderDays);
     setSource(r.source);
@@ -3513,6 +2582,19 @@ function Rules({ user }: { user: any }) {
               source,
             })
           : await post(`/rules/${rule.id}/${operation}`, {
+              ...(operation === "simulate"
+                ? {
+                    scenario: {
+                      category: "NEW_INSTITUTION",
+                      evidence: simEvidence
+                        ? [{ kind: "LEASE", reviewState: "ACCEPTED" }]
+                        : [],
+                      openDeficiencies: simDeficiency ? 1 : 0,
+                      completedVisit: simVisit,
+                      recommendationRecorded: simRecommendation,
+                    },
+                  }
+                : {}),
               expectedRevision: rule.revision,
               expectedHash: rule.contentHash,
               ...(operation === "save" ||
@@ -3527,7 +2609,7 @@ function Rules({ user }: { user: any }) {
           `Rule ${operation} committed. Existing cases remain pinned.`,
         );
         q.invalidateQueries();
-        if (operation === "create") setSelected(r.id);
+        if (operation === "create") choose(r);
       }
       setError(null);
     } catch (e) {
@@ -3537,14 +2619,14 @@ function Rules({ user }: { user: any }) {
     }
   }
   useEffect(() => {
-    if (rule && !selected) choose(rule);
+    if (rule && (!name || !selected)) choose(rule);
   }, [rule?.id]);
   return (
     <>
       <Heading
         eyebrow="CONFIGURABLE ROUTES. FIXED ACCOUNTABILITY."
-        title="Rules &"
-        accent="policy versions."
+        title="Workflow policies"
+        accent=""
       />
       <div className="rules-grid">
         <Panel>
@@ -3578,148 +2660,338 @@ function Rules({ user }: { user: any }) {
           <p className="eyebrow">
             STRUCTURED CONFIGURATION · NO EXECUTABLE CODE
           </p>
-          <h2>Preview the path. Preserve the past.</h2>
+          <h2>Selected policy and route</h2>
           <p className="muted">
             Published routes are immutable. Draft a new version to change
             stages. Publication requires a separate bureau grant and never
             grants decision authority.
           </p>
-          <Field title="Route name">
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder={rule?.name ?? "Name this route"}
-            />
-          </Field>
-          <Field title="Ordered stages (comma separated)">
-            <input value={stages} onChange={(e) => setStages(e.target.value)} />
-          </Field>
-          <p className="fine-print">
-            Allowed: SCRUTINY, EVC, SAC, SHC, AUTHORITY. Exactly one AUTHORITY
-            stage must end an acyclic route.
-          </p>
-          <div className="form-grid">
-            <Field title="Demo deadline · calendar days">
+          <div className="policy-provenance">
+            <Status value={rule?.state ?? "DRAFT"} />
+            <p>
+              Version {rule?.version ?? "not recorded"} · Source:{" "}
+              {rule?.source ?? source}
+            </p>
+            <p>
+              Verification: DEMO / unverified applicability. Academic year and
+              effective period: not recorded on this policy; each case records
+              its own year. Existing cases remain pinned.
+            </p>
+            <p>
+              Applicable categories:{" "}
+              {(rule?.config.applicability ?? [])
+                .map((c: string) => label(c))
+                .join(", ") || "Not recorded"}
+            </p>
+            {rule?.state !== "DRAFT" && (
+              <strong>
+                Read-only published/retired version. Create the next draft
+                before editing.
+              </strong>
+            )}
+          </div>
+          <fieldset
+            className="policy-fields"
+            disabled={!editor || rule?.state !== "DRAFT"}
+          >
+            <Field title="Route name">
               <input
-                type="number"
-                min={1}
-                max={365}
-                value={days}
-                onChange={(e) => setDays(Number(e.target.value))}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder={rule?.name ?? "Name this route"}
               />
             </Field>
-            <Field title="Advance reminder · days">
+            <section
+              className="visual-route-editor"
+              aria-label="Ordered policy stages"
+            >
+              <h3>Ordered review stages</h3>
+              <ol>
+                {stages.map((stage, index) => (
+                  <li key={stage}>
+                    <span className="stage-number">{index + 1}</span>
+                    <strong>{label(stage)}</strong>
+                    <label>
+                      Stage window · DEMO days
+                      <input
+                        type="number"
+                        aria-label={label(stage) + " stage window"}
+                        min={1}
+                        max={365}
+                        value={
+                          windows[stage === "EVC" ? "EVC_SCHEDULING" : stage] ??
+                          days
+                        }
+                        onChange={(e) =>
+                          setWindows({
+                            ...windows,
+                            [stage === "EVC" ? "EVC_SCHEDULING" : stage]:
+                              Number(e.target.value),
+                          })
+                        }
+                      />
+                    </label>
+                    <div className="stage-move">
+                      <button
+                        type="button"
+                        className="secondary"
+                        aria-label={"Move " + label(stage) + " earlier"}
+                        disabled={stage === "AUTHORITY" || index === 0}
+                        onClick={() =>
+                          setStages((prev) => {
+                            const next = [...prev];
+                            [next[index - 1], next[index]] = [
+                              next[index],
+                              next[index - 1],
+                            ];
+                            return next;
+                          })
+                        }
+                      >
+                        ↑
+                      </button>
+                      <button
+                        type="button"
+                        className="secondary"
+                        aria-label={"Move " + label(stage) + " later"}
+                        disabled={
+                          stage === "AUTHORITY" || index >= stages.length - 2
+                        }
+                        onClick={() =>
+                          setStages((prev) => {
+                            const next = [...prev];
+                            [next[index + 1], next[index]] = [
+                              next[index],
+                              next[index + 1],
+                            ];
+                            return next;
+                          })
+                        }
+                      >
+                        ↓
+                      </button>
+                      {stage !== "AUTHORITY" && (
+                        <button
+                          type="button"
+                          className="ghost"
+                          aria-label={"Remove " + label(stage) + " stage"}
+                          onClick={() =>
+                            setStages(stages.filter((s) => s !== stage))
+                          }
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                    {stage === "AUTHORITY" && (
+                      <small>
+                        Final competent-human decision; fixed last stage
+                      </small>
+                    )}
+                  </li>
+                ))}
+              </ol>
+              <div className="button-row">
+                <label className="field">
+                  Add eligible stage
+                  <select
+                    value={addStage}
+                    onChange={(e) => setAddStage(e.target.value)}
+                  >
+                    {["SCRUTINY", "EVC", "SAC", "SHC"].map((stage) => (
+                      <option
+                        key={stage}
+                        disabled={stages.includes(stage)}
+                        value={stage}
+                      >
+                        {label(stage)}
+                        {stages.includes(stage) ? " (already included)" : ""}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <button
+                  type="button"
+                  className="secondary"
+                  disabled={stages.includes(addStage)}
+                  onClick={() =>
+                    setStages([...stages.slice(0, -1), addStage, "AUTHORITY"])
+                  }
+                >
+                  Add stage before authority
+                </button>
+              </div>
+              <p className="fine-print">
+                Duplicate stages and cycles are rejected. EVC report windows can
+                be configured separately below.
+              </p>
+            </section>
+            <div className="form-grid">
+              <Field title="Demo deadline · calendar days">
+                <input
+                  type="number"
+                  min={1}
+                  max={365}
+                  value={days}
+                  onChange={(e) => setDays(Number(e.target.value))}
+                />
+              </Field>
+              <Field title="Advance reminder · days">
+                <input
+                  type="number"
+                  min={0}
+                  max={30}
+                  value={reminders}
+                  onChange={(e) => setReminders(Number(e.target.value))}
+                />
+              </Field>
+            </div>
+            <Field title="Policy provenance / source">
+              <input
+                value={source}
+                onChange={(e) => setSource(e.target.value)}
+              />
+            </Field>
+            <Field title="Applicable categories (comma separated)">
+              <input
+                value={categories}
+                onChange={(e) => setCategories(e.target.value)}
+              />
+            </Field>
+            <Field title="Required evidence types (comma separated; blank = any evidence)">
+              <input
+                value={requiredEvidence}
+                onChange={(e) => setRequiredEvidence(e.target.value)}
+                placeholder="LEASE, AFFIDAVIT"
+              />
+            </Field>
+            <Field title="Escalation delay after due date · calendar days">
               <input
                 type="number"
                 min={0}
-                max={30}
-                value={reminders}
-                onChange={(e) => setReminders(Number(e.target.value))}
+                max={365}
+                value={escalationDays}
+                onChange={(e) => setEscalationDays(Number(e.target.value))}
               />
             </Field>
-          </div>
-          <Field title="Policy provenance / source">
-            <input value={source} onChange={(e) => setSource(e.target.value)} />
-          </Field>
-          <Field title="Applicable categories (comma separated)">
-            <input
-              value={categories}
-              onChange={(e) => setCategories(e.target.value)}
-            />
-          </Field>
-          <Field title="Required evidence types (comma separated; blank = any evidence)">
-            <input
-              value={requiredEvidence}
-              onChange={(e) => setRequiredEvidence(e.target.value)}
-              placeholder="LEASE, AFFIDAVIT"
-            />
-          </Field>
-          <Field title="Escalation delay after due date · calendar days">
-            <input
-              type="number"
-              min={0}
-              max={365}
-              value={escalationDays}
-              onChange={(e) => setEscalationDays(Number(e.target.value))}
-            />
-          </Field>
-          <details>
-            <summary>
-              Stage windows and designated escalation hierarchy · DEMO calendar
-              days
-            </summary>
-            <p className="muted">
-              Blank windows use the default deadline. Overdue work remains
-              visible during escalation grace. No statutory holiday calendar is
-              implemented.
-            </p>
-            <div className="filters">
-              {[
-                "SCRUTINY",
-                "RESCRUTINY",
-                "RESPONSE",
-                "EVC_SCHEDULING",
-                "EVC_REPORT",
-                "SAC",
-                "SHC",
-                "AUTHORITY",
-                "DOCUMENT_REVIEW",
-              ].map((stage) => (
-                <Field key={stage} title={label(stage) + " days"}>
-                  <input
-                    type="number"
-                    min={1}
-                    max={365}
-                    value={windows[stage] ?? ""}
-                    placeholder={String(days)}
-                    onChange={(e) => {
-                      const next = { ...windows };
-                      if (e.target.value) next[stage] = Number(e.target.value);
-                      else delete next[stage];
-                      setWindows(next);
-                    }}
-                  />
-                </Field>
-              ))}
-            </div>
-            {levels.map((level, index) => (
-              <div className="filters" key={index}>
-                <Field title={"Level " + (index + 1) + " · days overdue"}>
-                  <input
-                    type="number"
-                    min={0}
-                    max={365}
-                    value={level.afterDays}
-                    onChange={(e) =>
-                      setLevels(
-                        levels.map((x, i) =>
-                          i === index
-                            ? { ...x, afterDays: Number(e.target.value) }
-                            : x,
-                        ),
-                      )
-                    }
-                  />
-                </Field>
-                <Field title="Designated role">
-                  <select
-                    value={level.role}
-                    onChange={(e) =>
-                      setLevels(
-                        levels.map((x, i) =>
-                          i === index ? { ...x, role: e.target.value } : x,
-                        ),
-                      )
-                    }
-                  >
-                    {["SUPERVISOR", "BUREAU", "AUTHORITY"].map((role) => (
-                      <option key={role}>{role}</option>
-                    ))}
-                  </select>
-                </Field>
+            <details>
+              <summary>
+                Stage windows and designated escalation hierarchy · DEMO
+                calendar days
+              </summary>
+              <p className="muted">
+                Blank windows use the default deadline. Overdue work remains
+                visible during escalation grace. No statutory holiday calendar
+                is implemented.
+              </p>
+              <div className="filters">
+                {[
+                  "SCRUTINY",
+                  "RESCRUTINY",
+                  "RESPONSE",
+                  "EVC_SCHEDULING",
+                  "EVC_REPORT",
+                  "SAC",
+                  "SHC",
+                  "AUTHORITY",
+                  "DOCUMENT_REVIEW",
+                ].map((stage) => (
+                  <Field key={stage} title={label(stage) + " days"}>
+                    <input
+                      type="number"
+                      min={1}
+                      max={365}
+                      value={windows[stage] ?? ""}
+                      placeholder={String(days)}
+                      onChange={(e) => {
+                        const next = { ...windows };
+                        if (e.target.value)
+                          next[stage] = Number(e.target.value);
+                        else delete next[stage];
+                        setWindows(next);
+                      }}
+                    />
+                  </Field>
+                ))}
               </div>
-            ))}
-          </details>
+              {levels.map((level, index) => (
+                <div className="filters" key={index}>
+                  <Field title={"Level " + (index + 1) + " · days overdue"}>
+                    <input
+                      type="number"
+                      min={0}
+                      max={365}
+                      value={level.afterDays}
+                      onChange={(e) =>
+                        setLevels(
+                          levels.map((x, i) =>
+                            i === index
+                              ? { ...x, afterDays: Number(e.target.value) }
+                              : x,
+                          ),
+                        )
+                      }
+                    />
+                  </Field>
+                  <Field title="Designated role">
+                    <select
+                      value={level.role}
+                      onChange={(e) =>
+                        setLevels(
+                          levels.map((x, i) =>
+                            i === index ? { ...x, role: e.target.value } : x,
+                          ),
+                        )
+                      }
+                    >
+                      {["SUPERVISOR", "BUREAU", "AUTHORITY"].map((role) => (
+                        <option key={role}>{role}</option>
+                      ))}
+                    </select>
+                  </Field>
+                </div>
+              ))}
+            </details>
+          </fieldset>
+          <section className="policy-scenario">
+            <h3>Evaluate a fictional scenario</h3>
+            <p className="fine-print">
+              Simulation changes no case, policy publication or deadline. Toggle
+              the actual guard inputs.
+            </p>
+            <label>
+              <input
+                type="checkbox"
+                checked={simEvidence}
+                onChange={(e) => setSimEvidence(e.target.checked)}
+              />
+              Accepted lease evidence present
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                checked={simDeficiency}
+                onChange={(e) => setSimDeficiency(e.target.checked)}
+              />
+              Open deficiency remains
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                checked={simVisit}
+                onChange={(e) => setSimVisit(e.target.checked)}
+              />
+              EVC completion report accepted
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                checked={simRecommendation}
+                onChange={(e) => setSimRecommendation(e.target.checked)}
+              />
+              Current-attempt recommendation recorded
+            </label>
+          </section>
           <ErrorBox error={error} />
           {message && (
             <p role="status" className="success">
@@ -3783,6 +3055,47 @@ function Rules({ user }: { user: any }) {
                 ))}
               </div>
               <p>{simulation.authority}</p>
+              {simulation.evaluation && (
+                <div className="simulation-results">
+                  <h3>Evaluated guards</h3>
+                  <p>{simulation.evaluation.explanation}</p>
+                  <h4>Submission</h4>
+                  {simulation.evaluation.submissionBlockers.length ? (
+                    <ul>
+                      {simulation.evaluation.submissionBlockers.map(
+                        (b: string) => (
+                          <li key={b}>{b}</li>
+                        ),
+                      )}
+                    </ul>
+                  ) : (
+                    <p>Configured submission checks clear for this scenario.</p>
+                  )}
+                  {simulation.evaluation.steps.map((step: any) => (
+                    <div key={step.stage}>
+                      <h4>
+                        {label(step.stage)} <Status value={step.state} />
+                      </h4>
+                      <p>
+                        Configured DEMO window: {step.windowDays} calendar days.
+                        Illustrative due {date(step.illustrativeDue)} IST.
+                      </p>
+                      {step.blockers.length ? (
+                        <ul>
+                          {step.blockers.map((b: string) => (
+                            <li key={b}>{b}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p>
+                          Explicit authorized human action is still required.
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
               <details open>
                 <summary>Compare stored and proposed version</summary>
                 <div className="form-grid">
