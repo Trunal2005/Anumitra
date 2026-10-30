@@ -1,0 +1,29 @@
+{
+  "sourceCommit": "14002e4e79b0d865f3c6715419c9ba61c405e44c",
+  "sourceDigest": "7cc274f15698a1294e25358642e957315b32ebb85289548c811164a275c67eac",
+  "rawVideo": "Anumitra-operations-walkthrough.webm",
+  "rawSHA256": "886a7ceaa166f331630c4aa70def5dd02c779d0c428dfd3d17971e8c760b72e3",
+  "rawDurationSeconds": 103.36,
+  "explanationVideo": "Anumitra-beginner-site-explanation.mp4",
+  "outputDurationSeconds": 158.93117913832197,
+  "voice": "Microsoft David Desktop - English (United States), local SAPI",
+  "paidAPIsUsed": false,
+  "method": "Contiguous segments of the actual single-page recording, paced for offline English narration; original raw recording retained. Captions sit below the app image. No invented UI screens.",
+  "bytes": 42337331,
+  "qa": {
+    "decodedWithoutErrors": true,
+    "mediaMetadata": [
+      "Duration: 00:02:39.04, start: 0.000000, bitrate: 2129 kb/s",
+      "Stream #0:1[0x2](und): Audio: aac (LC) (mp4a / 0x6134706D), 48000 Hz, stereo, fltp, 88 kb/s (default)",
+      "Stream #0:0(und): Audio: pcm_s16le, 48000 Hz, stereo, s16, 1536 kb/s (default)",
+      "[Parsed_volumedetect_0 @ 000002af9d727300] mean_volume: -24.7 dB",
+      "[Parsed_volumedetect_0 @ 000002af9d727300] max_volume: -3.2 dB"
+    ],
+    "sampleFramesSeconds": [
+      30,
+      90,
+      145
+    ],
+    "captionsUseLiteralLF": true
+  }
+}

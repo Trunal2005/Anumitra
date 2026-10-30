@@ -1,0 +1,15 @@
+
+Running 5 tests using 1 worker
+
+  ok 1 tests\browser\ui.spec.ts:38:1 › welcome and authenticated workspaces use real API and retain responsive design (7.1s)
+  ok 2 tests\browser\ui.spec.ts:143:1 › institution can save and submit a draft through browser forms (3.3s)
+  ok 3 tests\browser\ui.spec.ts:226:1 › cross-role repair journey: repeated response, EVC, conditional undertaking, effective renewal and escalation retry (1.1m)
+  ok 4 tests\browser\ui.spec.ts:650:1 › the first live revision refreshes a stale initial compliance snapshot (8.8s)
+  ok 5 tests\browser\ui.spec.ts:769:1 › readable reports, contextual history, scoped next actors and reviewed simulator provenance use the real API (13.2s)
+
+  5 passed (1.6m)
+
+To open last HTML report run:
+[36m[39m
+[36m  npx playwright show-report[39m
+[36m[39m

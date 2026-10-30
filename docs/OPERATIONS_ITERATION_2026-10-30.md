@@ -29,3 +29,9 @@ Before screenshots and `metadata-reproduction.json` are in `evidence/operations-
 Numerical policy remains DEMO. Historical missing intervals remain unknown. Public facts are historical and team human sign-off is pending; full-PDF redistribution permission and an authorized AICTE workflow contract are not established. No real college is given fictional operational visits, leases or compliance findings. No malware/authenticity scanning, Docker/Compose execution, formal GIGW/WCAG certification, production readiness, national-scale benchmark or measured efficiency gain is claimed.
 
 Accessibility design benchmarks: [GIGW](https://guidelines.india.gov.in/) and [W3C reflow guidance](https://www.w3.org/WAI/WCAG22/Understanding/reflow.html). Automated keyboard/focus, sampled contrast, narrow-layout and enlargement checks are finite verification, not certification. Broad report/filter permutations remain a coverage boundary.
+
+## Completed verification
+
+The complete `full-3` gate passed on `14002e4e79b0d865f3c6715419c9ba61c405e44c`: 41 backend cases without skips and all ten browser journeys. The Action desk pages 25 tasks with a contained keyboard-accessible scroll region; exact next/previous IDs were verified against 322 real isolated tasks. The earlier 84,531px capture failure is preserved in full-2 and explained in TEST_REPORT_2026-10-30. No timeout increase was used.
+
+Normal production build, strict service readiness, nine-page/case Chromium smoke, unchanged record/credential fingerprints and all 326 private byte hashes passed. Actual-site video and offline English explanation are outside the checkout. See the dated test report and visual gallery for exact evidence, source and remaining boundaries. Only documentation/evidence changes follow the tested implementation.

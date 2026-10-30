@@ -1,0 +1,15 @@
+
+Running 5 tests using 1 worker
+
+  ok 1 tests\browser\operations.spec.ts:73:1 › role-specific desks expose scoped tasks, deterministic counts and update connectivity (20.8s)
+  ok 2 tests\browser\operations.spec.ts:172:1 › specialised workspaces: role desks, queue drilldowns, source provenance, visual policy controls and accessible layouts (19.5s)
+  ok 3 tests\browser\operations.spec.ts:344:1 › public references retain field-level sources, historical year and missing-year disclosure (2.4s)
+  ok 4 tests\browser\operations.spec.ts:387:1 › responsive workspaces preserve keyboard focus, sampled contrast and 200 percent enlargement (16.3s)
+  ok 5 tests\browser\operations.spec.ts:557:1 › continuous evaluator walkthrough uses one real browser page across the guarded institutional review and human decision workflow (1.6m)
+
+  5 passed (2.7m)
+
+To open last HTML report run:
+[36m[39m
+[36m  npx playwright show-report[39m
+[36m[39m

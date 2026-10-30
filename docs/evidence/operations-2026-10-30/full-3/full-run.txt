@@ -1,0 +1,385 @@
+
+> anumitra@1.0.0 verify:isolated
+> node scripts/verify.mjs --evidence-dir=docs/evidence/operations-2026-10-30/full-3
+
+Prisma schema loaded from packages\db\schema.prisma
+Datasource "db": PostgreSQL database "anumitra_test_1793352974972", schema "public" at "127.0.0.1:55432"
+
+6 migrations found in prisma/migrations
+
+Applying migration `202610220001_initial`
+Applying migration `202610220002_invariants`
+Applying migration `202610220003_version_bytes`
+Applying migration `202610220004_submission_repairs`
+Applying migration `202610220005_attempt_invariants`
+Applying migration `202610230006_legacy_delivery_upgrade`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 202610220001_initial/
+    └─ migration.sql
+  └─ 202610220002_invariants/
+    └─ migration.sql
+  └─ 202610220003_version_bytes/
+    └─ migration.sql
+  └─ 202610220004_submission_repairs/
+    └─ migration.sql
+  └─ 202610220005_attempt_invariants/
+    └─ migration.sql
+  └─ 202610230006_legacy_delivery_upgrade/
+    └─ migration.sql
+      
+All migrations have been successfully applied.
+Environment variables loaded from .env
+{
+  runId: '59a5a75d-13c8-474f-a11c-14e7c8783dd1',
+  applications: 120,
+  institutions: 20
+}
+vite v6.4.5 building for production...
+transforming...
+✓ 1816 modules transformed.
+rendering chunks...
+computing gzip size...
+../../.local/test-runs/anumitra_test_1793352974972/web/index.html                                                     0.55 kB │ gzip:   0.35 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/space-grotesk-vietnamese-700-normal-DMty7AZE.woff2      4.20 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/jetbrains-mono-greek-400-normal-C190GLew.woff2          4.23 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/jetbrains-mono-greek-500-normal-JpySY46c.woff2          4.28 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/space-grotesk-vietnamese-400-normal-B7xT_GF5.woff2      4.30 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/space-grotesk-vietnamese-600-normal-DUi7WF5p.woff2      4.31 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/space-grotesk-vietnamese-500-normal-BmEvtly_.woff2      4.32 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/inter-vietnamese-400-normal-DMkecbls.woff2              4.97 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/inter-vietnamese-600-normal-Cc8MFFhd.woff2              5.10 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/inter-vietnamese-500-normal-DOriooB6.woff2              5.11 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/inter-greek-ext-400-normal-DGGRlc-M.woff2               5.26 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/jetbrains-mono-cyrillic-400-normal-BEIGL1Tu.woff2       5.33 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/jetbrains-mono-cyrillic-500-normal-DmUKJPL_.woff2       5.36 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/jetbrains-mono-vietnamese-400-normal-CqNFfHCs.woff      5.37 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/inter-greek-ext-500-normal-C4iEst2y.woff2               5.43 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/inter-greek-ext-600-normal-DRtmH8MT.woff2               5.43 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/jetbrains-mono-vietnamese-500-normal-DNRqzVM1.woff      5.48 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/space-grotesk-vietnamese-700-normal-Duxec5Rn.woff       5.59 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/jetbrains-mono-greek-400-normal-B9oWc5Lo.woff           5.66 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/space-grotesk-vietnamese-600-normal-D6zpsUhD.woff       5.70 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/space-grotesk-vietnamese-500-normal-BTqKIpxg.woff       5.72 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/jetbrains-mono-greek-500-normal-D7SFKleX.woff           5.72 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/space-grotesk-vietnamese-400-normal-BIWiOVfw.woff       5.73 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/inter-vietnamese-400-normal-Bbgyi5SW.woff               6.50 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/inter-vietnamese-500-normal-mJboJaSs.woff               6.60 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/inter-vietnamese-600-normal-BuLX-rYi.woff               6.64 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/jetbrains-mono-cyrillic-400-normal-ugxPyKxw.woff        6.98 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/jetbrains-mono-cyrillic-500-normal-DJqRU3vO.woff        7.02 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/inter-greek-ext-400-normal-KugGGMne.woff                7.06 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/inter-greek-ext-500-normal-2j5mBUwD.woff                7.19 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/inter-greek-ext-600-normal-B8X0CLgF.woff                7.21 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/jetbrains-mono-latin-ext-400-normal-Bc8Ftmh3.woff2      7.34 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/jetbrains-mono-latin-ext-500-normal-Cut-4mMH.woff2      7.53 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/inter-cyrillic-400-normal-obahsSVq.woff2                7.71 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/inter-greek-400-normal-B4URO6DV.woff2                   7.78 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/inter-cyrillic-500-normal-BasfLYem.woff2                7.90 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/inter-greek-500-normal-BIZE56-Y.woff2                   7.92 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/inter-greek-600-normal-plRanbMR.woff2                   7.94 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/inter-cyrillic-600-normal-CWCymEST.woff2                7.97 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/inter-cyrillic-400-normal-HOLc17fK.woff                 9.78 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/inter-greek-400-normal-q2sYcFCs.woff                    9.92 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/inter-cyrillic-600-normal-4D_pXhcN.woff                 9.94 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/inter-cyrillic-500-normal-CxZf_p3X.woff                 9.94 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/inter-greek-500-normal-Xzm54t5V.woff                    9.98 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/inter-greek-600-normal-BZpKdvQh.woff                   10.03 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/jetbrains-mono-latin-ext-400-normal-fXTG6kC5.woff      10.13 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/inter-cyrillic-ext-400-normal-BQZuk6qB.woff2           10.23 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/jetbrains-mono-latin-ext-500-normal-ckzbgY84.woff      10.34 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/inter-cyrillic-ext-500-normal-B0yAr1jD.woff2           10.43 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/inter-cyrillic-ext-600-normal-Dfes3d0z.woff2           10.48 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/space-grotesk-latin-ext-700-normal-BQnZhY3m.woff2      11.99 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/space-grotesk-latin-ext-400-normal-CfP_5XZW.woff2      12.26 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/space-grotesk-latin-ext-500-normal-DUe3BAxM.woff2      12.27 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/space-grotesk-latin-ext-600-normal-DxxdqCpr.woff2      12.29 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/space-grotesk-latin-700-normal-RjhwGPKo.woff2          12.84 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/space-grotesk-latin-600-normal-DjKNqYRj.woff2          13.28 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/space-grotesk-latin-500-normal-lFbtlQH6.woff2          13.31 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/inter-cyrillic-ext-400-normal-DQukG94-.woff            13.34 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/space-grotesk-latin-400-normal-CJ-V5oYT.woff2          13.39 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/inter-cyrillic-ext-500-normal-BmqWE9Dz.woff            13.45 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/inter-cyrillic-ext-600-normal-Bcila6Z-.woff            13.46 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/space-grotesk-latin-700-normal-CwsQ-cCU.woff           16.42 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/space-grotesk-latin-ext-700-normal-HVCqSBdx.woff       16.46 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/space-grotesk-latin-ext-600-normal-VcznFIpX.woff       16.73 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/space-grotesk-latin-ext-400-normal-DRPE3kg4.woff       16.79 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/space-grotesk-latin-ext-500-normal-3dgZTiw9.woff       16.79 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/space-grotesk-latin-600-normal-BflQw4A9.woff           16.88 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/space-grotesk-latin-500-normal-CNSSEhBt.woff           16.99 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/space-grotesk-latin-400-normal-BnQMeOim.woff           17.00 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/jetbrains-mono-latin-400-normal-V6pRDFza.woff2         21.17 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/jetbrains-mono-latin-500-normal-BWZEU5yA.woff2         21.83 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/inter-latin-400-normal-C38fXH4l.woff2                  23.66 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/inter-latin-500-normal-Cerq10X2.woff2                  24.27 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/inter-latin-600-normal-LgqL8muc.woff2                  24.45 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/jetbrains-mono-latin-400-normal-6-qcROiO.woff          27.50 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/jetbrains-mono-latin-500-normal-CJOVTJB7.woff          28.21 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/inter-latin-400-normal-CyCys3Eg.woff                   30.70 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/inter-latin-600-normal-CiBQ2DWP.woff                   31.26 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/inter-latin-500-normal-BL9OpVg8.woff                   31.28 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/inter-latin-ext-400-normal-C1nco2VV.woff2              35.00 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/inter-latin-ext-500-normal-CV4jyFjo.woff2              36.02 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/inter-latin-ext-600-normal-D2bJ5OIk.woff2              36.26 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/inter-latin-ext-400-normal-77YHD8bZ.woff               47.56 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/inter-latin-ext-500-normal-BxGbmqWO.woff               48.49 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/inter-latin-ext-600-normal-CIVaiw4L.woff               48.67 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/pdf.worker.min-qwK7q_zL.mjs                         1,046.21 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/index-BZFDvqzU.css                                    106.54 kB │ gzip:  31.54 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/PdfPreview-Df87QnJk.js                                442.45 kB │ gzip: 129.53 kB
+../../.local/test-runs/anumitra_test_1793352974972/web/assets/index-AkNeBgav.js                                     839.73 kB │ gzip: 207.15 kB
+✓ built in 8.69s
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+TAP version 13
+# Subtest: technical user creation, Mailpit recovery, one-time tokens and SSE session invalidation
+ok 1 - technical user creation, Mailpit recovery, one-time tokens and SSE session invalidation
+  ---
+  duration_ms: 4147.5194
+  ...
+# Subtest: master and document metadata imports are previewed and preserve evidence gates
+ok 2 - master and document metadata imports are previewed and preserve evidence gates
+  ---
+  duration_ms: 458.5697
+  ...
+# Subtest: contracts reject cycles, unsafe stages, status mass assignment and injection
+ok 3 - contracts reject cycles, unsafe stages, status mass assignment and injection
+  ---
+  duration_ms: 11.5845
+  ...
+# Subtest: unauthenticated and CSRF requests are denied
+ok 4 - unauthenticated and CSRF requests are denied
+  ---
+  duration_ms: 9.9928
+  ...
+# Subtest: scope isolation applies to records, documents, summaries, counts and exports
+ok 5 - scope isolation applies to records, documents, summaries, counts and exports
+  ---
+  duration_ms: 452.5662
+  ...
+# Subtest: persistent scrutiny → deficiency → response → targeted re-scrutiny → authority → conditional decision
+ok 6 - persistent scrutiny → deficiency → response → targeted re-scrutiny → authority → conditional decision
+  ---
+  duration_ms: 1352.5169
+  ...
+# Subtest: contradictory transitions cannot both commit
+ok 7 - contradictory transitions cannot both commit
+  ---
+  duration_ms: 337.5333
+  ...
+# Subtest: internal observations never reach institution history
+ok 8 - internal observations never reach institution history
+  ---
+  duration_ms: 451.5791
+  ...
+# Subtest: concurrent EVC reservations are serialized and visit completion requires a report
+ok 9 - concurrent EVC reservations are serialized and visit completion requires a report
+  ---
+  duration_ms: 639.3893
+  ...
+# Subtest: published versions are immutable; technical admin cannot publish or decide
+ok 10 - published versions are immutable; technical admin cannot publish or decide
+  ---
+  duration_ms: 97.544
+  ...
+# Subtest: unsafe file content and unsupported types are rejected without database insert
+ok 11 - unsafe file content and unsupported types are rejected without database insert
+  ---
+  duration_ms: 61.3989
+  ...
+# Subtest: local import preview has no side effects and replay is idempotent
+ok 12 - local import preview has no side effects and replay is idempotent
+  ---
+  duration_ms: 94.7376
+  ...
+# Subtest: stale reminders are superseded and valid notifications reach local SMTP
+ok 13 - stale reminders are superseded and valid notifications reach local SMTP
+  ---
+  duration_ms: 4586.8011
+  ...
+# Subtest: demo clock rejects ordinary users and session security version invalidates access
+ok 14 - demo clock rejects ordinary users and session security version invalidates access
+  ---
+  duration_ms: 561.2873
+  ...
+# Subtest: all five route families preserve recommendation/decision separation
+ok 15 - all five route families preserve recommendation/decision separation
+  ---
+  duration_ms: 1339.0644
+  ...
+# Subtest: SMTP failures have bounded attempts and stale obligation revisions are suppressed
+ok 16 - SMTP failures have bounded attempts and stale obligation revisions are suppressed
+  ---
+  duration_ms: 103.1656
+  ...
+# Subtest: demo scans are logically unique and database blocks immutable audit edits
+ok 17 - demo scans are logically unique and database blocks immutable audit edits
+  ---
+  duration_ms: 5797.5502
+  ...
+# Subtest: calendar validation rejects impossible dates and preserves leap-year IST end of day
+ok 18 - calendar validation rejects impossible dates and preserves leap-year IST end of day
+  ---
+  duration_ms: 2.0392
+  ...
+# Subtest: authenticated institution-only officials, intersected dimensions, multi-grant union and bounded delegation
+ok 19 - authenticated institution-only officials, intersected dimensions, multi-grant union and bounded delegation
+  ---
+  duration_ms: 2531.1001
+  ...
+# Subtest: two rejected responses create disjoint waiting/review intervals, immutable snapshots, replay and concurrency gates
+ok 20 - two rejected responses create disjoint waiting/review intervals, immutable snapshots, replay and concurrency gates
+  ---
+  duration_ms: 1542.5089
+  ...
+# Subtest: pending and rejected renewals preserve effective expiry; acceptance switches the deadline subject
+ok 21 - pending and rejected renewals preserve effective expiry; acceptance switches the deadline subject
+  ---
+  duration_ms: 50400.8313
+  ...
+# Subtest: upload rejects invalid metadata, foreign ownership, forbidden stage and database rollback without orphan bytes
+ok 22 - upload rejects invalid metadata, foreign ownership, forbidden stage and database rollback without orphan bytes
+  ---
+  duration_ms: 1045.801
+  ...
+# Subtest: policy publication binds saved revision/hash, audits draft save and prevents stale lifecycle races
+ok 23 - policy publication binds saved revision/hash, audits draft save and prevents stale lifecycle races
+  ---
+  duration_ms: 142.4657
+  ...
+# Subtest: actual pg-boss completed failed job retries in a new generation with one inbox and retained attempt history
+ok 24 - actual pg-boss completed failed job retries in a new generation with one inbox and retained attempt history
+  ---
+  duration_ms: 23663.2507
+  ...
+# Subtest: negative verification is deliberately referred for a human rejection; old committee recommendations cannot satisfy a new attempt
+ok 25 - negative verification is deliberately referred for a human rejection; old committee recommendations cannot satisfy a new attempt
+  ---
+  duration_ms: 2099.6292
+  ...
+# Subtest: escalation grace preserves overdue visibility, routes designated officials, deduplicates notes and audits acknowledgement/closure
+ok 26 - escalation grace preserves overdue visibility, routes designated officials, deduplicates notes and audits acknowledgement/closure
+  ---
+  duration_ms: 33072.7244
+  ...
+# Subtest: consolidated overdue reconciles post-decision undertakings and effective documents on one case
+ok 27 - consolidated overdue reconciles post-decision undertakings and effective documents on one case
+  ---
+  duration_ms: 27031.4927
+  ...
+# Subtest: compatible policy migration preserves due time, revises deadline identity and retains pins through retirement
+ok 28 - compatible policy migration preserves due time, revises deadline identity and retains pins through retirement
+  ---
+  duration_ms: 459.7211
+  ...
+# Subtest: authenticated mixed grants preserve per-case internal visibility and scoped SSE counts
+ok 29 - authenticated mixed grants preserve per-case internal visibility and scoped SSE counts
+  ---
+  duration_ms: 3774.9805
+  ...
+# Subtest: acceptance atomically resolves missing-acceptance alerts and a reviewed version cannot be rewritten
+ok 30 - acceptance atomically resolves missing-acceptance alerts and a reviewed version cannot be rewritten
+  ---
+  duration_ms: 11557.3997
+  ...
+# Subtest: reasoned visit cancellation atomically closes reminders, releases reservations and restores scheduling monitoring
+ok 31 - reasoned visit cancellation atomically closes reminders, releases reservations and restores scheduling monitoring
+  ---
+  duration_ms: 25682.3895
+  ...
+# Subtest: institution master preview enforces intersected scope, atomic review, provenance and replay
+ok 32 - institution master preview enforces intersected scope, atomic review, provenance and replay
+  ---
+  duration_ms: 1423.7597
+  ...
+# Subtest: next-step guidance follows institution response and post-decision undertaking actors, not stale owners
+ok 33 - next-step guidance follows institution response and post-decision undertaking actors, not stale owners
+  ---
+  duration_ms: 1939.1375
+  ...
+# Subtest: separate resolved escalations retain subject-level history and hide recipient identities from institutional views
+ok 34 - separate resolved escalations retain subject-level history and hide recipient identities from institutional views
+  ---
+  duration_ms: 29857.6772
+  ...
+# Subtest: overdue VISIT escalation reaches the designated supervisor in real local SMTP and resolves on cancellation
+ok 35 - overdue VISIT escalation reaches the designated supervisor in real local SMTP and resolves on cancellation
+  ---
+  duration_ms: 27360.2626
+  ...
+# Subtest: operations: metadata batch is atomic and duplicate external IDs are rejected
+ok 36 - operations: metadata batch is atomic and duplicate external IDs are rejected
+  ---
+  duration_ms: 135.2973
+  ...
+# Subtest: operations: concurrent metadata payload conflict is rechecked after locks and replay is truthful
+ok 37 - operations: concurrent metadata payload conflict is rechecked after locks and replay is truthful
+  ---
+  duration_ms: 421.3929
+  ...
+# Subtest: operations: metadata import rechecks editable state after the application lock
+ok 38 - operations: metadata import rechecks editable state after the application lock
+  ---
+  duration_ms: 367.8655
+  ...
+# Subtest: operations: role tasks, unknown stage age and backlog drilldowns reconcile under scope
+ok 39 - operations: role tasks, unknown stage age and backlog drilldowns reconcile under scope
+  ---
+  duration_ms: 1406.8286
+  ...
+# Subtest: operations: source-linked historical references cannot create operational records or imply current approval
+ok 40 - operations: source-linked historical references cannot create operational records or imply current approval
+  ---
+  duration_ms: 26.7071
+  ...
+# Subtest: operations: policy simulation evaluates real constrained guards without changing cases or policy
+ok 41 - operations: policy simulation evaluates real constrained guards without changing cases or policy
+  ---
+  duration_ms: 140.8319
+  ...
+1..41
+# tests 41
+# suites 0
+# pass 41
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 274303.5134
+
+Running 5 tests using 1 worker
+
+  ok 1 tests\browser\operations.spec.ts:73:1 › role-specific desks expose scoped tasks, deterministic counts and update connectivity (20.8s)
+  ok 2 tests\browser\operations.spec.ts:172:1 › specialised workspaces: role desks, queue drilldowns, source provenance, visual policy controls and accessible layouts (19.5s)
+  ok 3 tests\browser\operations.spec.ts:344:1 › public references retain field-level sources, historical year and missing-year disclosure (2.4s)
+  ok 4 tests\browser\operations.spec.ts:387:1 › responsive workspaces preserve keyboard focus, sampled contrast and 200 percent enlargement (16.3s)
+  ok 5 tests\browser\operations.spec.ts:557:1 › continuous evaluator walkthrough uses one real browser page across the guarded institutional review and human decision workflow (1.6m)
+
+  5 passed (2.7m)
+
+To open last HTML report run:
+[36m[39m
+[36m  npx playwright show-report[39m
+[36m[39m
+
+Running 5 tests using 1 worker
+
+  ok 1 tests\browser\ui.spec.ts:38:1 › welcome and authenticated workspaces use real API and retain responsive design (7.1s)
+  ok 2 tests\browser\ui.spec.ts:143:1 › institution can save and submit a draft through browser forms (3.3s)
+  ok 3 tests\browser\ui.spec.ts:226:1 › cross-role repair journey: repeated response, EVC, conditional undertaking, effective renewal and escalation retry (1.1m)
+  ok 4 tests\browser\ui.spec.ts:650:1 › the first live revision refreshes a stale initial compliance snapshot (8.8s)
+  ok 5 tests\browser\ui.spec.ts:769:1 › readable reports, contextual history, scoped next actors and reviewed simulator provenance use the real API (13.2s)
+
+  5 passed (1.6m)
+
+To open last HTML report run:
+[36m[39m
+[36m  npx playwright show-report[39m
+[36m[39m
+Disposable target retained for inspection; normal demo untouched.

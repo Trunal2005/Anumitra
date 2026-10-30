@@ -1,0 +1,59 @@
+{
+  "checkedAt": "2026-10-30T09:52:37.306Z",
+  "origin": "http://127.0.0.1:3000",
+  "sourceCommit": "14002e4e79b0d865f3c6715419c9ba61c405e44c",
+  "normalDemoReseeded": false,
+  "mutations": "authentication/session only; operational pages read-only",
+  "pages": [
+    {
+      "route": "/overview",
+      "heading": "Regional action desk",
+      "apiStatus": 200
+    },
+    {
+      "route": "/applications",
+      "heading": "Review queue",
+      "apiStatus": 200
+    },
+    {
+      "route": "/evc",
+      "heading": "EVC planner",
+      "apiStatus": 200
+    },
+    {
+      "route": "/committees",
+      "heading": "Committee agenda",
+      "apiStatus": 200
+    },
+    {
+      "route": "/compliance",
+      "heading": "Compliance ledger",
+      "apiStatus": 200
+    },
+    {
+      "route": "/documents",
+      "heading": "Evidence review",
+      "apiStatus": 200
+    },
+    {
+      "route": "/rules",
+      "heading": "Workflow policies",
+      "apiStatus": 200
+    },
+    {
+      "route": "/references",
+      "heading": "Public institution references",
+      "apiStatus": 200
+    },
+    {
+      "route": "/reports",
+      "heading": "Reports & audit",
+      "apiStatus": 200
+    },
+    {
+      "route": "/applications/:scoped-id",
+      "heading": "Document workspace"
+    }
+  ],
+  "pageErrors": []
+}

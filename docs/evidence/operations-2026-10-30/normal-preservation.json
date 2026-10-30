@@ -1,0 +1,14 @@
+{
+  "baselineAt": "2026-10-29T19:07:01.172Z",
+  "checkedAt": "2026-10-30T09:51:12.386Z",
+  "counts": {
+    "applications": 334,
+    "evidence": 326,
+    "users": 15
+  },
+  "allRecordUserClockCredentialFingerprintsUnchanged": true,
+  "privateFilesChecked": 326,
+  "privateFileHashFailures": 0,
+  "normalResetReseedMigrationOrCleanupPerformed": false,
+  "privateFileHashCheckedAt": "2026-10-30T09:15:38.554Z"
+}

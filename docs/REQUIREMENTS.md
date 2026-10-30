@@ -2,7 +2,7 @@
 
 ## Operational change mapping — 30 October 2026
 
-Committed implementation `c1eb46355145c110a9edd39cf35c38a4ee4c857a` is under complete isolated verification. The final [dated report](TEST_REPORT_2026-10-30.md) will supply the result and source manifest. The detailed matrix below retains earlier executed paths until that gate is recorded.
+Exact tested source `14002e4e79b0d865f3c6715419c9ba61c405e44c` passed the complete isolated gate: 41 backend tests without skips, all ten browser journeys, and both API restart preservation checks. The [dated report](TEST_REPORT_2026-10-30.md) and full-3 manifest bind these finite results to source. The detailed matrix below retains the earlier invariants and adds the operational proof.
 
 | PS group | Operational change | New proof / retained boundary |
 |---|---|---|
@@ -17,7 +17,7 @@ Committed implementation `c1eb46355145c110a9edd39cf35c38a4ee4c857a` is under com
 
 ## Detailed retained regression mapping
 
-Current review classification, 26 October 2026; exact tested source `54206f21b8e69f2e946c9421800cada99aa466f7`. Primary requirement: [SIH2026 entry 26262](https://www.sih.gov.in/sih2026PS), A–F and Regulatory Safeguard. Fresh primary retrieval returned HTTP 403; this review uses the supplied A–F brief and retained mapping, without claiming a newly verified official revision. These are prototype capabilities, not verified statutory values. The [dated report](TEST_REPORT_2026-10-26.md) records 35/35 backend tests, restart preservation and all five Chromium journeys in one complete run. Code/test mappings below are finite path coverage, not exhaustive combinations. Earlier reports remain historical.
+Current review classification, 30 October 2026; exact tested source `14002e4e79b0d865f3c6715419c9ba61c405e44c`. Primary scope is SIH26262 A–F and its human safeguard, using the supplied brief and retained official mapping; no newly certified statutory values are claimed. Current proof: 41 backend tests, ten browser journeys and normal readiness/preservation checks. Earlier reports remain historical.
 
 | PS bullet | Status | Implementation / user interaction | Supporting code/API/UI and evidence |
 |---|---|---|---|
@@ -58,7 +58,7 @@ Status key: **Verified working** means an implemented path executed successfully
 
 | Cross-cutting / external claim | Status | Evidence / boundary |
 |---|---|---|
-| Authentication, CSRF, recovery, session invalidation and bounded delegation | Verified working | API middleware + domain/grants.ts/permissions.ts; actual recovery, CSRF and grant regressions in current 35-test suite |
+| Authentication, CSRF, recovery, session invalidation and bounded delegation | Verified working | API middleware + domain/grants.ts/permissions.ts; actual recovery, CSRF and grant regressions in current 41-test suite |
 | Native restart persistence | Verified working | API restart case/version/policy comparison and actual worker retry/restart tests |
 | Historical hosted CI for 9ad109d | Verified working | Historical completed successful job, including full gate, npm ci and audit: https://github.com/Trunal2005/Anumitra/actions/runs/39942039627 ; evidence/audit-2026-10-23/ci-9ad109d.json. No result asserted for future documentation commits. |
 | Local Compose deployment path | Unverified | Supplied configuration; no local Compose execution in this audit. Hosted PostgreSQL/Mailpit service containers do not verify the application Compose path. |

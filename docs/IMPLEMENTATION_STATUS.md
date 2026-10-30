@@ -1,3 +1,13 @@
+# Current operational checkpoint — 30 October 2026
+
+Source `14002e4e79b0d865f3c6715419c9ba61c405e44c` passed the complete sequential isolated gate: 41 backend tests without skips, both API restart preservation checks and all ten browser journeys. See [the dated report](TEST_REPORT_2026-10-30.md) for the exact manifest, retained failures and finite limits.
+
+The authenticated UI now provides role-specific paged Action desks, compact server-paged queues, evidence-first cases, an EVC week/agenda planner, distinct Committee work, condition/evidence ledgers and a constrained visual policy editor. Atomic metadata import repairs three reproduced concurrency/rollback risks. Three separate historical public profiles preserve field-level sources; team human review is pending. Normal source/build/readiness/browser checks passed while existing records, credentials and private evidence were preserved. No normal reset/reseed/migration was run.
+
+B2 unknown legacy intervals and F3 exhaustive report permutations remain partial; official numerical policy/Compose/accessibility certification remain unverified; authorized live integration and malware scanning are missing. Hosted success is per-SHA and is not inferred from local results. No paid API, project licence, production or selection claim was introduced.
+
+## Historical 26 October checkpoint
+
 # Current checkpoint — 26 October 2026
 
 Use [the dated product report](TEST_REPORT_2026-10-26.md) for the current source and verification. Exact source `54206f21b8e69f2e946c9421800cada99aa466f7` passed the full sequential gate: 35 backend tests, API restart preservation and five Chromium journeys. Scoped reviewed imports, fictional simulator provenance, readable reports, contextual history and accurate next-role guidance were added. Earlier results below belong to 23 October and are retained as history.
